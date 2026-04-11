@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+
+
+model User {
+  id                    String    @id @default(uuid())
+  name                  String
+  email                 String    @unique
+  phone                 String?
+  password              String
+  role                  String    @default("CLIENT")
+  traccarUserId         Int?      @unique
+  isActive              Boolean   @default(true)
+  failedLoginAttempts   Int       @default(0)
+  lockUntil             DateTime?
+  isEmailVerified       Boolean   @default(false)
+  emailVerificationToken String?
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  totpSecret            String?
+  isTotpEnabled         Boolean   @default(false)
+  loginHistory          LoginHistory[]
+  vehicles              Vehicle[]
+  subscriptions         Subscription[]
+  payments              Payment[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Vehicle {
+  id              String   @id @default(uuid())
+  name            String
+  imei            String   @unique
+  type            String?
+  model           String?
+  plate           String?
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  traccarDeviceId Int?     @unique
+  traccarGeofenceId Int?   @unique
+  safeParkingOn   Boolean  @default(false)
+  parkingLat      Float?
+  parkingLng      Float?
+  parkingRadius   Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Subscription {
+  id            String             @id @default(uuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        String             @default("ACTIVE")
+  planId        String?
+  price         Float
+  expiresAt     DateTime
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float
+  status        String   @default("PENDING")
+  transactionId String?
+  paymentMethod String?
+  createdAt     DateTime @default(now())
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  device    String?
+  success   Boolean
+  createdAt DateTime @default(now())
+}
