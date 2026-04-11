@@ -10,22 +10,22 @@ export default defineConfig(() => ({
     proxy: {
       // SaaS API routes — must be declared before the Traccar catch-all
       '/api/auth': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_SAAS_URL || 'http://localhost:3001',
         changeOrigin: true,
       },
       '/api/saas': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_SAAS_URL || 'http://localhost:3001',
         changeOrigin: true,
       },
       // Traccar WebSocket (must be before the /api catch-all)
       '/api/socket': {
-        target: 'ws://localhost:8082',
+        target: process.env.VITE_TRACCAR_WS_URL || 'ws://localhost:8082',
         ws: true,
         changeOrigin: true,
       },
       // Traccar REST API — catch-all (must come last)
       '/api': {
-        target: 'http://localhost:8082',
+        target: process.env.VITE_TRACCAR_URL || 'http://localhost:8082',
         changeOrigin: true,
       },
     },

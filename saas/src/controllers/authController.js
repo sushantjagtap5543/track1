@@ -39,8 +39,7 @@ exports.register = async (req, res, next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12); // Stronger salt rounds
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-
+    
     // Traccar Integration
     let traccarUser;
     try {
@@ -62,14 +61,22 @@ exports.register = async (req, res, next) => {
       }
       throw err;
     }
-    
     try {
       await traccarService.linkDeviceToUser(traccarUser.id, traccarDevice.id);
     } catch (err) {
-      await traccarService.deleteDevice(traccarDevice.id).catch(e => console.error('Rollback cleanup failed:', e));
-      await traccarService.deleteUser(traccarUser.id).catch(e => console.error('Rollback cleanup failed:', e));
+      // Robust Rollback Saga
+      console.error('Registration failed at linking stage. Rolling back...', err);
+      if (traccarDevice && traccarDevice.id) {
+        await traccarService.deleteDevice(traccarDevice.id).catch(e => console.error('Rollback: Failed to delete device:', e));
+      }
+      if (traccarUser && traccarUser.id) {
+        await traccarService.deleteUser(traccarUser.id).catch(e => console.error('Rollback: Failed to delete user:', e));
+      }
       throw err;
     }
+
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     const user = await prisma.user.create({
       data: {
@@ -79,6 +86,7 @@ exports.register = async (req, res, next) => {
         password: hashedPassword,
         traccarUserId: traccarUser.id,
         emailVerificationToken,
+        emailVerificationExpires: verificationExpires,
         vehicles: {
           create: [{
             name: vehicleName,
@@ -141,6 +149,10 @@ exports.login = async (req, res, next) => {
 
       if (!user.isActive) {
         return res.status(403).json({ error: 'Account is locked or suspended' });
+      }
+
+      if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET is not configured');
       }
 
       const token = jwt.sign(
@@ -227,8 +239,13 @@ exports.resetPassword = async (req, res, next) => {
 exports.verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.params;
-    const user = await prisma.user.findFirst({ where: { emailVerificationToken: token } });
-    if (!user) return res.status(400).json({ error: 'Invalid verification token' });
+    const user = await prisma.user.findFirst({ 
+      where: { 
+        emailVerificationToken: token,
+        emailVerificationExpires: { gt: new Date() }
+      } 
+    });
+    if (!user) return res.status(400).json({ error: 'Invalid or expired verification token' });
 
     await prisma.user.update({
       where: { id: user.id },

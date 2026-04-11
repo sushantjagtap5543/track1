@@ -1,13 +1,19 @@
-// src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
+const cache = require('../services/cache');
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   // Token format: "Bearer [TOKEN]"
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ error: 'Access token required' });
+  }
+
+  // 1. Check for revoked tokens (Blacklist)
+  const isRevoked = await cache.get(`revoked_token:${token}`);
+  if (isRevoked) {
+    return res.status(401).json({ error: 'Token has been revoked' });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

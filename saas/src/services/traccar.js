@@ -12,11 +12,17 @@ const MOCK_DATA = {
   positions: [{ id: 1, deviceId: 1, latitude: 18.5204, longitude: 73.8567, speed: 10, course: 0, attributes: { ignition: true } }]
 };
 
-const getAuthHeaders = (email = TRACCAR_ADMIN_EMAIL, password = TRACCAR_ADMIN_PASSWORD) => {
-  return {
+const getAuthHeaders = (req = null) => {
+  const email = TRACCAR_ADMIN_EMAIL || 'admin';
+  const password = TRACCAR_ADMIN_PASSWORD || 'admin';
+  const headers = {
     'Authorization': 'Basic ' + Buffer.from(`${email}:${password}`).toString('base64'),
     'Content-Type': 'application/json'
   };
+  if (req?.headers?.['x-correlation-id']) {
+    headers['X-Correlation-ID'] = req.headers['x-correlation-id'];
+  }
+  return headers;
 };
 
 const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
@@ -39,10 +45,10 @@ const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
   });
 };
 
-const createUser = async (name, email, password) => {
+const createUser = async (name, email, password, req = null) => {
   const response = await fetchWithTimeout(`${TRACCAR_URL}/api/users`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getAuthHeaders(req),
     body: JSON.stringify({ name, email, password, attributes: {} })
   });
   if (!response.ok) throw new Error(`Traccar createUser failed: ${response.status}`);

@@ -39,7 +39,8 @@ public class LaipacProtocolDecoder extends BaseProtocolDecoder {
         super(protocol);
     }
 
-    public static final String DEFAULT_DEVICE_PASSWORD = "00000000";
+    public static final String DEFAULT_DEVICE_PASSWORD = "CHANGE_ME_NOW_88";
+
 
     private static final Pattern PATTERN_EAVSYS = new PatternBuilder()
             .text("$EAVSYS,")

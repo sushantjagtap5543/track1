@@ -13,6 +13,15 @@ const correlationIdMiddleware = require('./src/middleware/correlationIdMiddlewar
 const memoryGuard = require('./src/middleware/memoryGuard');
 const schemaGuard = require('./src/middleware/schemaGuard');
 
+const securityHeaders = (req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;");
+  next();
+};
+
 const prisma = new PrismaClient();
 const app = express();
 
@@ -21,6 +30,7 @@ const PORT = process.env.PORT || 3001;
 // Autonomic Guards
 schemaGuard();
 app.use(memoryGuard);
+app.use(securityHeaders);
 
 // Observability & Security
 app.use(correlationIdMiddleware);
@@ -33,8 +43,23 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: 'Too many login or reset attempts, please try again later'
+});
+
 app.use(limiter);
-app.use(cors());
+app.use('/api/auth', authLimiter);
+
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-Id'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Documentation
@@ -55,14 +80,20 @@ try {
   redis = new Redis({ host: process.env.REDIS_HOST || '127.0.0.1', retryStrategy: () => null });
   redis.on('error', (err) => {
     console.log('[INFO] Redis not available, using mock mode.');
-    redis = {
-      ping: () => Promise.resolve('PONG'),
-      on: () => {},
-      add: () => Promise.resolve()
+    redis = { 
+      ping: () => Promise.resolve('PONG'), 
+      on: () => {}, 
+      add: () => Promise.resolve(),
+      isMock: true 
     };
   });
 } catch (e) {
-  redis = { ping: () => Promise.resolve('PONG'), on: () => {}, add: () => Promise.resolve() };
+  redis = { 
+    ping: () => Promise.resolve('PONG'), 
+    on: () => {}, 
+    add: () => Promise.resolve(),
+    isMock: true 
+  };
 }
 
 // Status Dashboard
@@ -74,8 +105,14 @@ app.get('/api/status', async (req, res) => {
   };
 
   try { await prisma.$queryRaw`SELECT 1`; status.db = 'UP'; } catch (e) { status.db = 'DOWN'; }
-  try { if (await redis.ping() === 'PONG') status.redis = 'UP'; } catch (e) { status.redis = 'DOWN'; }
-  try { if (await traccar.checkHealth()) status.traccar = 'UP'; } catch (e) { status.traccar = 'DOWN'; }
+  try { 
+    if (redis.isMock) {
+      status.redis = 'MOCK (RECOVERY MODE)';
+    } else if (await redis.ping() === 'PONG') {
+      status.redis = 'UP'; 
+    }
+  } catch (e) { status.redis = 'DOWN'; }
+  try { if (await traccar.checkHealth()) status.traccar = process.env.MOCK_TRACCAR === 'true' ? 'MOCK' : 'UP'; } catch (e) { status.traccar = 'DOWN'; }
 
   const html = `
     <html>
