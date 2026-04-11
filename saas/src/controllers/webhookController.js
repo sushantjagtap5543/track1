@@ -2,6 +2,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { Worker } = require('worker_threads');
 const path = require('path');
+const edgeIntelligence = require('../services/edgeIntelligence');
 const prisma = new PrismaClient();
 
 /**
@@ -16,11 +17,20 @@ const handleTraccarWebhook = async (req, res) => {
       return res.status(400).json({ error: 'Missing required position fields' });
     }
 
-    // Offload signing to Crypto Worker
+    // 1. Edge Intelligence Pre-processing
+    const edgeResult = edgeIntelligence.processEdgeData({ deviceId, latitude, longitude, speed, attributes });
+    if (edgeResult.status === 'rejected') {
+      console.warn(`[Edge] Rejected data for device ${deviceId}: ${edgeResult.reason}`);
+      return res.status(422).json({ error: edgeResult.reason });
+    }
+
+    const { data: processedData } = edgeResult;
+
+    // 2. Offload signing to Crypto Worker
     const worker = new Worker(path.join(__dirname, '../workers/cryptoWorker.js'), {
       workerData: {
         action: 'signPosition',
-        payload: { deviceId, latitude, longitude, deviceTime, attributes }
+        payload: processedData
       }
     });
 
