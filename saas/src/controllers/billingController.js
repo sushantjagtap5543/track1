@@ -4,13 +4,8 @@ const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 
 // Use env for DB URL to support AWS Lightsail (Postgres) vs Local (SQLite)
-const prisma = new PrismaClient({ 
-  datasources: { 
-    db: { 
-      url: process.env.DATABASE_URL || "file:./prisma/dev.db" 
-    } 
-  } 
-});
+const prisma = new PrismaClient();
+
 
 const razorpay = (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) 
   ? new Razorpay({
