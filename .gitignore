@@ -25,3 +25,8 @@ traccar_error.log
 unified_schema.prisma
 *.log
 *.pem
+build/
+tree.txt
+*.log
+saas/.env
+.env

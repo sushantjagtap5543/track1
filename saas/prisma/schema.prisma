@@ -3,11 +3,29 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  CLIENT
+  SUPPORT
+}
 
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  PENDING
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
 
 model User {
   id                    String    @id @default(uuid())
@@ -15,7 +33,7 @@ model User {
   email                 String    @unique
   phone                 String?
   password              String
-  role                  String    @default("CLIENT")
+  role                  UserRole  @default(CLIENT)
   traccarUserId         Int?      @unique
   isActive              Boolean   @default(true)
   failedLoginAttempts   Int       @default(0)
@@ -32,6 +50,10 @@ model User {
   payments              Payment[]
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+
+  @@index([email])
+  @@index([traccarUserId])
+  @@index([isActive])
 }
 
 model Vehicle {
@@ -51,29 +73,39 @@ model Vehicle {
   parkingRadius   Float?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([imei])
 }
 
 model Subscription {
   id            String             @id @default(uuid())
   userId        String
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status        String             @default("ACTIVE")
+  status        SubscriptionStatus @default(ACTIVE)
   planId        String?
   price         Float
   expiresAt     DateTime
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
 }
 
 model Payment {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount        Float
-  status        String   @default("PENDING")
+  status        PaymentStatus @default(PENDING)
   transactionId String?
   paymentMethod String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime      @default(now())
+
+  @@index([userId])
+  @@index([transactionId])
 }
 
 model LoginHistory {
@@ -84,4 +116,7 @@ model LoginHistory {
   device    String?
   success   Boolean
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }

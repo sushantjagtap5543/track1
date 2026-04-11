@@ -1,21 +1,22 @@
 // src/controllers/authController.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 const { PrismaClient } = require('@prisma/client');
 const traccarService = require('../services/traccar');
 const { emailQueue } = require('../services/queue');
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: 'file:./prisma/dev.db'
-    }
-  }
-});
+// Use global singleton if possible, or ensure it uses env URL
+const prisma = new PrismaClient();
 
-const crypto = require('crypto');
-
-// Helper for input validation (Upgrade: Use zod/joi in production)
+/**
+ * Helper for input validation
+ * @param {string[]} fields 
+ * @param {Object} data 
+ * @returns {Object} { valid: boolean, error: string }
+ */
 const validateInput = (fields, data) => {
   for (const field of fields) {
     if (!data[field]) return { valid: false, error: `${field} is required` };
@@ -25,27 +26,28 @@ const validateInput = (fields, data) => {
   return { valid: true };
 };
 
-exports.register = async (req, res) => {
-  const validation = validateInput(['name', 'email', 'password', 'vehicleName', 'deviceImei'], req.body);
-  if (!validation.valid) return res.status(400).json({ error: validation.error });
-
-  const { name, email, phone, password, vehicleName, vehicleType, vehiclePlate, deviceImei } = req.body;
-
+exports.register = async (req, res, next) => {
   try {
+    const validation = validateInput(['name', 'email', 'password', 'vehicleName', 'deviceImei'], req.body);
+    if (!validation.valid) return res.status(400).json({ error: validation.error });
+
+    const { name, email, phone, password, vehicleName, vehicleType, vehiclePlate, deviceImei } = req.body;
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12); // Stronger salt rounds
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
 
+    // Traccar Integration
     let traccarUser;
     try {
       traccarUser = await traccarService.createUser(name, email, password);
     } catch (err) {
       if (err.message && /duplicate|unique/i.test(err.message)) {
-        throw new Error('Email is already registered in Traccar. Please login.');
+        return res.status(400).json({ error: 'Email is already registered in Traccar system.' });
       }
       throw err;
     }
@@ -56,7 +58,7 @@ exports.register = async (req, res) => {
     } catch (err) {
       await traccarService.deleteUser(traccarUser.id).catch(e => console.error('Rollback cleanup failed:', e));
       if (err.message && /duplicate|unique/i.test(err.message)) {
-        throw new Error('Device IMEI is already registered. Please use a different device or login.');
+        return res.status(400).json({ error: 'Device IMEI is already registered.' });
       }
       throw err;
     }
@@ -69,52 +71,42 @@ exports.register = async (req, res) => {
       throw err;
     }
 
-    try {
-      const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          phone,
-          password: hashedPassword,
-          traccarUserId: traccarUser.id,
-          emailVerificationToken,
-          vehicles: {
-            create: [{
-              name: vehicleName,
-              imei: deviceImei,
-              type: vehicleType,
-              plate: vehiclePlate,
-              traccarDeviceId: traccarDevice.id
-            }]
-          }
-        },
-        include: {
-          vehicles: true
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        traccarUserId: traccarUser.id,
+        emailVerificationToken,
+        vehicles: {
+          create: [{
+            name: vehicleName,
+            imei: deviceImei,
+            type: vehicleType,
+            plate: vehiclePlate,
+            traccarDeviceId: traccarDevice.id
+          }]
         }
-      });
-      // Queue verification email
-      await emailQueue.add('SEND_VERIFICATION_EMAIL', { to: email, token: emailVerificationToken });
+      },
+      include: { vehicles: true }
+    });
 
-      res.status(201).json({ 
-        message: 'Registration successful. Please verify your email.', 
-        user: { id: user.id, email: user.email, name: user.name } 
-      });
-    } catch (err) {
-      await traccarService.deleteDevice(traccarDevice.id).catch(e => console.error('Rollback cleanup failed:', e));
-      await traccarService.deleteUser(traccarUser.id).catch(e => console.error('Rollback cleanup failed:', e));
-      throw err;
-    }
+    await emailQueue.add('SEND_VERIFICATION_EMAIL', { to: email, token: emailVerificationToken });
+
+    res.status(201).json({ 
+      message: 'Registration successful. Please verify your email.', 
+      user: { id: user.id, email: user.email, name: user.name } 
+    });
 
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: error.message || 'Registration failed' });
+    next(error); // Use global error handler
   }
 };
 
-exports.login = async (req, res) => {
-  const { email, password, mfaToken, ipAddress, device } = req.body;
-
+exports.login = async (req, res, next) => {
   try {
+    const { email, password, mfaToken, ipAddress, device } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     
     if (!user) {
@@ -128,13 +120,10 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (isMatch) {
-      // MFA Check
       if (user.isTotpEnabled) {
         if (!mfaToken) {
           return res.status(200).json({ mfaRequired: true, message: 'MFA token required' });
         }
-        // Verification logic (assuming speakeasy)
-        const speakeasy = require('speakeasy');
         const verified = speakeasy.totp.verify({
           secret: user.totpSecret,
           encoding: 'base32',
@@ -163,10 +152,7 @@ exports.login = async (req, res) => {
       res.json({ message: 'Login successful', token, role: user.role, traccarUserId: user.traccarUserId });
     } else {
       const attempts = user.failedLoginAttempts + 1;
-      let lockUntil = null;
-      if (attempts >= 5) {
-        lockUntil = new Date(Date.now() + 30 * 60 * 1000);
-      }
+      const lockUntil = attempts >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null;
 
       await prisma.user.update({
         where: { id: user.id },
@@ -181,47 +167,48 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed', details: error.message });
+    next(error);
   }
 };
 
-exports.forgotPassword = async (req, res) => {
-  const { email } = req.body;
+exports.forgotPassword = async (req, res, next) => {
   try {
+    const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: 'If an account exists, a reset link has been sent.' });
 
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const resetExpires = new Date(Date.now() + 3600000); // 1 hour
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { resetPasswordToken: resetToken, resetPasswordExpires: resetExpires }
+      data: { resetPasswordToken: hashedResetToken, resetPasswordExpires: resetExpires }
     });
 
-    // Queue reset email
     await emailQueue.add('SEND_RESET_EMAIL', { to: email, token: resetToken });
 
-    res.json({ message: 'Password reset token generated and queued.' });
+    res.json({ message: 'If an account exists, a reset link has been sent.' });
   } catch (error) {
-    res.status(500).json({ error: 'Forgot password failed' });
+    next(error);
   }
 };
 
-exports.resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body;
+exports.resetPassword = async (req, res, next) => {
   try {
+    const { token, newPassword } = req.body;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
     const user = await prisma.user.findFirst({
       where: {
-        resetPasswordToken: token,
+        resetPasswordToken: hashedToken,
         resetPasswordExpires: { gt: new Date() }
       }
     });
 
     if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -233,13 +220,13 @@ exports.resetPassword = async (req, res) => {
 
     res.json({ message: 'Password reset successful' });
   } catch (error) {
-    res.status(500).json({ error: 'Reset password failed' });
+    next(error);
   }
 };
 
-exports.verifyEmail = async (req, res) => {
-  const { token } = req.params;
+exports.verifyEmail = async (req, res, next) => {
   try {
+    const { token } = req.params;
     const user = await prisma.user.findFirst({ where: { emailVerificationToken: token } });
     if (!user) return res.status(400).json({ error: 'Invalid verification token' });
 
@@ -250,34 +237,35 @@ exports.verifyEmail = async (req, res) => {
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Email verification failed' });
+    next(error);
   }
 };
 
-exports.setupMFA = async (req, res) => {
+exports.setupMFA = async (req, res, next) => {
   try {
-    const speakeasy = require('speakeasy');
-    const QRCode = require('qrcode');
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
-
     const secret = speakeasy.generateSecret({ name: `GeoSurePath (${user.email})` });
+    
+    // Store temporarily in memory or a cache if possible, 
+    // here we store in DB but not enabled yet.
     await prisma.user.update({
       where: { id: user.id },
-      data: { totpSecret: secret.base32 }
+      data: { totpSecret: secret.base32, isTotpEnabled: false }
     });
 
     const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
     res.json({ secret: secret.base32, qrCode: qrCodeUrl });
   } catch (error) {
-    res.status(500).json({ error: 'MFA setup failed' });
+    next(error);
   }
 };
 
-exports.verifyMFA = async (req, res) => {
-  const { token } = req.body;
+exports.verifyMFA = async (req, res, next) => {
   try {
-    const speakeasy = require('speakeasy');
+    const { token } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+
+    if (!user.totpSecret) return res.status(400).json({ error: 'MFA not set up' });
 
     const verified = speakeasy.totp.verify({
       secret: user.totpSecret,
@@ -295,12 +283,10 @@ exports.verifyMFA = async (req, res) => {
       res.status(400).json({ error: 'Invalid token' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'MFA verification failed' });
+    next(error);
   }
 };
 
 exports.logout = async (req, res) => {
-  // Simple logout (stateless JWT). 
-  // Future: Add token to Redis blacklist.
   res.json({ message: 'Logged out successfully' });
 };

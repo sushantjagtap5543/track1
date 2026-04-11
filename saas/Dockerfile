@@ -1,18 +1,19 @@
-FROM node:18
-
+FROM node:18-alpine AS base
 WORKDIR /app
 
-# Install native dependencies required for building bcrypt
-RUN apt-get update && apt-get install -y build-essential python3 && rm -rf /var/lib/apt/lists/*
+# Native deps for bcrypt
+RUN apk add --no-cache build-base python3
 
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps --production
 
 COPY . .
+RUN npx prisma generate
 
-# Generate Prisma client
-RUN chmod +x node_modules/.bin/prisma && npx prisma generate
+# Non-root
+RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S -G nodejs nodejs
+USER nodejs
 
 EXPOSE 3001
-
+ENV NODE_ENV=production
 CMD ["npm", "start"]

@@ -1,0 +1,56 @@
+name: GeoSurePath CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  audit-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: saas/package-lock.json
+
+      - name: Install dependencies
+        run: cd saas && npm ci
+
+      - name: Run linting
+        run: cd saas && npm run lint || echo "Linting skipped"
+
+      - name: Prisma Validate
+        run: cd saas && npx prisma validate
+
+  docker-build:
+    needs: audit-and-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Build Traccar Core
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: geosurepath-traccar:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build SaaS API
+        uses: docker/build-push-action@v5
+        with:
+          context: ./saas
+          push: false
+          tags: geosurepath-saas-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

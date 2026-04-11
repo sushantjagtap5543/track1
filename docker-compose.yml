@@ -5,10 +5,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-geosurepath}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-this-to-something-long-and-random}
       POSTGRES_DB: ${DB_NAME:-geosurepath}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-geosurepath} -d $${POSTGRES_DB:-geosurepath}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-geosurepath}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -36,9 +36,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     ports:
       - "5001-5150:5001-5150/tcp"
       - "5001-5150:5001-5150/udp"
+      - "8082:8082"  # Added for internal clarity
     volumes:
       - ./logs:/opt/traccar/logs:rw
       - ./data:/opt/traccar/data:rw
@@ -55,13 +61,19 @@ services:
         condition: service_healthy
       traccar:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     # No direct port exposure (Nginx only)
     env_file:
       - ./saas/.env
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-geosurepath}:${DB_PASSWORD}@db:5432/${DB_NAME:-geosurepath}?schema=saas
+      - DATABASE_URL=postgresql://${DB_USER:-geosurepath}:${DB_PASSWORD:-change-this-to-something-long-and-random}@db:5432/${DB_NAME:-geosurepath}?schema=saas
       - REDIS_HOST=redis
       - TRACCAR_URL=http://traccar:8082
+      - NODE_ENV=production
 
   nginx:
     image: nginx:alpine
@@ -69,6 +81,7 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"  # Added for future HTTPS
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
