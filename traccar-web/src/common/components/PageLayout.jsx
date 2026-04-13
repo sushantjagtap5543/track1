@@ -22,6 +22,7 @@ const useStyles = makeStyles()((theme, { miniVariant }) => ({
   root: {
     height: '100%',
     display: 'flex',
+    backgroundColor: '#020617', // Deep slate background
     [theme.breakpoints.down('md')]: {
       flexDirection: 'column',
     },
@@ -32,18 +33,31 @@ const useStyles = makeStyles()((theme, { miniVariant }) => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
+    backgroundColor: 'rgba(15, 23, 42, 0.8) !important',
+    backdropFilter: 'blur(16px)',
+    borderRight: '1px solid rgba(255, 255, 255, 0.05) !important',
+    color: '#f8fafc', // Force light text for icons and titles
     '@media print': {
       display: 'none',
     },
+    '& .MuiToolbar-root': {
+       borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+       color: '#f8fafc',
+    }
   },
   mobileDrawer: {
     width: theme.dimensions.drawerWidthTablet,
+    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+    backdropFilter: 'blur(16px)',
     '@media print': {
       display: 'none',
     },
   },
   mobileToolbar: {
     zIndex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+    backdropFilter: 'blur(16px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
     '@media print': {
       display: 'none',
     },
@@ -53,7 +67,8 @@ const useStyles = makeStyles()((theme, { miniVariant }) => ({
     alignItems: 'stretch',
     display: 'flex',
     flexDirection: 'column',
-    overflowY: 'auto',
+    overflow: 'hidden', // Changed from overflowY: auto to hidden to allow children to manage scroll
+    backgroundColor: 'transparent',
   },
 }));
 
@@ -65,19 +80,19 @@ const PageTitle = ({ breadcrumbs }) => {
 
   if (desktop) {
     return (
-      <Typography variant="h6" noWrap>
+      <Typography variant="h6" noWrap sx={{ color: '#f8fafc' }}>
         {t(breadcrumbs[0])}
       </Typography>
     );
   }
   return (
-    <Breadcrumbs>
+    <Breadcrumbs sx={{ '& ol': { color: '#f8fafc' } }}>
       {breadcrumbs.slice(0, -1).map((breadcrumb) => (
-        <Typography variant="h6" color="inherit" key={breadcrumb}>
+        <Typography variant="h6" key={breadcrumb} sx={{ color: '#f8fafc' }}>
           {t(breadcrumb)}
         </Typography>
       ))}
-      <Typography variant="h6" color="textPrimary">
+      <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700 }}>
         {t(breadcrumbs[breadcrumbs.length - 1])}
       </Typography>
     </Breadcrumbs>

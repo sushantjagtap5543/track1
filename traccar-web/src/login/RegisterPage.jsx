@@ -57,11 +57,6 @@ const useStyles = makeStyles()((theme) => ({
     left: theme.spacing(2),
     color: 'rgba(255, 255, 255, 0.5)',
     zIndex: 10,
-    '&:hover': {
-      color: theme.palette.primary.main,
-      background: 'rgba(255, 255, 255, 0.1)',
-      transform: 'translateX(-4px)',
-    },
   },
   input: {
     '& .MuiOutlinedInput-root': {
@@ -111,22 +106,16 @@ const useStyles = makeStyles()((theme) => ({
     fontSize: '0.75rem',
     letterSpacing: '1px',
   },
+  backButton: {
+    position: 'absolute',
+    top: theme.spacing(2),
+    left: theme.spacing(2),
+    zIndex: 10,
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
   registerButton: {
-    borderRadius: '14px',
     padding: theme.spacing(1.8, 0),
-    fontSize: '1.05rem',
-    fontWeight: 900,
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
-    transition: 'all 0.3s ease',
     marginTop: theme.spacing(1),
-    '&:hover': {
-      background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-      transform: 'translateY(-2px)',
-      boxShadow: '0 12px 35px rgba(59, 130, 246, 0.4)',
-    },
   },
   footer: {
     display: 'flex',
@@ -339,14 +328,16 @@ const Register = () => {
             onChange={(e) => setPassword(e.target.value)}
             className={classes.input}
             helperText="8+ character secure shield"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </motion.div>

@@ -40,6 +40,35 @@ export default (server, darkMode, direction) =>
                 backdrop-filter: blur(8px);
                 border: 1px solid rgba(255,255,255,0.1);
               }
+              input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+              input[type="date"]::-webkit-calendar-picker-indicator {
+                filter: invert(1);
+                cursor: pointer;
+              }
+              
+              /* Custom Premium Scrollbar */
+              * {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(56, 189, 248, 0.2) transparent;
+              }
+              *::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+              }
+              *::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              *::-webkit-scrollbar-thumb {
+                background: rgba(56, 189, 248, 0.2);
+                border-radius: 10px;
+                border: 2px solid transparent;
+                background-clip: content-box;
+                transition: all 0.3s ease;
+              }
+              *::-webkit-scrollbar-thumb:hover {
+                background: rgba(56, 189, 248, 0.4);
+                background-clip: content-box;
+              }
             `,
           },
         },

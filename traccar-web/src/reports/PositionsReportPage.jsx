@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow, Typography, Box } from '@mui/material';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
 import ReportFilter, { updateReportParams } from './components/ReportFilter';
@@ -153,51 +153,58 @@ const PositionsReportPage = () => {
                   fullWidth
                 />
               </div>
-              <ColumnSelect
-                columns={columns}
-                setColumns={setColumns}
-                columnsArray={available}
-                rawValues
-                disabled={!items.length}
-              />
+              <div className={classes.filterItem}>
+                <ColumnSelect
+                  columns={columns}
+                  setColumns={setColumns}
+                  columnsArray={available}
+                  rawValues
+                  disabled={!items.length}
+                />
+              </div>
             </ReportFilter>
           </div>
-          <Table>
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Table className={classes.table} stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell className={classes.columnAction} />
+                <TableCell sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }} className={classes.columnAction} />
                 {columns.map((key) => (
-                  <TableCell key={key}>{positionAttributes[key]?.name || key}</TableCell>
+                  <TableCell key={key} sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{positionAttributes[key]?.name || key}</TableCell>
                 ))}
-                <TableCell className={classes.columnAction} />
+                <TableCell sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }} className={classes.columnAction} />
               </TableRow>
             </TableHead>
             <TableBody>
               {!loading ? (
                 items.slice(0, 4000).map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} className={classes.tableRow}>
                     <TableCell className={classes.columnAction} padding="none">
-                      {selectedItem === item ? (
-                        <IconButton
-                          size="small"
-                          onClick={() => setSelectedItem(null)}
-                          ref={selectedRef}
-                        >
-                          <GpsFixedIcon fontSize="small" />
-                        </IconButton>
-                      ) : (
-                        <IconButton size="small" onClick={() => setSelectedItem(item)}>
-                          <LocationSearchingIcon fontSize="small" />
-                        </IconButton>
-                      )}
+                      <div className={classes.columnActionContainer}>
+                        {selectedItem === item ? (
+                          <IconButton
+                            size="small"
+                            onClick={() => setSelectedItem(null)}
+                            ref={selectedRef}
+                          >
+                            <GpsFixedIcon fontSize="small" sx={{ color: '#38bdf8' }} />
+                          </IconButton>
+                        ) : (
+                          <IconButton size="small" onClick={() => setSelectedItem(item)}>
+                            <LocationSearchingIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </div>
                     </TableCell>
                     {columns.map((key) => (
                       <TableCell key={key}>
-                        <PositionValue
-                          position={item}
-                          property={item.hasOwnProperty(key) ? key : null}
-                          attribute={item.hasOwnProperty(key) ? null : key}
-                        />
+                        <Typography className={classes.eventText}>
+                          <PositionValue
+                            position={item}
+                            property={item.hasOwnProperty(key) ? key : null}
+                            attribute={item.hasOwnProperty(key) ? null : key}
+                          />
+                        </Typography>
                       </TableCell>
                     ))}
                     <TableCell className={classes.actionCellPadding}>
@@ -213,10 +220,11 @@ const PositionsReportPage = () => {
                   </TableRow>
                 ))
               ) : (
-                <TableShimmer columns={columns.length + 1} startAction />
+                <TableShimmer columns={columns.length + 2} startAction />
               )}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          </Box>
         </div>
       </div>
     </PageLayout>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Divider, Typography, IconButton, Toolbar, Paper } from '@mui/material';
-import Tooltip from '@mui/material/Tooltip';
+import { Divider, Typography, IconButton, Box, Paper, Tooltip } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import ExploreIcon from '@mui/icons-material/Explore';
+import BackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../map/core/MapView';
 import MapCurrentLocation from '../map/MapCurrentLocation';
@@ -13,14 +14,15 @@ import { useTranslation } from '../common/components/LocalizationProvider';
 import MapGeocoder from '../map/geocoder/MapGeocoder';
 import { errorsActions } from '../store';
 import MapScale from '../map/MapScale';
-import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
+import useSettingsStyles from '../settings/common/useSettingsStyles';
 
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
+    backgroundColor: '#020617',
   },
   content: {
     flexGrow: 1,
@@ -34,18 +36,18 @@ const useStyles = makeStyles()((theme) => ({
   drawer: {
     display: 'flex',
     flexDirection: 'column',
-    [theme.breakpoints.up('sm')]: {
-      width: theme.dimensions.drawerWidthDesktop,
-    },
+    backgroundColor: 'rgba(15, 23, 42, 0.4) !important',
+    backdropFilter: 'blur(20px)',
+    borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+    width: theme.dimensions.drawerWidthDesktop,
     [theme.breakpoints.down('sm')]: {
+      width: '100%',
       height: theme.dimensions.drawerHeightPhone,
     },
   },
   mapContainer: {
     flexGrow: 1,
-  },
-  title: {
-    flexGrow: 1,
+    position: 'relative',
   },
   fileInput: {
     display: 'none',
@@ -54,6 +56,7 @@ const useStyles = makeStyles()((theme) => ({
 
 const GeofencesPage = () => {
   const { classes } = useStyles();
+  const { classes: settingsClasses } = useSettingsStyles();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const t = useTranslation();
@@ -94,11 +97,19 @@ const GeofencesPage = () => {
     <div className={classes.root}>
       <div className={classes.content}>
         <Paper square className={classes.drawer}>
-          <Toolbar>
-            <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
+          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton sx={{ color: '#94a3b8' }} onClick={() => navigate(-1)}>
               <BackIcon />
             </IconButton>
-            <Typography variant="h6" className={classes.title}>
+            <Box sx={{
+              width: 38, height: 38, borderRadius: '10px',
+              background: 'linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(129,140,248,0.2) 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid rgba(56,189,248,0.2)',
+            }}>
+              <ExploreIcon sx={{ color: '#38bdf8', fontSize: 20 }} />
+            </Box>
+            <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.1rem', flexGrow: 1, letterSpacing: '-0.02em' }}>
               {t('sharedGeofences')}
             </Typography>
             <label htmlFor="upload-gpx">
@@ -109,15 +120,17 @@ const GeofencesPage = () => {
                 className={classes.fileInput}
                 onChange={handleFile}
               />
-              <IconButton edge="end" component="span" onClick={() => {}}>
+              <IconButton component="span" sx={{ color: '#38bdf8', '&:hover': { backgroundColor: 'rgba(56, 189, 248, 0.1)' } }}>
                 <Tooltip title={t('sharedUpload')}>
-                  <UploadFileIcon />
+                  <UploadFileIcon fontSize="small" />
                 </Tooltip>
               </IconButton>
             </label>
-          </Toolbar>
-          <Divider />
-          <GeofencesList onGeofenceSelected={setSelectedGeofenceId} />
+          </Box>
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)' }} />
+          <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
+            <GeofencesList onGeofenceSelected={setSelectedGeofenceId} />
+          </Box>
         </Paper>
         <div className={classes.mapContainer}>
           <MapView>

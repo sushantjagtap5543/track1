@@ -53,19 +53,19 @@ const SocketController = () => {
         dispatch(eventsActions.add(events));
       }
       
-      // Expand to 20+ alerts including geofence events
-      const alertTypes = [
-        'alarm', 'deviceOnline', 'deviceOffline', 'deviceUnknown', 
-        'deviceMoving', 'deviceStopped', 'deviceOverspeed', 'geofenceEnter', 
-        'geofenceExit', 'ignitionOn', 'ignitionOff', 'powerCut', 'powerRestored',
-        'maintenance', 'textMessage', 'commandResult', 'driverChanged', 'batteryLow', 
-        'gpsBlind', 'sos', 'vibration', 'tow'
-      ];
-      
-      const importantEvents = events.filter(e => alertTypes.includes(e.type) || e.type === 'alarm');
+      const soundEventsArray = soundEvents ? soundEvents.split(',') : [];
+      const soundAlarmsArray = soundAlarms ? soundAlarms.split(',') : [];
 
-      if (importantEvents.length > 0) {
-        new Audio(alarm).play().catch(() => {}); // Catch play errors if not interacted
+      const shouldPlaySound = events.some((event) => {
+        if (soundEventsArray.includes('all')) return true;
+        if (event.type === 'alarm') {
+          return soundAlarmsArray.includes('all') || soundAlarmsArray.includes(event.attributes.alarm || 'sos');
+        }
+        return soundEventsArray.includes(event.type);
+      });
+
+      if (shouldPlaySound) {
+        new Audio(alarm).play().catch(() => {});
       }
 
       setNotifications((prev) => [

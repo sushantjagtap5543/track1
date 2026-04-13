@@ -24,6 +24,7 @@ import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import StopIcon from '@mui/icons-material/Stop';
+import FenceIcon from '@mui/icons-material/Fence';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { devicesActions } from '../store';
@@ -293,6 +294,12 @@ const DeviceRow = ({ devices, index, style }) => {
                       <IconButton className={classes.actionButton} onClick={handleSafeParkingToggle} sx={{ p: '4px' }}>
                         <SecurityIcon className={item.attributes?.safeParking ? classes.success : classes.neutral} />
                       </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title={`Geofences${position.geofenceIds?.length ? ` (${position.geofenceIds.length})` : ''}`}>
+                      <Box className={classes.actionButton}>
+                        <FenceIcon className={position.geofenceIds?.length ? classes.success : classes.neutral} />
+                      </Box>
                     </Tooltip>
                   </Stack>
 

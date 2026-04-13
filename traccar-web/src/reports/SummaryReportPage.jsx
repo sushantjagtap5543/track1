@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -11,7 +11,13 @@ import {
   TableRow,
   TableBody,
   TableCell,
+  Typography,
+  Box
 } from '@mui/material';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TimerIcon from '@mui/icons-material/Timer';
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
 import { useTheme } from '@mui/material/styles';
 import {
   formatDistance,
@@ -87,6 +93,36 @@ const SummaryReportPage = () => {
     }
   });
 
+  const stats = useMemo(() => {
+    if (items.length === 0) return null;
+    const totalDistance = items.reduce((acc, item) => acc + item.distance, 0);
+    const avgSpeed = items.reduce((acc, item) => acc + item.averageSpeed, 0) / items.length;
+    const maxSpeed = Math.max(...items.map((item) => item.maxSpeed));
+    const totalEngineHours = items.reduce((acc, item) => acc + item.engineHours, 0);
+    const totalFuel = items.reduce((acc, item) => acc + item.spentFuel, 0);
+
+    return {
+      distance: formatDistance(totalDistance, distanceUnit, t),
+      avgSpeed: formatSpeed(avgSpeed, speedUnit, t),
+      maxSpeed: formatSpeed(maxSpeed, speedUnit, t),
+      engineHours: totalEngineHours > 0 ? formatNumericHours(totalEngineHours, t) : null,
+      fuel: totalFuel > 0 ? formatVolume(totalFuel, volumeUnit, t) : null,
+    };
+  }, [items, distanceUnit, speedUnit, volumeUnit, t]);
+
+  useEffect(() => {
+    if (!searchParams.get('from') || !searchParams.get('to')) {
+        const from = new Date();
+        from.setHours(0, 0, 0, 0);
+        const to = new Date();
+        to.setHours(23, 59, 59, 999);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('from', from.toISOString());
+        newParams.set('to', to.toISOString());
+        setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const onExport = useCatch(async () => {
     const rows = [];
     const deviceHeader = t('sharedDevice');
@@ -118,7 +154,7 @@ const SummaryReportPage = () => {
     const value = item[key];
     switch (key) {
       case 'deviceId':
-        return devices[value].name;
+        return devices[value]?.name || value;
       case 'startTime':
         return formatTime(value, 'date');
       case 'startOdometer':
@@ -141,58 +177,111 @@ const SummaryReportPage = () => {
 
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportSummary']}>
-      <div className={classes.header}>
-        <ReportFilter
-          onShow={onShow}
-          onExport={onExport}
-          onSchedule={onSchedule}
-          deviceType="multiple"
-          loading={loading}
-        >
-          <div className={classes.filterItem}>
-            <FormControl fullWidth>
-              <InputLabel>{t('sharedType')}</InputLabel>
-              <Select
-                label={t('sharedType')}
-                value={daily}
-                onChange={(e) =>
-                  updateReportParams(searchParams, setSearchParams, 'daily', [
-                    String(e.target.value),
-                  ])
-                }
-              >
-                <MenuItem value={false}>{t('reportSummary')}</MenuItem>
-                <MenuItem value>{t('reportDaily')}</MenuItem>
-              </Select>
-            </FormControl>
+      <div className={classes.container}>
+        <div className={classes.containerMain}>
+          <div className={classes.header}>
+            <ReportFilter
+              onShow={onShow}
+              onExport={onExport}
+              onSchedule={onSchedule}
+              deviceType="multiple"
+              loading={loading}
+            >
+              <div className={classes.filterItem}>
+                <FormControl fullWidth>
+                  <InputLabel>{t('sharedType')}</InputLabel>
+                  <Select
+                    label={t('sharedType')}
+                    value={daily}
+                    onChange={(e) =>
+                      updateReportParams(searchParams, setSearchParams, 'daily', [
+                        String(e.target.value),
+                      ])
+                    }
+                  >
+                    <MenuItem value={false}>{t('reportSummary')}</MenuItem>
+                    <MenuItem value>{t('reportDaily')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+              <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
+            </ReportFilter>
           </div>
-          <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
-        </ReportFilter>
-      </div>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>{t('sharedDevice')}</TableCell>
-            {columns.map((key) => (
-              <TableCell key={key}>{t(columnsMap.get(key))}</TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {!loading ? (
-            items.map((item) => (
-              <TableRow key={`${item.deviceId}_${Date.parse(item.startTime)}`}>
-                <TableCell>{devices[item.deviceId].name}</TableCell>
-                {columns.map((key) => (
-                  <TableCell key={key}>{formatValue(item, key)}</TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableShimmer columns={columns.length + 1} />
+
+          {stats && !loading && (
+            <div className={classes.statCards}>
+              <div className={classes.statCard}>
+                <TimelineIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('sharedDistance')}</Typography>
+                <Typography className={classes.statValue}>{stats.distance}</Typography>
+              </div>
+              <div className={classes.statCard}>
+                <SpeedIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('reportAverageSpeed')}</Typography>
+                <Typography className={classes.statValue}>{stats.avgSpeed}</Typography>
+              </div>
+              {stats.engineHours && (
+                <div className={classes.statCard}>
+                  <TimerIcon className={classes.statIcon} />
+                  <Typography className={classes.statLabel}>{t('reportEngineHours')}</Typography>
+                  <Typography className={classes.statValue}>{stats.engineHours}</Typography>
+                </div>
+              )}
+              {stats.fuel && (
+                <div className={classes.statCard}>
+                  <LocalGasStationIcon className={classes.statIcon} />
+                  <Typography className={classes.statLabel}>{t('reportSpentFuel')}</Typography>
+                  <Typography className={classes.statValue}>{stats.fuel}</Typography>
+                </div>
+              )}
+            </div>
           )}
-        </TableBody>
-      </Table>
+
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Table className={classes.table} stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t('sharedDevice')}</TableCell>
+                  {columns.map((key) => (
+                    <TableCell key={key} sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t(columnsMap.get(key))}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!loading ? (
+                  items.map((item) => (
+                    <TableRow key={`${item.deviceId}_${Date.parse(item.startTime)}`} className={classes.tableRow}>
+                      <TableCell>
+                        <Typography className={classes.deviceName}>
+                          {devices[item.deviceId]?.name || item.deviceId}
+                        </Typography>
+                      </TableCell>
+                      {columns.map((key) => (
+                        <TableCell key={key}>
+                          <Typography className={classes.eventText}>
+                            {formatValue(item, key)}
+                          </Typography>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableShimmer columns={columns.length + 1} />
+                )}
+                {!loading && items.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} align="center">
+                      <Typography sx={{ color: '#f8fafc', py: 8, fontSize: '0.9rem', fontWeight: 500 }}>
+                        {t('sharedNoData')}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Box>
+        </div>
+      </div>
     </PageLayout>
   );
 };

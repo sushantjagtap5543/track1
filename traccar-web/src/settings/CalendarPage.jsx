@@ -74,7 +74,7 @@ const simpleCalendar = () =>
   );
 
 const CalendarPage = () => {
-  const { classes } = useSettingsStyles();
+  const { classes: settingsClasses } = useSettingsStyles();
   const dispatch = useDispatch();
   const t = useTranslation();
 
@@ -119,37 +119,59 @@ const CalendarPage = () => {
       menu={<SettingsMenu />}
       breadcrumbs={['settingsTitle', 'sharedCalendar']}
     >
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, ml: 1 }}>
+        <Box sx={{
+          width: 48, height: 48, borderRadius: '14px',
+          background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2,
+          border: '1px solid rgba(129, 140, 248, 0.2)',
+        }}>
+          <CalendarMonthIcon sx={{ color: '#818cf8', fontSize: 28 }} />
+        </Box>
+        <Box>
+          <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedCalendar')}</Typography>
+          <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+            Schedule operational windows and temporal rules for automated reporting.
+          </Typography>
+        </Box>
+      </Box>
+
       {item && (
         <>
-          <Accordion defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle1">{t('sharedRequired')}</Typography>
+          <Accordion defaultExpanded sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+              <Typography sx={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedRequired')}</Typography>
             </AccordionSummary>
-            <AccordionDetails className={classes.details}>
-              <TextField
-                value={item.name || ''}
-                onChange={(event) => setItem({ ...item, name: event.target.value })}
-                label={t('sharedName')}
-              />
-              <FormControl>
-                <InputLabel>{t('sharedType')}</InputLabel>
-                <Select
-                  label={t('sharedType')}
-                  value={simple ? 'simple' : 'custom'}
-                  onChange={(e) =>
-                    setItem({
-                      ...item,
-                      data: e.target.value === 'simple' ? simpleCalendar() : null,
-                    })
-                  }
-                >
-                  <MenuItem value="simple">{t('calendarSimple')}</MenuItem>
-                  <MenuItem value="custom">{t('reportCustom')}</MenuItem>
-                </Select>
-              </FormControl>
+            <AccordionDetails className={settingsClasses.details}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                <TextField
+                  fullWidth
+                  value={item.name || ''}
+                  onChange={(event) => setItem({ ...item, name: event.target.value })}
+                  label={t('sharedName')}
+                />
+                <FormControl fullWidth>
+                  <InputLabel>{t('sharedType')}</InputLabel>
+                  <Select
+                    label={t('sharedType')}
+                    value={simple ? 'simple' : 'custom'}
+                    onChange={(e) =>
+                      setItem({
+                        ...item,
+                        data: e.target.value === 'simple' ? simpleCalendar() : null,
+                      })
+                    }
+                  >
+                    <MenuItem value="simple">{t('calendarSimple')}</MenuItem>
+                    <MenuItem value="custom">{t('reportCustom')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
               {simple ? (
-                <>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mt: 1 }}>
                   <TextField
+                    fullWidth
                     label={t('reportFrom')}
                     type="datetime-local"
                     value={dayjs(lines[5].slice(-15)).locale('en').format('YYYY-MM-DDTHH:mm')}
@@ -159,6 +181,7 @@ const CalendarPage = () => {
                     }}
                   />
                   <TextField
+                    fullWidth
                     label={t('reportTo')}
                     type="datetime-local"
                     value={dayjs(lines[6].slice(-15)).locale('en').format('YYYY-MM-DDTHH:mm')}
@@ -167,7 +190,7 @@ const CalendarPage = () => {
                       setItem({ ...item, data: updateCalendar(lines, 6, `DTEND;${time}`) });
                     }}
                   />
-                  <FormControl>
+                  <FormControl fullWidth>
                     <InputLabel>{t('calendarRecurrence')}</InputLabel>
                     <Select
                       label={t('calendarRecurrence')}
@@ -187,7 +210,7 @@ const CalendarPage = () => {
                     </Select>
                   </FormControl>
                   {['WEEKLY', 'MONTHLY'].includes(rule.frequency) && (
-                    <FormControl>
+                    <FormControl fullWidth>
                       <InputLabel>{t('calendarDays')}</InputLabel>
                       <Select
                         multiple
@@ -226,9 +249,10 @@ const CalendarPage = () => {
                       </Select>
                     </FormControl>
                   )}
-                </>
+                </Box>
               ) : (
                 <MuiFileInput
+                  fullWidth
                   placeholder={t('sharedSelectFile')}
                   value={file}
                   onChange={handleFileChange}
@@ -236,8 +260,10 @@ const CalendarPage = () => {
               )}
             </AccordionDetails>
           </Accordion>
+
           <EditAttributesAccordion
             attributes={item.attributes}
+            layout="grid"
             setAttributes={(attributes) => setItem({ ...item, attributes })}
             definitions={{}}
           />

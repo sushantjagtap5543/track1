@@ -10,7 +10,33 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    padding: theme.spacing(3, 2, 2),
+    padding: theme.spacing(0, 0, 3),
+    marginBottom: theme.spacing(1),
+  },
+  textField: {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'rgba(30, 41, 59, 0.4)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '12px',
+      border: '1px solid rgba(255, 255, 255, 0.05)',
+      transition: 'all 0.2s ease',
+      '&:hover': {
+        backgroundColor: 'rgba(30, 41, 59, 0.6)',
+        borderColor: 'rgba(56, 189, 248, 0.2)',
+      },
+      '&.Mui-focused': {
+        backgroundColor: 'rgba(30, 41, 59, 0.8)',
+        borderColor: '#38bdf8',
+        boxShadow: '0 0 0 4px rgba(56, 189, 248, 0.1)',
+      },
+    },
+    '& .MuiOutlinedInput-input': {
+      color: '#f8fafc',
+      padding: theme.spacing(1.5, 2),
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      border: 'none',
+    },
   },
 }));
 
@@ -29,6 +55,7 @@ const SearchHeader = ({ keyword, setKeyword }) => {
   return (
     <div className={classes.header}>
       <TextField
+        className={classes.textField}
         variant="outlined"
         placeholder={t('sharedSearch')}
         value={input}

@@ -110,7 +110,7 @@ model Subscription {
   /// ID of the pricing plan.
   planId    String?
   /// Price paid for the current period (Decimal).
-  price     Decimal
+  price     Float
   /// When the current subscription period ends.
   expiresAt DateTime
   /// Creation timestamp.
@@ -134,7 +134,7 @@ model Payment {
   /// User who made the payment.
   userId        String
   /// Amount paid (Decimal).
-  amount        Decimal
+  amount        Float
   /// Payment status.
   status        String    @default("PENDING")
   /// External transaction ID (e.g., Razorpay/Stripe).

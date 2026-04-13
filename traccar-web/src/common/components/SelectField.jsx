@@ -36,6 +36,7 @@ const SelectField = ({
   helperText,
   placeholder,
   singleLine,
+  sx,
 }) => {
   const { classes } = useStyles();
   const [items, setItems] = useState();
@@ -68,6 +69,7 @@ const SelectField = ({
 
     return (
       <Autocomplete
+        sx={sx}
         size={singleLine ? 'small' : 'medium'}
         multiple={multiple}
         className={multiple && singleLine ? classes.autocompleteMultiple : undefined}

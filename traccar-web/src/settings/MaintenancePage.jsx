@@ -12,6 +12,8 @@ import {
   Select,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import BuildIcon from '@mui/icons-material/Build';
+import { Box } from '@mui/material';
 import { prefixString } from '../common/util/stringUtils';
 import EditItemView from './components/EditItemView';
 import EditAttributesAccordion from './components/EditAttributesAccordion';
@@ -28,7 +30,7 @@ import SettingsMenu from './components/SettingsMenu';
 import useSettingsStyles from './common/useSettingsStyles';
 
 const MaintenancePage = () => {
-  const { classes } = useSettingsStyles();
+  const { classes: settingsClasses } = useSettingsStyles();
   const t = useTranslation();
 
   const positionAttributes = usePositionAttributes(t);
@@ -139,56 +141,80 @@ const MaintenancePage = () => {
       menu={<SettingsMenu />}
       breadcrumbs={['settingsTitle', 'sharedMaintenance']}
     >
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, ml: 1 }}>
+        <Box sx={{
+          width: 48, height: 48, borderRadius: '14px',
+          background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2,
+          border: '1px solid rgba(234, 179, 8, 0.2)',
+        }}>
+          <BuildIcon sx={{ color: '#eab308', fontSize: 28 }} />
+        </Box>
+        <Box>
+          <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedMaintenance')}</Typography>
+          <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+            Update maintenance details, service schedules, and alert thresholds for your devices.
+          </Typography>
+        </Box>
+      </Box>
+
       {item && (
         <>
-          <Accordion defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle1">{t('sharedRequired')}</Typography>
+          <Accordion defaultExpanded sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+              <Typography sx={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedRequired')}</Typography>
             </AccordionSummary>
-            <AccordionDetails className={classes.details}>
-              <TextField
-                value={item.name || ''}
-                onChange={(e) => setItem({ ...item, name: e.target.value })}
-                label={t('sharedName')}
-              />
-              <FormControl>
-                <InputLabel>{t('sharedType')}</InputLabel>
-                <Select
-                  label={t('sharedType')}
-                  value={item.type || ''}
-                  onChange={(e) => setItem({ ...item, type: e.target.value, start: 0, period: 0 })}
-                >
-                  {convertToList(positionAttributes).map(({ key, name }) => (
-                    <MenuItem key={key} value={key}>
-                      {name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                type={item.type?.endsWith('Time') ? 'date' : 'number'}
-                value={rawToValue(true, item.start) || ''}
-                onChange={(e) => setItem({ ...item, start: valueToRaw(true, e.target.value) })}
-                label={
-                  labels.start
-                    ? `${t('maintenanceStart')} (${labels.start})`
-                    : t('maintenanceStart')
-                }
-              />
-              <TextField
-                type="number"
-                value={rawToValue(false, item.period) || ''}
-                onChange={(e) => setItem({ ...item, period: valueToRaw(false, e.target.value) })}
-                label={
-                  labels.period
-                    ? `${t('maintenancePeriod')} (${labels.period})`
-                    : t('maintenancePeriod')
-                }
-              />
+            <AccordionDetails className={settingsClasses.details}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                <TextField
+                  fullWidth
+                  value={item.name || ''}
+                  onChange={(e) => setItem({ ...item, name: e.target.value })}
+                  label={t('sharedName')}
+                />
+                <FormControl fullWidth>
+                  <InputLabel>{t('sharedType')}</InputLabel>
+                  <Select
+                    label={t('sharedType')}
+                    value={item.type || ''}
+                    onChange={(e) => setItem({ ...item, type: e.target.value, start: 0, period: 0 })}
+                  >
+                    {convertToList(positionAttributes).map(({ key, name }) => (
+                      <MenuItem key={key} value={key}>
+                        {name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  fullWidth
+                  type={item.type?.endsWith('Time') ? 'date' : 'number'}
+                  value={rawToValue(true, item.start) || ''}
+                  onChange={(e) => setItem({ ...item, start: valueToRaw(true, e.target.value) })}
+                  label={
+                    labels.start
+                      ? `${t('maintenanceStart')} (${labels.start})`
+                      : t('maintenanceStart')
+                  }
+                />
+                <TextField
+                  fullWidth
+                  type="number"
+                  value={rawToValue(false, item.period) || ''}
+                  onChange={(e) => setItem({ ...item, period: valueToRaw(false, e.target.value) })}
+                  label={
+                    labels.period
+                      ? `${t('maintenancePeriod')} (${labels.period})`
+                      : t('maintenancePeriod')
+                  }
+                />
+              </Box>
             </AccordionDetails>
           </Accordion>
+
           <EditAttributesAccordion
             attributes={item.attributes}
+            layout="grid"
             setAttributes={(attributes) => setItem({ ...item, attributes })}
             definitions={{}}
           />

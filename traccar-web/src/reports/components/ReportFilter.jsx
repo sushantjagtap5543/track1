@@ -204,22 +204,21 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
       {selectedOption !== 'schedule' ? (
         <>
           <div className={classes.filterItem}>
-            <FormControl fullWidth>
-              <InputLabel>{t('reportPeriod')}</InputLabel>
-              <Select
-                label={t('reportPeriod')}
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-              >
-                <MenuItem value="today">{t('reportToday')}</MenuItem>
-                <MenuItem value="yesterday">{t('reportYesterday')}</MenuItem>
-                <MenuItem value="thisWeek">{t('reportThisWeek')}</MenuItem>
-                <MenuItem value="previousWeek">{t('reportPreviousWeek')}</MenuItem>
-                <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
-                <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem>
-                <MenuItem value="custom">{t('reportCustom')}</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              select
+              fullWidth
+              label={t('reportPeriod')}
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+            >
+              <MenuItem value="today">{t('reportToday')}</MenuItem>
+              <MenuItem value="yesterday">{t('reportYesterday')}</MenuItem>
+              <MenuItem value="thisWeek">{t('reportThisWeek')}</MenuItem>
+              <MenuItem value="previousWeek">{t('reportPreviousWeek')}</MenuItem>
+              <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
+              <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem>
+              <MenuItem value="custom">{t('reportCustom')}</MenuItem>
+            </TextField>
           </div>
           {period === 'custom' && (
             <div className={classes.filterItem}>
@@ -229,6 +228,17 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
                 fullWidth
+                slotProps={{
+                  input: {
+                    onClick: (e) => e.target.showPicker && e.target.showPicker(),
+                    sx: { 
+                      cursor: 'pointer',
+                      '& input::-webkit-calendar-picker-indicator': {
+                        filter: 'invert(1) brightness(100%)',
+                      }
+                    }
+                  }
+                }}
               />
             </div>
           )}
@@ -240,6 +250,17 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
                 fullWidth
+                slotProps={{
+                  input: {
+                    onClick: (e) => e.target.showPicker && e.target.showPicker(),
+                    sx: { 
+                      cursor: 'pointer',
+                      '& input::-webkit-calendar-picker-indicator': {
+                        filter: 'invert(1) brightness(100%)',
+                      }
+                    }
+                  }
+                }}
               />
             </div>
           )}

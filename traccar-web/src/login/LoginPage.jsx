@@ -78,25 +78,9 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   loginButton: {
-    borderRadius: '16px',
     padding: theme.spacing(2, 0),
-    fontSize: '1.1rem',
-    fontWeight: 900,
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
-    transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
     marginTop: theme.spacing(2),
     height: '60px',
-    '&:hover': {
-      background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-      transform: 'translateY(-3px)',
-      boxShadow: '0 12px 35px rgba(59, 130, 246, 0.4)',
-    },
-    '&:active': {
-      transform: 'translateY(0)',
-    },
   },
   footer: {
     display: 'flex',
@@ -248,12 +232,14 @@ const Login = () => {
             autoComplete="email"
             onChange={(event) => setEmail(event.target.value)}
             className={classes.input}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </motion.div>
@@ -269,19 +255,21 @@ const Login = () => {
             autoComplete="current-password"
             onChange={(event) => setPassword(event.target.value)}
             className={classes.input}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </motion.div>

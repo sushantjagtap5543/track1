@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow, Typography, Box } from '@mui/material';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
 import RouteIcon from '@mui/icons-material/Route';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TimerIcon from '@mui/icons-material/Timer';
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
 import {
   formatAddress,
   formatDistance,
@@ -57,6 +61,7 @@ const TripReportPage = () => {
   const { classes } = useReportStyles();
   const t = useTranslation();
   const theme = useTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const devices = useSelector((state) => state.devices.items, deviceEquality(['id', 'name']));
 
@@ -104,6 +109,23 @@ const TripReportPage = () => {
       setRoute(null);
     }
   }, [selectedItem]);
+  
+  const stats = useMemo(() => {
+    if (items.length === 0) return null;
+    const totalDistance = items.reduce((acc, item) => acc + item.distance, 0);
+    const avgSpeed = items.reduce((acc, item) => acc + item.averageSpeed, 0) / items.length;
+    const maxSpeed = Math.max(...items.map((item) => item.maxSpeed));
+    const totalDuration = items.reduce((acc, item) => acc + item.duration, 0);
+    const totalFuel = items.reduce((acc, item) => acc + item.spentFuel, 0);
+
+    return {
+      distance: formatDistance(totalDistance, distanceUnit, t),
+      avgSpeed: formatSpeed(avgSpeed, speedUnit, t),
+      maxSpeed: formatSpeed(maxSpeed, speedUnit, t),
+      duration: formatNumericHours(totalDuration, t),
+      fuel: totalFuel > 0 ? formatVolume(totalFuel, volumeUnit, t) : null,
+    };
+  }, [items, distanceUnit, speedUnit, volumeUnit, t]);
 
   const onShow = useCatch(async ({ deviceIds, groupIds, from, to }) => {
     const query = new URLSearchParams({ from, to });
@@ -120,10 +142,23 @@ const TripReportPage = () => {
     }
   });
 
+  useEffect(() => {
+    if (!searchParams.get('from') || !searchParams.get('to')) {
+        const from = new Date();
+        from.setHours(0, 0, 0, 0);
+        const to = new Date();
+        to.setHours(23, 59, 59, 999);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('from', from.toISOString());
+        newParams.set('to', to.toISOString());
+        setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const onExport = useCatch(async () => {
     const sheets = new Map();
     items.forEach((item) => {
-      const deviceName = devices[item.deviceId].name;
+      const deviceName = devices[item.deviceId]?.name || item.deviceId;
       if (!sheets.has(deviceName)) {
         sheets.set(deviceName, []);
       }
@@ -178,7 +213,7 @@ const TripReportPage = () => {
     const value = item[key];
     switch (key) {
       case 'deviceId':
-        return devices[value].name;
+        return devices[value]?.name || value;
       case 'startTime':
       case 'endTime':
         return formatTime(value, 'minutes');
@@ -240,47 +275,94 @@ const TripReportPage = () => {
               <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
             </ReportFilter>
           </div>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell className={classes.columnAction} />
-                <TableCell>{t('sharedDevice')}</TableCell>
-                {columns.map((key) => (
-                  <TableCell key={key}>{t(columnsMap.get(key))}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {!loading ? (
-                items.map((item) => (
-                  <TableRow key={item.startPositionId}>
-                    <TableCell className={classes.columnAction} padding="none">
-                      <div className={classes.columnActionContainer}>
-                        {selectedItem === item ? (
-                          <IconButton size="small" onClick={() => setSelectedItem(null)}>
-                            <GpsFixedIcon fontSize="small" />
-                          </IconButton>
-                        ) : (
-                          <IconButton size="small" onClick={() => setSelectedItem(item)}>
-                            <LocationSearchingIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                        <IconButton size="small" onClick={() => navigateToReplay(item)}>
-                          <RouteIcon fontSize="small" />
-                        </IconButton>
-                      </div>
-                    </TableCell>
-                    <TableCell>{devices[item.deviceId].name}</TableCell>
-                    {columns.map((key) => (
-                      <TableCell key={key}>{formatValue(item, key)}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableShimmer columns={columns.length + 2} startAction />
+
+          {stats && !loading && (
+            <div className={classes.statCards}>
+              <div className={classes.statCard}>
+                <TimelineIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('sharedDistance')}</Typography>
+                <Typography className={classes.statValue}>{stats.distance}</Typography>
+              </div>
+              <div className={classes.statCard}>
+                <SpeedIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('reportAverageSpeed')}</Typography>
+                <Typography className={classes.statValue}>{stats.avgSpeed}</Typography>
+              </div>
+              <div className={classes.statCard}>
+                <TimerIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('reportDuration')}</Typography>
+                <Typography className={classes.statValue}>{stats.duration}</Typography>
+              </div>
+              {stats.fuel && (
+                <div className={classes.statCard}>
+                  <LocalGasStationIcon className={classes.statIcon} />
+                  <Typography className={classes.statLabel}>{t('reportSpentFuel')}</Typography>
+                  <Typography className={classes.statValue}>{stats.fuel}</Typography>
+                </div>
               )}
-            </TableBody>
-          </Table>
+            </div>
+          )}
+
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Table className={classes.table} stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell className={classes.columnAction} sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }} />
+                  <TableCell sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t('sharedDevice')}</TableCell>
+                  {columns.map((key) => (
+                    <TableCell key={key} sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t(columnsMap.get(key))}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!loading ? (
+                  items.map((item) => (
+                    <TableRow key={`${item.deviceId}_${item.startTime}`} className={classes.tableRow}>
+                      <TableCell className={classes.columnAction} padding="none">
+                        <div className={classes.columnActionContainer}>
+                          {selectedItem === item ? (
+                            <IconButton size="small" onClick={() => setSelectedItem(null)}>
+                              <GpsFixedIcon fontSize="small" sx={{ color: '#38bdf8' }} />
+                            </IconButton>
+                          ) : (
+                            <IconButton size="small" onClick={() => setSelectedItem(item)}>
+                              <LocationSearchingIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                          <IconButton size="small" onClick={() => navigateToReplay(item)}>
+                            <RouteIcon fontSize="small" />
+                          </IconButton>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Typography className={classes.deviceName}>
+                          {devices[item.deviceId]?.name || item.deviceId}
+                        </Typography>
+                      </TableCell>
+                      {columns.map((key) => (
+                        <TableCell key={key}>
+                          <Typography className={classes.eventText}>
+                            {formatValue(item, key)}
+                          </Typography>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableShimmer columns={columns.length + 2} startAction />
+                )}
+                {!loading && items.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 2} align="center">
+                      <Typography sx={{ color: '#f8fafc', py: 8, fontSize: '0.9rem', fontWeight: 500 }}>
+                        {t('sharedNoData')}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Box>
         </div>
       </div>
     </PageLayout>

@@ -11,10 +11,12 @@ import {
   TableCell,
   TableBody,
   Link,
-  IconButton,
+  Typography,
+  Box,
 } from '@mui/material';
-import GpsFixedIcon from '@mui/icons-material/GpsFixed';
-import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import NewReleasesIcon from '@mui/icons-material/NewReleases';
+import PlaceIcon from '@mui/icons-material/Place';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { formatAddress, formatSpeed, formatTime } from '../common/util/formatter';
@@ -29,12 +31,7 @@ import { useCatch, useEffectAsync } from '../reactHelper';
 import useReportStyles from './common/useReportStyles';
 import TableShimmer from '../common/components/TableShimmer';
 import { useAttributePreference, usePreference } from '../common/util/preferences';
-import MapView from '../map/core/MapView';
-import MapGeofence from '../map/MapGeofence';
-import MapPositions from '../map/MapPositions';
-import MapCamera from '../map/MapCamera';
 import scheduleReport from './common/scheduleReport';
-import MapScale from '../map/MapScale';
 import SelectField from '../common/components/SelectField';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import exportExcel from '../common/util/exportExcel';
@@ -86,22 +83,12 @@ const EventReportPage = () => {
   const [items, setItems] = useState([]);
   const [positions, setPositions] = useState({});
   const [loading, setLoading] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [position, setPosition] = useState(null);
 
   useEffect(() => {
     if (!eventTypes.length) {
       updateReportParams(searchParams, setSearchParams, 'eventType', ['allEvents']);
     }
   }, [searchParams, setSearchParams, eventTypes]);
-
-  useEffect(() => {
-    if (selectedItem?.positionId) {
-      setPosition(positions[selectedItem.positionId] || null);
-    } else {
-      setPosition(null);
-    }
-  }, [selectedItem, positions]);
 
   useEffectAsync(async () => {
     const response = await fetchOrThrow('/api/notifications/types');
@@ -120,8 +107,6 @@ const EventReportPage = () => {
     if (eventTypes[0] !== 'allEvents' && eventTypes.includes('alarm')) {
       alarmTypes.forEach((it) => query.append('alarm', it));
     }
-    setSelectedItem(null);
-    setPosition(null);
     setLoading(true);
     try {
       const response = await fetchOrThrow(`/api/reports/events?${query.toString()}`, {
@@ -146,10 +131,35 @@ const EventReportPage = () => {
     }
   });
 
+  const stats = useMemo(() => {
+    if (items.length === 0) return null;
+    const alarmCount = items.filter((item) => item.type === 'alarm').length;
+    const geofenceCount = items.filter((item) => item.type.includes('Geofence')).length;
+
+    return {
+      total: items.length,
+      alarms: alarmCount,
+      geofences: geofenceCount,
+    };
+  }, [items]);
+
+  useEffect(() => {
+    if (!searchParams.get('from') || !searchParams.get('to')) {
+        const from = new Date();
+        from.setHours(0, 0, 0, 0);
+        const to = new Date();
+        to.setHours(23, 59, 59, 999);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('from', from.toISOString());
+        newParams.set('to', to.toISOString());
+        setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const onExport = useCatch(async () => {
     const sheets = new Map();
     items.forEach((item) => {
-      const deviceName = devices[item.deviceId].name;
+      const deviceName = devices[item.deviceId]?.name || t('sharedUnknown');
       if (!sheets.has(deviceName)) {
         sheets.set(deviceName, []);
       }
@@ -162,7 +172,7 @@ const EventReportPage = () => {
           const position = positions[item.positionId];
           row[header] = position ? formatAddress(position, coordinateFormat) : '';
         } else {
-          row[header] = formatValue(item, key);
+          row[header] = formatValue(item, key, true);
         }
       });
       sheets.get(deviceName).push(row);
@@ -179,15 +189,35 @@ const EventReportPage = () => {
     navigate('/reports/scheduled');
   });
 
-  const formatValue = (item, key) => {
+  const formatValue = (item, key, plain = false) => {
     const value = item[key];
     switch (key) {
       case 'deviceId':
-        return devices[value].name;
+        return devices[value]?.name || t('sharedUnknown');
       case 'eventTime':
         return formatTime(value, 'seconds');
       case 'type':
-        return t(prefixString('event', value));
+        if (plain) return t(prefixString('event', value));
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography 
+              sx={{ 
+                color: '#f8fafc',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                padding: '2px 10px', 
+                borderRadius: '2000px',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 0 10px rgba(255, 255, 255, 0.05)'
+              }}
+            >
+              {t(prefixString('event', value))}
+            </Typography>
+          </Box>
+        );
       case 'geofenceId':
         if (value > 0) {
           const geofence = geofences[value];
@@ -222,6 +252,7 @@ const EventReportPage = () => {
               <Link
                 href={`/api/media/${devices[item.deviceId]?.uniqueId}/${item.attributes.file}`}
                 target="_blank"
+                sx={{ color: '#3b82f6', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
               >
                 {item.attributes.file}
               </Link>
@@ -239,16 +270,6 @@ const EventReportPage = () => {
   return (
     <PageLayout menu={<ReportsMenu />} breadcrumbs={['reportTitle', 'reportEvents']}>
       <div className={classes.container}>
-        {selectedItem && (
-          <div className={classes.containerMap}>
-            <MapView>
-              <MapGeofence />
-              {position && <MapPositions positions={[position]} titleField="fixTime" />}
-            </MapView>
-            <MapScale />
-            {position && <MapCamera latitude={position.latitude} longitude={position.longitude} />}
-          </div>
-        )}
         <div className={classes.containerMain}>
           <div className={classes.header}>
             <ReportFilter
@@ -301,44 +322,70 @@ const EventReportPage = () => {
               <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
             </ReportFilter>
           </div>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell className={classes.columnAction} />
-                <TableCell>{t('sharedDevice')}</TableCell>
-                {columns.map((key) => (
-                  <TableCell key={key}>{t(columnsMap.get(key))}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {!loading ? (
-                items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className={classes.columnAction} padding="none">
-                      {(item.positionId &&
-                        (selectedItem === item ? (
-                          <IconButton size="small" onClick={() => setSelectedItem(null)}>
-                            <GpsFixedIcon fontSize="small" />
-                          </IconButton>
-                        ) : (
-                          <IconButton size="small" onClick={() => setSelectedItem(item)}>
-                            <LocationSearchingIcon fontSize="small" />
-                          </IconButton>
-                        ))) ||
-                        ''}
-                    </TableCell>
-                    <TableCell>{devices[item.deviceId].name}</TableCell>
-                    {columns.map((key) => (
-                      <TableCell key={key}>{formatValue(item, key)}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableShimmer columns={columns.length + 2} />
-              )}
-            </TableBody>
-          </Table>
+
+          {stats && !loading && (
+            <div className={classes.statCards}>
+              <div className={classes.statCard}>
+                <NotificationsIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('reportEvents')}</Typography>
+                <Typography className={classes.statValue}>{stats.total}</Typography>
+              </div>
+              <div className={classes.statCard}>
+                <NewReleasesIcon className={classes.statIcon} sx={{ color: '#f43f5e' }} />
+                <Typography className={classes.statLabel}>{t('sharedAlarms')}</Typography>
+                <Typography className={classes.statValue}>{stats.alarms}</Typography>
+              </div>
+              <div className={classes.statCard}>
+                <PlaceIcon className={classes.statIcon} sx={{ color: '#10b981' }} />
+                <Typography className={classes.statLabel}>{t('sharedGeofences')}</Typography>
+                <Typography className={classes.statValue}>{stats.geofences}</Typography>
+              </div>
+            </div>
+          )}
+
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Table className={classes.table} stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t('sharedDevice')}</TableCell>
+                  {columns.map((key) => (
+                    <TableCell key={key} sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t(columnsMap.get(key))}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!loading ? (
+                  items.map((item) => (
+                    <TableRow key={item.id} className={classes.tableRow}>
+                      <TableCell>
+                        <Typography className={classes.deviceName}>
+                          {devices[item.deviceId]?.name || t('sharedUnknown')}
+                        </Typography>
+                      </TableCell>
+                      {columns.map((key) => (
+                        <TableCell key={key}>
+                          <Typography className={classes.eventText}>
+                            {formatValue(item, key)}
+                          </Typography>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableShimmer columns={columns.length + 1} />
+                )}
+                {!loading && items.length === 0 && (
+                   <TableRow>
+                     <TableCell colSpan={columns.length + 1} align="center">
+                       <Typography sx={{ color: '#f8fafc', py: 8, fontSize: '0.9rem', fontWeight: 500 }}>
+                         {t('sharedNoData')}
+                       </Typography>
+                     </TableCell>
+                   </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Box>
         </div>
       </div>
     </PageLayout>

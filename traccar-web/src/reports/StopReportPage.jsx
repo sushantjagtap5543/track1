@@ -1,10 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow, Typography, Box } from '@mui/material';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
+import PanToolIcon from '@mui/icons-material/PanTool';
+import TimerIcon from '@mui/icons-material/Timer';
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
 import {
   formatAddress,
   formatDistance,
@@ -49,6 +52,7 @@ const StopReportPage = () => {
   const { classes } = useReportStyles();
   const t = useTranslation();
   const theme = useTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const devices = useSelector((state) => state.devices.items, deviceEquality(['id', 'name']));
 
@@ -81,10 +85,35 @@ const StopReportPage = () => {
     }
   });
 
+  const stats = useMemo(() => {
+    if (items.length === 0) return null;
+    const totalDuration = items.reduce((acc, item) => acc + item.duration, 0);
+    const totalFuel = items.reduce((acc, item) => acc + item.spentFuel, 0);
+
+    return {
+      count: items.length,
+      duration: formatNumericHours(totalDuration, t),
+      fuel: totalFuel > 0 ? formatVolume(totalFuel, volumeUnit, t) : null,
+    };
+  }, [items, t, volumeUnit]);
+
+  useEffect(() => {
+    if (!searchParams.get('from') || !searchParams.get('to')) {
+        const from = new Date();
+        from.setHours(0, 0, 0, 0);
+        const to = new Date();
+        to.setHours(23, 59, 59, 999);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('from', from.toISOString());
+        newParams.set('to', to.toISOString());
+        setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const onExport = useCatch(async () => {
     const sheets = new Map();
     items.forEach((item) => {
-      const deviceName = devices[item.deviceId].name;
+      const deviceName = devices[item.deviceId]?.name || item.deviceId;
       if (!sheets.has(deviceName)) {
         sheets.set(deviceName, []);
       }
@@ -112,7 +141,7 @@ const StopReportPage = () => {
     const value = item[key];
     switch (key) {
       case 'deviceId':
-        return devices[value].name;
+        return devices[value]?.name || value;
       case 'startTime':
       case 'endTime':
         return formatTime(value, 'minutes');
@@ -172,42 +201,86 @@ const StopReportPage = () => {
               <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
             </ReportFilter>
           </div>
-          <Table>
+
+          {stats && !loading && (
+            <div className={classes.statCards}>
+              <div className={classes.statCard}>
+                <PanToolIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('reportStops')}</Typography>
+                <Typography className={classes.statValue}>{stats.count}</Typography>
+              </div>
+              <div className={classes.statCard}>
+                <TimerIcon className={classes.statIcon} />
+                <Typography className={classes.statLabel}>{t('reportDuration')}</Typography>
+                <Typography className={classes.statValue}>{stats.duration}</Typography>
+              </div>
+              {stats.fuel && (
+                <div className={classes.statCard}>
+                  <LocalGasStationIcon className={classes.statIcon} />
+                  <Typography className={classes.statLabel}>{t('reportSpentFuel')}</Typography>
+                  <Typography className={classes.statValue}>{stats.fuel}</Typography>
+                </div>
+              )}
+            </div>
+          )}
+
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Table className={classes.table} stickyHeader>
             <TableHead>
               <TableRow>
                 <TableCell className={classes.columnAction} />
-                <TableCell>{t('sharedDevice')}</TableCell>
+                <TableCell sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t('sharedDevice')}</TableCell>
                 {columns.map((key) => (
-                  <TableCell key={key}>{t(columnsMap.get(key))}</TableCell>
+                  <TableCell key={key} sx={{ backgroundColor: 'rgba(30, 41, 59, 0.9) !important', backdropFilter: 'blur(8px)', zIndex: 11 }}>{t(columnsMap.get(key))}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {!loading ? (
                 items.map((item) => (
-                  <TableRow key={item.positionId}>
+                  <TableRow key={item.positionId} className={classes.tableRow}>
                     <TableCell className={classes.columnAction} padding="none">
-                      {selectedItem === item ? (
-                        <IconButton size="small" onClick={() => setSelectedItem(null)}>
-                          <GpsFixedIcon fontSize="small" />
-                        </IconButton>
-                      ) : (
-                        <IconButton size="small" onClick={() => setSelectedItem(item)}>
-                          <LocationSearchingIcon fontSize="small" />
-                        </IconButton>
-                      )}
+                      <div className={classes.columnActionContainer}>
+                        {selectedItem === item ? (
+                          <IconButton size="small" onClick={() => setSelectedItem(null)}>
+                            <GpsFixedIcon fontSize="small" sx={{ color: '#38bdf8' }} />
+                          </IconButton>
+                        ) : (
+                          <IconButton size="small" onClick={() => setSelectedItem(item)}>
+                            <LocationSearchingIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell>{devices[item.deviceId].name}</TableCell>
+                    <TableCell>
+                      <Typography className={classes.deviceName}>
+                        {devices[item.deviceId]?.name || item.deviceId}
+                      </Typography>
+                    </TableCell>
                     {columns.map((key) => (
-                      <TableCell key={key}>{formatValue(item, key)}</TableCell>
+                      <TableCell key={key}>
+                        <Typography className={classes.eventText}>
+                          {formatValue(item, key)}
+                        </Typography>
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableShimmer columns={columns.length + 2} startAction />
               )}
+              {!loading && items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 2} align="center">
+                    <Typography sx={{ color: '#f8fafc', py: 8, fontSize: '0.9rem', fontWeight: 500 }}>
+                      {t('sharedNoData')}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
-          </Table>
+            </Table>
+          </Box>
         </div>
       </div>
     </PageLayout>

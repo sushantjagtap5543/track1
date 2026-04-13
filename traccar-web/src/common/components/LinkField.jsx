@@ -86,6 +86,22 @@ const LinkField = ({
         isOptionEqualToValue={(i1, i2) => keyGetter(i1) === keyGetter(i2)}
         options={items || []}
         getOptionLabel={(item) => titleGetter(item)}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(30, 41, 59, 0.4)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            '&:hover': { backgroundColor: 'rgba(30, 41, 59, 0.6)' },
+          },
+          '& .MuiInputLabel-root': { color: '#94a3b8' },
+          '& .MuiInputBase-input': { color: '#f8fafc' },
+          '& .MuiChip-root': {
+            backgroundColor: 'rgba(56, 189, 248, 0.1) !important',
+            color: '#38bdf8 !important',
+            border: '1px solid rgba(56, 189, 248, 0.2)',
+          }
+        }}
         renderInput={(params) => (
           <TextField
             {...params}

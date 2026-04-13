@@ -1,18 +1,17 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Container,
-  Button,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Skeleton,
   Typography,
   TextField,
+  Box,
+  Button,
 } from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
 import { useCatch, useEffectAsync } from '../../reactHelper';
 import { useTranslation } from '../../common/components/LocalizationProvider';
 import PageLayout from '../../common/components/PageLayout';
-import useSettingsStyles from '../common/useSettingsStyles';
+import useReportStyles from '../../reports/common/useReportStyles';
 import fetchOrThrow from '../../common/util/fetchOrThrow';
 
 const EditItemView = ({
@@ -63,39 +62,52 @@ const EditItemView = ({
 
   return (
     <PageLayout menu={menu} breadcrumbs={breadcrumbs}>
-      <Container maxWidth="xs" className={classes.container}>
-        {item ? (
-          children
-        ) : (
-          <Accordion defaultExpanded>
-            <AccordionSummary>
-              <Typography variant="subtitle1">
-                <Skeleton width="10em" />
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={-i} width="100%">
-                  <TextField />
-                </Skeleton>
-              ))}
-            </AccordionDetails>
-          </Accordion>
-        )}
-        <div className={classes.buttons}>
-          <Button color="primary" variant="outlined" onClick={() => navigate(-1)} disabled={!item}>
-            {t('sharedCancel')}
-          </Button>
-          <Button
-            color="primary"
-            variant="contained"
-            onClick={handleSave}
-            disabled={!item || !validate()}
-          >
-            {t('sharedSave')}
-          </Button>
+      <div className={classes.container}>
+        <div className={classes.containerMain}>
+          <Box maxWidth="md" sx={{ width: '100%', mx: 'auto', p: { xs: 2, md: 4 } }}>
+            {item ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {children}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Skeleton variant="rectangular" height={60} sx={{ borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.05)' }} />
+                <Skeleton variant="rectangular" height={200} sx={{ borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.05)' }} />
+                <Skeleton variant="rectangular" height={200} sx={{ borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.05)' }} />
+              </Box>
+            )}
+            
+            <Box sx={{ 
+              display: 'flex', gap: 2, mt: 6, pt: 4, 
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              position: 'sticky', bottom: 0, 
+              background: 'rgba(15, 23, 42, 0.01)', 
+              backdropFilter: 'blur(5px)' 
+            }}>
+              <Button 
+                fullWidth
+                variant="outlined"
+                startIcon={<CloseIcon />}
+                disabled={!item}
+                sx={{ py: 1.8 }}
+                onClick={() => navigate(-1)}
+              >
+                {t('sharedCancel')}
+              </Button>
+              <Button 
+                fullWidth
+                variant="contained"
+                startIcon={<SaveIcon />}
+                disabled={!item || (validate && !validate())}
+                sx={{ py: 1.8 }}
+                onClick={handleSave}
+              >
+                {t('sharedSave')}
+              </Button>
+            </Box>
+          </Box>
         </div>
-      </Container>
+      </div>
     </PageLayout>
   );
 };

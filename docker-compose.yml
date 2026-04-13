@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-geosurepath}
     ports:
       - "5432:5432"
+    command: ["postgres", "-c", "synchronous_commit=off", "-c", "max_wal_size=2GB", "-c", "checkpoint_timeout=15min", "-c", "shared_buffers=2GB", "-c", "work_mem=64MB"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-geosurepath}"]
       interval: 5s
@@ -18,7 +19,7 @@ services:
       resources:
         limits:
           cpus: '0.50'
-          memory: 512M
+          memory: 2G
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -59,7 +60,9 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 1G
+          memory: 2.5G
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx2g
     ports:
       - "5001-5150:5001-5150/tcp"
       - "5001-5150:5001-5150/udp"
@@ -89,7 +92,7 @@ services:
       resources:
         limits:
           cpus: '0.50'
-          memory: 512M
+          memory: 1G
     # No direct port exposure (Nginx only)
     env_file:
       - ./saas/.env

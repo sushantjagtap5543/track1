@@ -8,22 +8,23 @@ const ColumnSelect = ({ columns, setColumns, columnsArray, rawValues, disabled }
 
   return (
     <div className={classes.filterItem}>
-      <FormControl fullWidth>
-        <InputLabel>{t('sharedColumns')}</InputLabel>
-        <Select
-          label={t('sharedColumns')}
-          value={columns}
-          onChange={(e) => setColumns(e.target.value)}
-          multiple
-          disabled={disabled}
-        >
-          {columnsArray.map(([key, string]) => (
-            <MenuItem key={key} value={key}>
-              {rawValues ? string : t(string)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <TextField
+        select
+        fullWidth
+        label={t('sharedColumns')}
+        value={columns}
+        onChange={(e) => setColumns(e.target.value)}
+        SelectProps={{
+          multiple: true,
+        }}
+        disabled={disabled}
+      >
+        {columnsArray.map(([key, string]) => (
+          <MenuItem key={key} value={key}>
+            {rawValues ? string : t(string)}
+          </MenuItem>
+        ))}
+      </TextField>
     </div>
   );
 };
