@@ -400,6 +400,8 @@
     "mapLocationIqStreets": "LocationIQ Streets",
     "mapLocationIqDark": "LocationIQ Dark",
     "mapLocationIqKey": "LocationIQ Access Token",
+    "mapEsriSatellite": "Esri Satellite",
+    "mapStadiaSmooth": "Stadia Smooth",
     "mapTomTomBasic": "TomTom Basic",
     "mapTomTomFlow": "TomTom Traffic Flow",
     "mapTomTomIncidents": "TomTom Traffic Incidents",
@@ -628,6 +630,7 @@
     "categoryTruck": "Truck",
     "categoryVan": "Van",
     "categoryScooter": "Scooter",
+    "categoryAis140": "AIS140",
     "maintenanceStart": "Start",
     "maintenancePeriod": "Period"
 }

@@ -5,13 +5,16 @@ const validatedColor = (color) => (/^#([0-9A-Fa-f]{3}){1,2}$/.test(color) ? colo
 export default (server, darkMode) => ({
   mode: darkMode ? 'dark' : 'light',
   background: {
-    default: darkMode ? grey[900] : grey[50],
+    default: darkMode ? '#020617' : '#f8fafc',
+    paper: darkMode ? '#0f172a' : '#ffffff',
   },
   primary: {
-    main: validatedColor(server?.attributes?.colorPrimary) || (darkMode ? '#3b82f6' : '#1d4ed8'),
+    main: validatedColor(server?.attributes?.colorPrimary) || '#3b82f6',
+    light: '#60a5fa',
+    dark: '#2563eb',
   },
   secondary: {
-    main: validatedColor(server?.attributes?.colorSecondary) || (darkMode ? '#10b981' : '#059669'),
+    main: validatedColor(server?.attributes?.colorSecondary) || '#10b981',
   },
   neutral: {
     main: grey[500],
@@ -19,7 +22,13 @@ export default (server, darkMode) => ({
   geometry: {
     main: '#3bb2d0',
   },
-  alwaysDark: {
-    main: grey[900],
+  error: {
+    main: '#ef4444',
+  },
+  warning: {
+    main: '#f59e0b',
+  },
+  success: {
+    main: '#22c55e',
   },
 });

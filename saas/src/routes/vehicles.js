@@ -15,4 +15,7 @@ router.post('/engine', vehicleController.toggleEngine);
 // Safe parking toggle
 router.post('/safe-parking', vehicleController.toggleSafeParking);
 
+// Delete vehicle (Soft Delete)
+router.delete('/:vehicleId', vehicleController.deleteVehicle);
+
 module.exports = router;

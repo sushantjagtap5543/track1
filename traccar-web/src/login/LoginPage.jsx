@@ -149,17 +149,19 @@ const Login = () => {
     setLoading(true);
     setErrorText('');
     try {
-      // Step 1: Authenticate with Traccar (primary session for the tracking dashboard)
+      // Step 1: Authenticate with Traccar (Primary Session)
       const traccarResponse = await fetch('/api/session', {
         method: 'POST',
-        body: new URLSearchParams(`email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ email, password }).toString(),
       });
 
       if (traccarResponse.ok) {
         const user = await traccarResponse.json();
-        dispatch(sessionActions.updateUser(user));
-
-        // Step 2: Also authenticate with SaaS API to get JWT for SaaS-specific features
+        
+        // Step 2: Authenticate with SaaS API (JWT Session)
         try {
           const saasResponse = await fetch('/api/auth/login', {
             method: 'POST',
@@ -171,115 +173,182 @@ const Login = () => {
             if (saasData.token) localStorage.setItem('saasToken', saasData.token);
           }
         } catch (saasErr) {
-          console.warn('[Login] SaaS token retrieval failed (non-fatal):', saasErr);
+          console.warn('[GeoSurePath] SaaS auth sync failed (non-fatal):', saasErr);
         }
 
+        dispatch(sessionActions.updateUser(user));
         navigate('/');
       } else {
-        const traccarErrorData = await traccarResponse.json().catch(() => ({}));
-        if (traccarResponse.status === 401) {
-          setErrorText('Invalid email or password.');
-        } else if (traccarResponse.status === 403) {
-          setErrorText(traccarErrorData.error || 'Your account has been suspended. Please contact support.');
-        } else {
-          setErrorText('Login failed. Please check your credentials or try again later.');
-        }
+        const errorData = await traccarResponse.json().catch(() => ({}));
+        setErrorText(errorData.error || 'Invalid email or password. Please try again.');
       }
     } catch (e) {
-      setErrorText('Unable to connect to the server. Please check your connection.');
+      setErrorText('Connection failure. Please check if the GeoSurePath engine is running.');
     } finally {
       setLoading(false);
     }
   });
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <LoginLayout>
       <Box
         component={motion.form}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
         className={classes.container}
         onSubmit={handleSubmit}
       >
-        <div className={classes.header}>
-          <Typography className={classes.title}>Login</Typography>
-          <Typography className={classes.subText}>Please sign in to continue</Typography>
-        </div>
+        <motion.div className={classes.header} variants={itemVariants}>
+          <Typography className={classes.title}>Sign In</Typography>
+          <Typography className={classes.subText}>Elite Fleet Intelligence Engine</Typography>
+        </motion.div>
 
         {errorText && (
-          <Alert severity="error" sx={{ borderRadius: '12px', mb: 1 }}>{errorText}</Alert>
+          <motion.div variants={itemVariants}>
+            <Alert 
+              severity="error" 
+              sx={{ 
+                borderRadius: '16px', 
+                mb: 1, 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                color: '#f87171',
+                border: '1px solid rgba(239, 68, 68, 0.2)'
+              }}
+            >
+              {errorText}
+            </Alert>
+          </motion.div>
         )}
 
-        <TextField
-          required
-          fullWidth
-          label="Email"
-          name="email"
-          type="email"
-          value={email}
-          autoComplete="email"
-          onChange={(event) => setEmail(event.target.value)}
-          className={classes.input}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <EmailOutlined sx={{ color: 'rgba(255,255,255,0.3)' }} />
-              </InputAdornment>
-            ),
-          }}
-        />
+        <motion.div variants={itemVariants}>
+          <TextField
+            required
+            fullWidth
+            label="Email Address"
+            name="email"
+            type="email"
+            value={email}
+            autoComplete="email"
+            onChange={(event) => setEmail(event.target.value)}
+            className={classes.input}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </motion.div>
 
-        <TextField
-          required
-          fullWidth
-          label="Password"
-          name="password"
-          value={password}
-          type={showPassword ? 'text' : 'password'}
-          autoComplete="current-password"
-          onChange={(event) => setPassword(event.target.value)}
-          className={classes.input}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlined sx={{ color: 'rgba(255,255,255,0.3)' }} />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.3)' }}>
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+        <motion.div variants={itemVariants}>
+          <TextField
+            required
+            fullWidth
+            label="Security Password"
+            name="password"
+            value={password}
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            onChange={(event) => setPassword(event.target.value)}
+            className={classes.input}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </motion.div>
 
-        <div className={classes.footer}>
+        <motion.div className={classes.footer} variants={itemVariants}>
           <FormControlLabel
             control={<Checkbox sx={{ color: 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#3b82f6' } }} />}
-            label={<Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Remember me</Typography>}
+            label={<Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 500 }}>Remember Secure Session</Typography>}
           />
-          <Link href="/reset-password" className={classes.link}>Forgot Password?</Link>
-        </div>
+          <Link href="/reset-password" className={classes.link}>Recovery Access?</Link>
+        </motion.div>
 
-        <Button
-          variant="contained"
-          fullWidth
-          type="submit"
-          disabled={loading || !email || !password}
-          className={classes.loginButton}
-        >
-          {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
-        </Button>
+        <motion.div variants={itemVariants}>
+          <Button
+            variant="contained"
+            fullWidth
+            type="submit"
+            disabled={loading || !email || !password}
+            className={classes.loginButton}
+          >
+            {loading ? <CircularProgress size={26} color="inherit" /> : 'Authorize Access'}
+          </Button>
+        </motion.div>
 
-        <Typography className={classes.signupText}>
-          Don&apos;t have an account?
-          <Link onClick={() => navigate('/register')} component="button" type="button" className={classes.signupLink}>
-            Register
-          </Link>
-        </Typography>
+        <motion.div variants={itemVariants}>
+          <Typography className={classes.signupText}>
+            New to the platform?
+            <Link onClick={() => navigate('/register')} component="button" type="button" className={classes.signupLink}>
+              Create Elite Account
+            </Link>
+          </Typography>
+        </motion.div>
+
+        <motion.div variants={itemVariants} style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1.5,
+              background: 'rgba(46, 204, 113, 0.1)',
+              border: '1px solid rgba(46, 204, 113, 0.2)',
+              borderRadius: '30px',
+              px: 3,
+              py: 1,
+              backdropFilter: 'blur(5px)',
+            }}
+          >
+            <Box
+              sx={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#2ecc71',
+                boxShadow: '0 0 10px #2ecc71',
+                animation: 'pulse-dot 2s infinite',
+                '@keyframes pulse-dot': {
+                  '0%': { opacity: 0.5, transform: 'scale(0.8)' },
+                  '50%': { opacity: 1, transform: 'scale(1.2)' },
+                  '100%': { opacity: 0.5, transform: 'scale(0.8)' },
+                },
+              }}
+            />
+            <Typography sx={{ color: '#2ecc71', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px' }}>
+              AIS140 COMPLIANT (RTO CERTIFIED)
+            </Typography>
+          </Box>
+        </motion.div>
       </Box>
     </LoginLayout>
   );

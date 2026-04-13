@@ -69,9 +69,13 @@ public class AttributeComputationProvider {
                 .loops(config.getBoolean(Keys.PROCESSING_COMPUTED_ATTRIBUTES_LOOPS))
                 .newInstance(config.getBoolean(Keys.PROCESSING_COMPUTED_ATTRIBUTES_NEW_INSTANCE_CREATION))
                 .structuredLiteral(true);
+        Map<String, Object> namespaces = new HashMap<>();
+        namespaces.put("math", Math.class);
+        namespaces.put("safe", com.safe.Functions.class);
+
         engine = new JexlBuilder()
                 .strict(true)
-                .namespaces(Collections.singletonMap("math", Math.class))
+                .namespaces(namespaces)
                 .sandbox(sandbox)
                 .create();
         includeDeviceAttributes = config.getBoolean(Keys.PROCESSING_COMPUTED_ATTRIBUTES_DEVICE_ATTRIBUTES);

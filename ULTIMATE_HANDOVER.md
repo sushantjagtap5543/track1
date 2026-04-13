@@ -12,7 +12,7 @@ GeoSurePath Track1 has been transformed from a prototype repository into a world
 ## 3. Maintenance Protocols
 - **Diagnostics**: Use `./geosure.sh doctor` for environmental auto-healing.
 - **Observability**: Monitor `/api/status` for real-time predictive health trends.
-- **Audit Reports**: Reference `comprehensive_audit_final_3000.md` for the full technical legacy.
+- **Audit Reports**: Reference `comprehensive_audit_200.md` for the latest technical hardening audit.
 
 ## 4. Future Roadmap
 - **Blockchain Integration**: Use the `cryptoWorker` for immutable position signing.

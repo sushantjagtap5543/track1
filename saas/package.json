@@ -11,22 +11,24 @@
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "@prisma/client": "5.0.0",
-    "bcrypt": "5.1.0",
+    "@prisma/client": "5.22.0",
+    "bcrypt": "5.1.1",
     "bullmq": "4.0.0",
     "cors": "2.8.5",
-    "dotenv": "16.0.0",
-    "express": "4.18.2",
-    "express-rate-limit": "7.1.0",
-    "ioredis": "5.3.2",
-    "jsonwebtoken": "9.0.0",
-    "prom-client": "15.0.0",
+    "dotenv": "16.4.5",
+    "express": "4.19.2",
+    "express-rate-limit": "7.2.0",
+    "helmet": "7.1.0",
+    "ioredis": "5.4.1",
+    "jsonwebtoken": "9.0.2",
+    "prom-client": "15.1.0",
     "qrcode": "1.5.3",
+    "razorpay": "^2.9.6",
     "speakeasy": "2.0.0",
     "swagger-jsdoc": "6.2.8",
     "swagger-ui-express": "5.0.0",
     "uuid": "9.0.1",
-    "zod": "3.22.4"
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "eslint": "8.52.0",

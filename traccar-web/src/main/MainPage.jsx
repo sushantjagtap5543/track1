@@ -18,6 +18,12 @@ import { useAttributePreference } from '../common/util/preferences';
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
+    width: '100%',
+    overflow: 'hidden',
+    // Global UI Scaling for extreme high-density dashboard feel
+    '& > *': {
+       zoom: '0.8', 
+    }
   },
   sidebar: {
     pointerEvents: 'none',
@@ -25,12 +31,15 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: 'column',
     [theme.breakpoints.up('md')]: {
       position: 'fixed',
-      left: 0,
-      top: 0,
-      height: `calc(100% - ${theme.spacing(3)})`,
+      left: theme.spacing(1),
+      top: theme.spacing(1),
+      height: `calc(100% - ${theme.spacing(2)})`,
       width: theme.dimensions.drawerWidthDesktop,
-      margin: theme.spacing(1.5),
       zIndex: 3,
+      padding: theme.spacing(1),
+      gap: theme.spacing(1),
+      display: 'flex',
+      flexDirection: 'column',
     },
     [theme.breakpoints.down('md')]: {
       height: '100%',
@@ -44,6 +53,7 @@ const useStyles = makeStyles()((theme) => ({
   footer: {
     pointerEvents: 'auto',
     zIndex: 5,
+    marginTop: 'auto',
   },
   middle: {
     flex: 1,
@@ -120,7 +130,7 @@ const MainPage = () => {
         />
       )}
       <div className={classes.sidebar}>
-        <Paper square className={classes.header}>
+        <Paper elevation={3} className={classes.header} sx={{ borderRadius: '12px', overflow: 'hidden', backgroundColor: 'rgba(15, 23, 42, 0.96)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
           <MainToolbar
             filteredDevices={filteredDevices}
             devicesOpen={devicesOpen}
@@ -146,9 +156,9 @@ const MainPage = () => {
             </div>
           )}
           <Paper
-            square
+            elevation={3}
             className={classes.contentList}
-            style={devicesOpen ? {} : { visibility: 'hidden' }}
+            style={devicesOpen ? { backgroundColor: 'rgba(15, 23, 42, 0.96)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)', overflow: 'hidden' } : { visibility: 'hidden' }}
           >
             <DeviceList devices={filteredDevices} />
           </Paper>

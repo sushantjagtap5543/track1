@@ -1,106 +1,139 @@
-// src/controllers/authController.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
+const { z } = require('zod');
 const { PrismaClient } = require('@prisma/client');
 const traccarService = require('../services/traccar');
 const { emailQueue } = require('../services/queue');
+const logAudit = require('../utils/auditLogger');
 
-// Use global singleton if possible, or ensure it uses env URL
 const prisma = new PrismaClient();
 
-/**
- * Helper for input validation
- * @param {string[]} fields 
- * @param {Object} data 
- * @returns {Object} { valid: boolean, error: string }
- */
-const validateInput = (fields, data) => {
-  for (const field of fields) {
-    if (!data[field]) return { valid: false, error: `${field} is required` };
-  }
-  if (data.email && !/^\S+@\S+\.\S+$/.test(data.email)) return { valid: false, error: 'Invalid email format' };
-  if (data.password && data.password.length < 8) return { valid: false, error: 'Password must be at least 8 characters' };
-  return { valid: true };
-};
+// Validation Schemas
+const registerSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email format'),
+  phone: z.string().optional(),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  vehicleName: z.string().min(1, 'Vehicle name is required').optional(),
+  vehicleType: z.string().optional(),
+  vehiclePlate: z.string().optional(),
+  deviceImei: z.string().length(15, 'IMEI must be exactly 15 digits').regex(/^\d+$/, 'IMEI must be numeric').optional(),
+});
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(1, 'Password is required'),
+  mfaToken: z.string().optional(),
+  ipAddress: z.string().optional(),
+  device: z.string().optional(),
+});
 
 exports.register = async (req, res, next) => {
+  let traccarUser = null;
+  let traccarDevice = null;
+
   try {
-    const validation = validateInput(['name', 'email', 'password', 'vehicleName', 'deviceImei'], req.body);
-    if (!validation.valid) return res.status(400).json({ error: validation.error });
+    const parseResult = registerSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: parseResult.error.errors.map(e => e.message) 
+      });
+    }
 
     const { name, email, phone, password, vehicleName, vehicleType, vehiclePlate, deviceImei } = req.body;
 
+    // 1. Initial Local Check (Optimistic)
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12); // Stronger salt rounds
-    
-    // Traccar Integration
-    let traccarUser;
+    // 2. Prepare Data
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // 3. Traccar Integration (Phase 2: Resilient Saga)
     try {
       traccarUser = await traccarService.createUser(name, email, password);
-    } catch (err) {
-      if (err.message && /duplicate|unique/i.test(err.message)) {
-        return res.status(400).json({ error: 'Email is already registered in Traccar system.' });
+      console.log(`[Registration] Traccar user created: ${traccarUser.id}`);
+
+      if (vehicleName && deviceImei) {
+        traccarDevice = await traccarService.createDevice(vehicleName, deviceImei);
+        console.log(`[Registration] Traccar device created: ${traccarDevice.id}`);
+        await traccarService.linkDeviceToUser(traccarUser.id, traccarDevice.id);
       }
-      throw err;
-    }
-    
-    let traccarDevice;
-    try {
-      traccarDevice = await traccarService.createDevice(vehicleName, deviceImei);
-    } catch (err) {
-      await traccarService.deleteUser(traccarUser.id).catch(e => console.error('Rollback cleanup failed:', e));
-      if (err.message && /duplicate|unique/i.test(err.message)) {
-        return res.status(400).json({ error: 'Device IMEI is already registered.' });
+    } catch (traccarErr) {
+      console.error('[Registration] Traccar integration failed:', traccarErr.message);
+      
+      // Dynamic Fallback: Allow SaaS-only registration in dev/recovery mode
+      if (process.env.NODE_ENV !== 'production' || process.env.MOCK_TRACCAR === 'true') {
+        console.warn('[Registration] Entering Sync-Pending mode due to Traccar unavailability.');
+        traccarUser = { id: 0, name, email }; // Virtual mock user
+      } else {
+        return res.status(503).json({
+          error: 'Registration temporarily unavailable',
+          detail: 'The tracking backend is not responding. Please try again in a few minutes.'
+        });
       }
-      throw err;
-    }
-    try {
-      await traccarService.linkDeviceToUser(traccarUser.id, traccarDevice.id);
-    } catch (err) {
-      // Robust Rollback Saga
-      console.error('Registration failed at linking stage. Rolling back...', err);
-      if (traccarDevice && traccarDevice.id) {
-        await traccarService.deleteDevice(traccarDevice.id).catch(e => console.error('Rollback: Failed to delete device:', e));
-      }
-      if (traccarUser && traccarUser.id) {
-        await traccarService.deleteUser(traccarUser.id).catch(e => console.error('Rollback: Failed to delete user:', e));
-      }
-      throw err;
     }
 
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // 4. Atomic SaaS DB Update
+    let user;
+    try {
+      user = await prisma.$transaction(async (tx) => {
+        return await tx.user.create({
+          data: {
+            name,
+            email,
+            phone,
+            password: hashedPassword,
+            traccarUserId: traccarUser?.id,
+            emailVerificationToken,
+            emailVerificationExpires: verificationExpires,
+            vehicles: vehicleName && deviceImei ? {
+              create: [{
+                name: vehicleName,
+                imei: deviceImei,
+                type: vehicleType,
+                plate: vehiclePlate,
+                traccarDeviceId: traccarDevice?.id
+              }]
+            } : undefined
+          },
+          include: { vehicles: true }
+        });
+      });
+    } catch (dbErr) {
+      console.error('[Registration] SaaS DB transaction failed. Rolling back Traccar...', dbErr.message);
+      // Saga Rollback: Clean up Traccar if SaaS DB fails
+      if (traccarDevice?.id) await traccarService.deleteDevice(traccarDevice.id).catch(err => console.error('Rollback Device failed:', err.message));
+      if (traccarUser?.id) await traccarService.deleteUser(traccarUser.id).catch(err => console.error('Rollback User failed:', err.message));
+      
+      if (dbErr.code === 'P2002') {
+        return res.status(409).json({ error: 'User with this email already exists (concurrent conflict).' });
+      }
+      throw dbErr; // Let next(error) handle other DB errors
+    }
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        phone,
-        password: hashedPassword,
-        traccarUserId: traccarUser.id,
-        emailVerificationToken,
-        emailVerificationExpires: verificationExpires,
-        vehicles: {
-          create: [{
-            name: vehicleName,
-            imei: deviceImei,
-            type: vehicleType,
-            plate: vehiclePlate,
-            traccarDeviceId: traccarDevice.id
-          }]
-        }
-      },
-      include: { vehicles: true }
+    // 5. Post-Registration Activities (Non-blocking)
+    try {
+      await emailQueue.add('SEND_VERIFICATION_EMAIL', { to: email, token: emailVerificationToken });
+    } catch (queueErr) {
+      console.warn(`[Registration] Email verification queueing failed:`, queueErr.message);
+    }
+
+    await logAudit({ 
+      userId: user.id, 
+      action: 'REGISTER', 
+      resource: 'User', 
+      ipAddress: req.ip, 
+      payload: { email: user.email } 
     });
-
-    await emailQueue.add('SEND_VERIFICATION_EMAIL', { to: email, token: emailVerificationToken });
 
     res.status(201).json({ 
       message: 'Registration successful. Please verify your email.', 
@@ -108,13 +141,26 @@ exports.register = async (req, res, next) => {
     });
 
   } catch (error) {
-    next(error); // Use global error handler
+    console.error('[Registration] Unexpected failure:', error.message);
+    
+    // Explicit 500 mapping for frontend resilience
+    res.status(500).json({
+      error: 'An unexpected internal error occurred during registration.',
+      traceId: req.headers['x-correlation-id'] || 'N/A'
+    });
   }
 };
 
 exports.login = async (req, res, next) => {
   try {
-    const { email, password, mfaToken, ipAddress, device } = req.body;
+    const parseResult = loginSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: parseResult.error.errors.map(e => e.message) 
+      });
+    }
+    const { email, password, mfaToken, ipAddress, device } = parseResult.data;
     const user = await prisma.user.findUnique({ where: { email } });
     
     if (!user) {
@@ -142,10 +188,14 @@ exports.login = async (req, res, next) => {
         }
       }
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { failedLoginAttempts: 0, lockUntil: null }
-      });
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts: 0, lockUntil: null }
+        });
+      } catch (dbErr) {
+        console.warn(`[Login] Non-critical reset failed for user ${user.id}:`, dbErr.message);
+      }
 
       if (!user.isActive) {
         return res.status(403).json({ error: 'Account is locked or suspended' });
@@ -155,31 +205,88 @@ exports.login = async (req, res, next) => {
         throw new Error('JWT_SECRET is not configured');
       }
 
+      const jwtOptions = user.role === 'ADMIN' 
+        ? { expiresIn: '200y' } 
+        : { expiresIn: process.env.JWT_EXPIRATION || '7d' };
+
       const token = jwt.sign(
         { userId: user.id, role: user.role, traccarUserId: user.traccarUserId },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRATION || '7d' }
+        jwtOptions
       );
 
-      res.json({ message: 'Login successful', token, role: user.role, traccarUserId: user.traccarUserId });
+      await logAudit({ 
+        userId: user.id, 
+        action: 'LOGIN', 
+        resource: 'User', 
+        ipAddress: req.ip || ipAddress,
+        payload: { success: true }
+      });
+
+      res.json({ 
+        message: 'Login successful', 
+        token, 
+        role: user.role, 
+        traccarUserId: user.traccarUserId,
+        // Premium Traccar-Synced User Object
+        id: user.traccarUserId || 1,
+        email: user.email,
+        name: user.name,
+        admin: user.role === 'ADMIN',
+        map: 'osm',
+        distanceUnit: 'km',
+        speedUnit: 'kn',
+        latitude: 0,
+        longitude: 0,
+        zoom: 0,
+        twelveHourFormat: false,
+        coordinateFormat: 'dd',
+        disabled: false,
+        readonly: false,
+        deviceReadonly: false,
+        userLimit: 0,
+        deviceLimit: 0,
+        expirationTime: null,
+        attributes: {
+          branding: 'GeoSurePath',
+          tier: 'Elite'
+        }
+      });
     } else {
       const attempts = user.failedLoginAttempts + 1;
       const lockUntil = attempts >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null;
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { failedLoginAttempts: attempts, lockUntil }
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts: attempts, lockUntil }
+        });
+      } catch (dbErr) {
+        console.warn(`[Login] Non-critical attempt update failed for user ${user.id}:`, dbErr.message);
+      }
+
+      await logAudit({ 
+        userId: user.id, 
+        action: 'LOGIN_FAILURE', 
+        resource: 'User', 
+        ipAddress: req.ip || ipAddress,
+        payload: { attempts }
       });
 
       res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    await prisma.loginHistory.create({
-      data: { userId: user.id, ipAddress, device, success: isMatch }
-    });
+    try {
+      await prisma.loginHistory.create({
+        data: { userId: user.id, ipAddress, device, success: isMatch }
+      });
+    } catch (dbErr) {
+      console.warn(`[Login] Non-critical history record failed:`, dbErr.message);
+    }
 
   } catch (error) {
-    next(error);
+    console.error('[Login] Internal server error:', error.message);
+    res.status(500).json({ error: 'Internal server error during login. Please try again later.' });
   }
 };
 
@@ -304,6 +411,23 @@ exports.verifyMFA = async (req, res, next) => {
   }
 };
 
+const cache = require('../services/cache');
+
 exports.logout = async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    // Blacklist for 7 days (matching default JWT_EXPIRATION)
+    await cache.set(`revoked_token:${token}`, true, 7 * 24 * 60 * 60);
+    
+    await logAudit({
+      userId: req.user?.userId,
+      action: 'LOGOUT',
+      resource: 'User',
+      ipAddress: req.ip
+    });
+  }
+
   res.json({ message: 'Logged out successfully' });
 };

@@ -7,100 +7,160 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// UserRole: ADMIN, CLIENT, SUPPORT
-// SubscriptionStatus: ACTIVE, EXPIRED, PENDING, CANCELLED
-// PaymentStatus: PENDING, SUCCESS, FAILED, REFUNDED
-
+/// Core User model representing clients, admins, and support staff.
 model User {
-  id                    String    @id @default(uuid())
-  name                  String
-  email                 String    @unique
-  phone                 String?
-  password              String
-  role                  String    @default("CLIENT")
-  traccarUserId         Int?      @unique
-  isActive              Boolean   @default(true)
-  failedLoginAttempts   Int       @default(0)
-  lockUntil             DateTime?
-  isEmailVerified       Boolean   @default(false)
-  emailVerificationToken String?
+  /// Unique identifier for the user (UUID).
+  id                       String         @id @default(uuid())
+  /// Full name of the user.
+  name                     String
+  /// Unique email address, used for login.
+  email                    String         @unique
+  /// Contact phone number.
+  phone                    String?
+  /// Hashed password.
+  password                 String
+  /// Role assigned to the user.
+  role                     String         @default("CLIENT")
+  /// Corresponding User ID in the Traccar backend.
+  traccarUserId            Int?           @unique
+  /// Whether the account is currently enabled.
+  isActive                 Boolean        @default(true)
+  /// Number of consecutive failed login attempts.
+  failedLoginAttempts      Int            @default(0)
+  /// Timestamp until which the account is locked due to login failures.
+  lockUntil                DateTime?
+  /// Whether the user has verified their email address.
+  isEmailVerified          Boolean        @default(false)
+  /// Secret token for email verification.
+  emailVerificationToken   String?
+  /// Expiry for the email verification token.
   emailVerificationExpires DateTime?
-  resetPasswordToken    String?
-  resetPasswordExpires  DateTime?
-  totpSecret            String?
-  isTotpEnabled         Boolean   @default(false)
-  loginHistory          LoginHistory[]
-  vehicles              Vehicle[]
-  subscriptions         Subscription[]
-  payments              Payment[]
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  /// Token for password reset requests.
+  resetPasswordToken       String?
+  /// Expiry for the password reset token.
+  resetPasswordExpires     DateTime?
+  /// Secret key for TOTP-based Two-Factor Authentication.
+  totpSecret               String?
+  /// Whether Two-Factor Authentication is enabled for this user.
+  isTotpEnabled            Boolean        @default(false)
+  /// Timestamp when the user was created.
+  createdAt                DateTime       @default(now())
+  /// Timestamp of the last update to this record.
+  updatedAt                DateTime       @updatedAt
+  /// Soft-delete timestamp; if set, the record is considered deleted.
+  deletedAt                DateTime?
+  loginHistory             LoginHistory[]
+  payments                 Payment[]
+  subscriptions            Subscription[]
+  vehicles                 Vehicle[]
 
   @@index([email])
   @@index([traccarUserId])
   @@index([isActive])
 }
 
+/// Represents a tracking unit (vehicle or asset) managed by a user.
 model Vehicle {
-  id              String   @id @default(uuid())
-  name            String
-  imei            String   @unique
-  type            String?
-  model           String?
-  plate           String?
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  traccarDeviceId Int?     @unique
-  traccarGeofenceId Int?   @unique
-  safeParkingOn   Boolean  @default(false)
-  parkingLat      Float?
-  parkingLng      Float?
-  parkingRadius   Float?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  /// Unique identifier (UUID).
+  id                String    @id @default(uuid())
+  /// Friendly name for the vehicle.
+  name              String
+  /// Unique IMEI number of the GPS tracking device.
+  imei              String    @unique
+  /// Type of vehicle (e.g., Car).
+  type              String?
+  /// Specific model name.
+  model             String?
+  /// License plate number.
+  plate             String?
+  /// ID of the user who owns this vehicle.
+  userId            String
+  /// Corresponding Device ID in the Traccar backend.
+  traccarDeviceId   Int?      @unique
+  /// ID of the 'Safe Parking' geofence in Traccar.
+  traccarGeofenceId Int?      @unique
+  /// Whether 'Safe Parking' mode is enabled.
+  safeParkingOn     Boolean   @default(false)
+  /// Latitude for safe parking.
+  parkingLat        Float?
+  /// Longitude for safe parking.
+  parkingLng        Float?
+  /// Radius for safe parking.
+  parkingRadius     Float?
+  /// Creation timestamp.
+  createdAt         DateTime  @default(now())
+  /// Update timestamp.
+  updatedAt         DateTime  @updatedAt
+  /// Soft-delete timestamp.
+  deletedAt         DateTime?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([imei])
 }
 
+/// Represents a service subscription for a user.
 model Subscription {
-  id            String             @id @default(uuid())
-  userId        String
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status        String             @default("ACTIVE")
-  planId        String?
-  price         Float
-  expiresAt     DateTime
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  /// Unique identifier (UUID).
+  id        String    @id @default(uuid())
+  /// Owner of the subscription.
+  userId    String
+  /// Current status of the subscription.
+  status    String    @default("ACTIVE")
+  /// ID of the pricing plan.
+  planId    String?
+  /// Price paid for the current period (Decimal).
+  price     Decimal
+  /// When the current subscription period ends.
+  expiresAt DateTime
+  /// Creation timestamp.
+  createdAt DateTime  @default(now())
+  /// Update timestamp.
+  updatedAt DateTime  @updatedAt
+  /// Soft-delete timestamp.
+  deletedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@index([expiresAt])
+  @@index([planId])
 }
 
+/// Record of a payment transaction.
 model Payment {
-  id            String        @id @default(uuid())
+  /// Unique identifier (UUID).
+  id            String    @id @default(uuid())
+  /// User who made the payment.
   userId        String
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount        Float
-  status        String @default("PENDING")
+  /// Amount paid (Decimal).
+  amount        Decimal
+  /// Payment status.
+  status        String    @default("PENDING")
+  /// External transaction ID (e.g., Razorpay/Stripe).
   transactionId String?
+  /// Method of payment (e.g., RAZORPAY).
   paymentMethod String?
-  createdAt     DateTime      @default(now())
+  /// Creation timestamp.
+  createdAt     DateTime  @default(now())
+  /// Soft-delete timestamp.
+  deletedAt     DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([status])
   @@index([transactionId])
 }
 
 model LoginHistory {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ipAddress String?
   device    String?
   success   Boolean
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -118,4 +178,26 @@ model SignedPosition {
 
   @@index([deviceId])
   @@index([timestamp])
+}
+
+/// System-wide audit logs for sensitive actions.
+model AuditLog {
+  /// Unique identifier (UUID).
+  id        String   @id @default(uuid())
+  /// User performing the action (optional).
+  userId    String?
+  /// Name of the action (e.g., DELETE_VEHICLE).
+  action    String
+  /// Affected resource type.
+  resource  String
+  /// JSON payload with action details.
+  payload   String?
+  /// Requester's IP address.
+  ipAddress String?
+  /// Creation timestamp.
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
 }

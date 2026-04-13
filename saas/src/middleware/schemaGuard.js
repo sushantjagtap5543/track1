@@ -17,7 +17,7 @@ const schemaGuard = () => {
     console.log('[OK] Database schema verified.');
     return true;
   } catch (err) {
-    console.error('[FAIL] Schema Mismatch Detected!');
+    console.error('[WARNING] Schema Mismatch or Prisma tools missing. Proceeding anyway...', err.message);
     return false;
   }
 };

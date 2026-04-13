@@ -43,7 +43,7 @@ const AddAttributeDialog = ({ open, onResult, definitions }) => {
           name: value.name || key,
           type: value.type,
         }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     [definitions],
   );
 

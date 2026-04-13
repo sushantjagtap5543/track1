@@ -16,10 +16,20 @@ const authenticateToken = async (req, res, next) => {
     return res.status(401).json({ error: 'Token has been revoked' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  // 2. Check if user is globally suspended (Scenario 5)
+  // We'll verify this AFTER jwt.verify to get the userId, or now if we can decode without verify.
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
+
+    // 2. Check if user is globally suspended (Scenario 5)
+    const isUserRevoked = await cache.get(`revoked_user:${user.userId}`);
+    if (isUserRevoked) {
+      return res.status(401).json({ error: 'Account has been suspended. Please contact support.' });
+    }
+
     req.user = user; // Contains { userId, role, traccarUserId }
     next();
   });

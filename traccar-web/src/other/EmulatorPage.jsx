@@ -125,7 +125,7 @@ const EmulatorPage = () => {
             <ListItem>
               <SelectField
                 label={t('reportDevice')}
-                data={Object.values(devices).sort((a, b) => a.name.localeCompare(b.name))}
+                data={Object.values(devices).sort((a, b) => (a.name || '').localeCompare(b.name || ''))}
                 value={deviceId}
                 onChange={(e) => dispatch(devicesActions.selectId(e.target.value))}
                 fullWidth

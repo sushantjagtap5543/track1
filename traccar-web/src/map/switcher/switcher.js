@@ -37,11 +37,20 @@ export class SwitcherControl {
     for (const style of this.styles) {
       const styleElement = document.createElement('button');
       styleElement.type = 'button';
-      styleElement.innerText = style.title;
+      styleElement.title = style.title;
+      
+      const indicator = document.createElement('span');
+      indicator.className = 'style-indicator';
+      styleElement.appendChild(indicator);
+
+      const text = document.createElement('span');
+      text.innerText = style.title;
+      styleElement.appendChild(text);
+
       styleElement.dataset.id = style.id;
       styleElement.dataset.style = JSON.stringify(style.style);
       styleElement.addEventListener('click', (event) => {
-        const { target } = event;
+        const target = event.currentTarget;
         if (!target.classList.contains('active')) {
           this.onSelectStyle(target);
         }
@@ -87,6 +96,7 @@ export class SwitcherControl {
     this.controlContainer = document.createElement('div');
     this.controlContainer.classList.add('maplibregl-ctrl');
     this.controlContainer.classList.add('maplibregl-ctrl-group');
+    this.controlContainer.classList.add('maplibregl-ctrl-switcher');
     this.mapStyleContainer = document.createElement('div');
     this.styleButton = document.createElement('button');
     this.styleButton.type = 'button';

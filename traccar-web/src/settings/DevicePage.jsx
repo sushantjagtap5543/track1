@@ -123,7 +123,7 @@ const DevicePage = () => {
                     id: category,
                     name: t(`category${category.replace(/^\w/, (c) => c.toUpperCase())}`),
                   }))
-                  .sort((a, b) => a.name.localeCompare(b.name))}
+                  .sort((a, b) => (a.name || '').localeCompare(b.name || ''))}
                 label={t('deviceCategory')}
               />
               <SelectField
@@ -158,6 +158,108 @@ const DevicePage = () => {
               </Button>
             </AccordionDetails>
           </Accordion>
+          {item.category === 'ais140' && (
+            <Accordion defaultExpanded>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="subtitle1" sx={{ color: '#2ecc71', fontWeight: 'bold' }}>
+                  AIS140 compliance (RTO)
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails className={classes.details}>
+                <TextField
+                  value={item.attributes?.vrn || ''}
+                  onChange={(event) => setItem({ ...item, attributes: { ...item.attributes, vrn: event.target.value.toUpperCase() } })}
+                  label="Vehicle Registration Number (VRN)"
+                  placeholder="e.g. MH12AB1234"
+                  variant="outlined"
+                />
+                <TextField
+                  value={item.attributes?.chassisNumber || ''}
+                  onChange={(event) => setItem({ ...item, attributes: { ...item.attributes, chassisNumber: event.target.value.toUpperCase() } })}
+                  label="Chassis Number"
+                  variant="outlined"
+                />
+                <TextField
+                  value={item.attributes?.engineNumber || ''}
+                  onChange={(event) => setItem({ ...item, attributes: { ...item.attributes, engineNumber: event.target.value.toUpperCase() } })}
+                  label="Engine Number"
+                  variant="outlined"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={item.attributes?.vltForwarding || false}
+                      onChange={(event) => setItem({ ...item, attributes: { ...item.attributes, vltForwarding: event.target.checked } })}
+                    />
+                  }
+                  label="Enable VLT Government Forwarding"
+                />
+                {item.attributes?.vltForwarding && (
+                  <TextField
+                    value={item.attributes?.forwardUrl || ''}
+                    onChange={(event) => setItem({ ...item, attributes: { ...item.attributes, forwardUrl: event.target.value } })}
+                    label="VLT Gateway URL (Target IP/Endpoint)"
+                    placeholder="http://vlt.rto-gateway.in/api"
+                    variant="outlined"
+                    helperText="The official government server endpoint for position forwarding."
+                  />
+                )}
+                <Button 
+                  variant="contained" 
+                  color="success" 
+                  fullWidth 
+                  sx={{ mt: 2, fontWeight: 'bold' }}
+                  onClick={() => {
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                      <html>
+                        <head>
+                          <title>AIS140 Installation Certificate</title>
+                          <style>
+                            body { font-family: 'Arial', sans-serif; padding: 40px; color: #333; }
+                            .header { text-align: center; border-bottom: 2px solid #2ecc71; padding-bottom: 20px; }
+                            .badge { color: #2ecc71; font-weight: bold; border: 1px solid #2ecc71; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 10px; }
+                            .details { margin-top: 40px; border: 1px solid #eee; padding: 20px; border-radius: 8px; }
+                            .row { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #f9f9f9; padding-bottom: 5px; }
+                            .label { font-weight: bold; color: #666; }
+                            .footer { margin-top: 60px; font-size: 12px; color: #999; text-align: center; }
+                            .signature { margin-top: 40px; display: flex; justify-content: space-between; }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="header">
+                            <h1>AIS140 Installation Certificate</h1>
+                            <p>Certificate of Conformity & Installation</p>
+                            <div class="badge">RTO VALIDATED</div>
+                          </div>
+                          <div class="details">
+                            <div class="row"><span class="label">Vehicle Name:</span> <span>${item.name}</span></div>
+                            <div class="row"><span class="label">Registration Number (VRN):</span> <span>${item.attributes?.vrn || 'N/A'}</span></div>
+                            <div class="row"><span class="label">Chassis Number:</span> <span>${item.attributes?.chassisNumber || 'N/A'}</span></div>
+                            <div class="row"><span class="label">Engine Number:</span> <span>${item.attributes?.engineNumber || 'N/A'}</span></div>
+                            <div class="row"><span class="label">Device IMEI (Unique ID):</span> <span>${item.uniqueId}</span></div>
+                            <div class="row"><span class="label">Installation Date:</span> <span>${new Date().toLocaleDateString()}</span></div>
+                            <div class="row"><span class="label">VLT Status:</span> <span>${item.attributes?.vltForwarding ? 'Active & Forwarding' : 'Standalone'}</span></div>
+                          </div>
+                          <div class="signature">
+                            <div>_______________________<br>Authorized Technician</div>
+                            <div>_______________________<br>Client/Owner Signature</div>
+                          </div>
+                          <div class="footer">
+                            <p>This certificate confirms that the vehicle described above has been fitted with an AIS140 compliant GPS Tracking unit and is successfully registered on the GeoSurePath platform.</p>
+                          </div>
+                          <script>window.print();</script>
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                  }}
+                >
+                  Generate RTO Certificate (PDF)
+                </Button>
+              </AccordionDetails>
+            </Accordion>
+          )}
           {item.id && (
             <Accordion>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>

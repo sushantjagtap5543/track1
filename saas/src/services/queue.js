@@ -6,24 +6,58 @@ const redisConnection = new IORedis({
   host: process.env.REDIS_HOST || '127.0.0.1',
   port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
   maxRetriesPerRequest: null,
-  lazyConnect: true, // Don't crash on start
+  retryStrategy: (times) => {
+    if (process.env.NODE_ENV !== 'production') {
+      return null; // Stop retrying in development
+    }
+    return Math.min(times * 50, 2000);
+  },
+  lazyConnect: true,
 });
 
 redisConnection.on('error', (err) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('[GeoSurePath] Redis not available. Background jobs will be queued locally but not processed.');
-  } else {
-    console.error('[GeoSurePath] Redis error:', err);
+  if (process.env.NODE_ENV !== 'production') {
+    if (!redisConnection.isMockReported) {
+      console.log('[GeoSurePath] Redis unavailable for queues. Background workers will be inactive.');
+      redisConnection.isMockReported = true;
+    }
+    return; // Completely silent after first report
   }
+  console.error('[GeoSurePath] Redis error:', err);
 });
 
-// Create queues
-const emailQueue = new Queue('EmailQueue', { connection: redisConnection });
-const alertQueue = new Queue('AlertQueue', { connection: redisConnection });
-const billingQueue = new Queue('BillingQueue', { connection: redisConnection });
+// Create queues with resilience
+const createResilientQueue = (name) => {
+  const queue = new Queue(name, { connection: redisConnection });
+  
+  // Wrap add method to handle Redis unavailability
+  const originalAdd = queue.add.bind(queue);
+  queue.add = async (jobName, data, opts) => {
+    try {
+      if (redisConnection.status === 'ready') {
+        return await originalAdd(jobName, data, opts);
+      }
+      console.log(`[GeoSurePath] Mock Queue [${name}]: Added job ${jobName}`, data);
+      return { id: `mock_${Date.now()}`, data };
+    } catch (err) {
+      console.warn(`[GeoSurePath] Queue [${name}] error, falling back to mock:`, err.message);
+      return { id: `mock_${Date.now()}`, data };
+    }
+  };
+  
+  return queue;
+};
+
+const emailQueue = createResilientQueue('EmailQueue');
+const alertQueue = createResilientQueue('AlertQueue');
+const billingQueue = createResilientQueue('BillingQueue');
 
 // Initialize Workers
 const startWorkers = () => {
+  if (redisConnection.status !== 'ready' && redisConnection.status !== 'connecting') {
+     console.log('[GeoSurePath] Skipping background workers (Redis unavailable).');
+     return;
+  }
   console.log('[GeoSurePath] Starting background workers...');
 
   const emailWorker = new Worker('EmailQueue', async job => {

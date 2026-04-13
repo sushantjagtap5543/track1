@@ -1,11 +1,11 @@
 const speedConverter = (unit) => {
   switch (unit) {
     case 'kmh':
+    default:
       return 1.852;
     case 'mph':
       return 1.15078;
     case 'kn':
-    default:
       return 1;
   }
 };
@@ -13,11 +13,11 @@ const speedConverter = (unit) => {
 export const speedUnitString = (unit, t) => {
   switch (unit) {
     case 'kmh':
+    default:
       return t('sharedKmh');
     case 'mph':
       return t('sharedMph');
     case 'kn':
-    default:
       return t('sharedKn');
   }
 };

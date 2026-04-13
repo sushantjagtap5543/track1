@@ -10,6 +10,11 @@ const prisma = new PrismaClient();
  * Receives position data, signs it via cryptoWorker, and stores it immutably.
  */
 const handleTraccarWebhook = async (req, res) => {
+  const webhookSecret = req.headers['x-traccar-secret'];
+  if (process.env.WEBHOOK_SECRET && webhookSecret !== process.env.WEBHOOK_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized webhook request' });
+  }
+
   try {
     const { deviceId, latitude, longitude, deviceTime, attributes } = req.body;
 

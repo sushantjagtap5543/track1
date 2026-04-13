@@ -38,11 +38,11 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
   const devices = useSelector((state) => state.devices.items, deviceEquality(['id', 'name']));
   const groups = useSelector((state) => state.groups.items);
   const deviceList = useMemo(
-    () => Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)),
+    () => Object.values(devices).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     [devices],
   );
   const groupList = useMemo(
-    () => Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)),
+    () => Object.values(groups).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     [groups],
   );
 

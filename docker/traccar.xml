@@ -3,9 +3,9 @@
 <properties>
 
     <entry key='database.driver'>org.postgresql.Driver</entry>
-    <entry key='database.url'>jdbc:postgresql://db:5432/geosurepath</entry>
+    <entry key='database.url'>jdbc:postgresql://db:5432/geosurepath?currentSchema=public</entry>
     <entry key='database.user'>geosurepath</entry>
-    <entry key='database.password'>${env.DATABASE_PASSWORD}</entry> <!-- Placeholder for environment variable substitution -->
+    <entry key='database.password'>change-this-to-something-long-and-random</entry> <!-- Placeholder for environment variable substitution -->
 
 
     <entry key='web.path'>./modern</entry>
@@ -14,6 +14,7 @@
     <entry key='geofence.polyline'>true</entry>
     <entry key='server.statistics'>https://www.traccar.org/analytics/</entry>
 
-    <!-- Allow admin API to create users -->
-    <entry key='registration.enable'>true</entry>
+    <!-- Disable self-registration for managed SaaS security -->
+    <entry key='registration.enable'>false</entry>
+
 </properties>

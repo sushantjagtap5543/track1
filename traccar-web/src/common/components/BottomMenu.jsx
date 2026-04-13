@@ -26,34 +26,51 @@ import { nativePostMessage } from './NativeInterface';
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    background: 'rgba(2, 6, 23, 0.8)',
-    backdropFilter: 'blur(20px)',
-    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-    transition: 'all 0.3s ease',
+    background: 'rgba(15, 23, 42, 0.96)',
+    backdropFilter: 'blur(30px) saturate(180%)',
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.5)',
+    zIndex: 10,
   },
   navigation: {
     background: 'transparent',
     height: theme.dimensions.bottomBarHeight,
     '& .MuiBottomNavigationAction-root': {
-      color: 'rgba(255, 255, 255, 0.4)',
-      transition: 'all 0.2s ease',
+      color: 'rgba(255, 255, 255, 0.7)',
       minWidth: 0,
+      padding: theme.spacing(1, 0),
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      '& .MuiBottomNavigationAction-label': {
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        letterSpacing: '0.025em',
+        marginTop: theme.spacing(0.5),
+      },
       '&.Mui-selected': {
-        color: '#3b82f6',
+        color: '#38bdf8',
         '& .MuiSvgIcon-root': {
-          transform: 'translateY(-2px)',
-          filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))',
+          transform: 'translateY(-4px)',
+          filter: 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.8))',
+        },
+        '& .MuiBottomNavigationAction-label': {
+          fontSize: '0.8rem',
+          color: '#38bdf8',
+          textShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
         },
       },
       '&:hover': {
-        color: 'rgba(255, 255, 255, 0.8)',
+        color: 'rgba(255, 255, 255, 1)',
+        '& .MuiSvgIcon-root': {
+          transform: 'translateY(-2px)',
+        },
       },
     },
   },
   badge: {
     '& .MuiBadge-badge': {
-      backgroundColor: '#ef4444',
-      boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)',
+      backgroundColor: '#f43f5e',
+      boxShadow: '0 0 15px rgba(244, 63, 94, 0.6)',
+      border: '2px solid rgba(15, 23, 42, 1)',
     },
   },
 }));
@@ -163,7 +180,7 @@ const BottomMenu = () => {
   };
 
   return (
-    <Paper square className={classes.root}>
+    <Paper elevation={3} className={classes.root} sx={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
       <BottomNavigation
         value={currentSelection()}
         onChange={handleSelection}
@@ -213,7 +230,7 @@ const BottomMenu = () => {
         onClose={() => setAnchorEl(null)}
         PaperProps={{
           sx: {
-            background: 'rgba(15, 23, 42, 0.9)',
+            background: 'rgba(15, 23, 42, 0.96)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '12px',

@@ -1,10 +1,9 @@
 html, body {
   height: 100%;
-}
-
-body {
+  width: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -13,8 +12,113 @@ body {
   }
 }
 
-.root {
+#root, .root {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 }
+
+/* Pixel-Perfect Map Controls */
+.maplibregl-ctrl-top-right {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  margin-right: 12px !important;
+}
+
+.maplibregl-ctrl-group, 
+.maplibregl-ctrl-geocoder {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(16px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important; /* Slightly more precise rounding */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+  margin: 0 !important; /* Managed by parent gap */
+  width: 36px !important;
+  overflow: visible !important;
+}
+
+.maplibregl-ctrl-geocoder.maplibregl-ctrl-geocoder--collapsed {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: 36px !important;
+  height: 36px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.maplibregl-ctrl-geocoder--button {
+  width: 36px !important;
+  height: 36px !important;
+  color: #fff !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.maplibregl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+
+.maplibregl-ctrl-icon,
+.maplibregl-ctrl-geocoder--icon {
+  filter: brightness(0) invert(1) !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-size: 20px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* Precise Visual Normalization */
+.maplibre-ctrl-notification {
+  background-size: 20px !important;
+}
+
+.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon {
+  background-size: 20px !important;
+}
+
+.maplibregl-style-switcher {
+  background-size: 20px !important;
+}
+
+.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon,
+.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+  background-size: 20px !important;
+}
+
+.maplibregl-ctrl-geocoder--icon-search {
+  background-size: 20px !important;
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+}
+
+.maplibregl-ctrl-geocoder--button {
+    background: transparent !important;
+}
+
+.maplibregl-ctrl-geocoder--collapsed .maplibregl-ctrl-geocoder--button {
+    display: none !important;
+}
+
+.maplibregl-ctrl-geocoder--input {
+    color: #fff !important;
+    background: transparent !important;
+}
+
+

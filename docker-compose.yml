@@ -7,11 +7,18 @@ services:
       POSTGRES_USER: ${DB_USER:-geosurepath}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-change-this-to-something-long-and-random}
       POSTGRES_DB: ${DB_NAME:-geosurepath}
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-geosurepath}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -19,11 +26,18 @@ services:
     image: redis:7-alpine
     container_name: geosurepath_redis
     restart: always
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     volumes:
       - redis_data:/data
 
@@ -41,6 +55,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     ports:
       - "5001-5150:5001-5150/tcp"
       - "5001-5150:5001-5150/udp"
@@ -66,6 +85,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     # No direct port exposure (Nginx only)
     env_file:
       - ./saas/.env
@@ -79,6 +103,11 @@ services:
     image: nginx:alpine
     container_name: geosurepath_nginx
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     ports:
       - "80:80"
       - "443:443"  # Added for future HTTPS

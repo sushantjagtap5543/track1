@@ -321,6 +321,26 @@ export default () => {
         attribute: 'mapboxAccessToken',
       },
       {
+        id: 'esriSatellite',
+        title: t('mapEsriSatellite'),
+        style: styleCustom({
+          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+          maxZoom: 19,
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community',
+        }),
+        available: true,
+      },
+      {
+        id: 'stadiaSmooth',
+        title: t('mapStadiaSmooth'),
+        style: styleCustom({
+          tiles: ['https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png'],
+          maxZoom: 20,
+          attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
+        }),
+        available: true,
+      },
+      {
         id: 'custom',
         title: t('mapCustom'),
         style:

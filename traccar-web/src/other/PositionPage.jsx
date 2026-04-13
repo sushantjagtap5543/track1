@@ -25,19 +25,49 @@ import fetchOrThrow from '../common/util/fetchOrThrow';
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    height: '100%',
+    minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
+    backgroundColor: '#0f172a', // Deep slate background
+    color: '#f8fafc',
+    // Global UI Scaling for extreme high-density dashboard feel
+    '& > *': {
+       zoom: '0.8',
+    }
   },
   content: {
     overflow: 'auto',
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
   },
+  appBar: {
+    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+    backdropFilter: 'blur(10px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    color: '#f8fafc',
+  },
+  paper: {
+    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    overflow: 'hidden',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+  },
+  tableCell: {
+    color: '#f8fafc',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+  },
+  tableHeader: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    fontSize: '0.75rem',
+    letterSpacing: '0.05em',
+  },
 }));
 
 const PositionPage = () => {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const navigate = useNavigate();
   const t = useTranslation();
 
@@ -69,23 +99,23 @@ const PositionPage = () => {
 
   return (
     <div className={classes.root}>
-      <AppBar position="sticky" color="inherit">
+      <AppBar position="sticky" elevation={0} className={classes.appBar}>
         <Toolbar>
           <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
             <BackIcon />
           </IconButton>
-          <Typography variant="h6">{deviceName}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>{deviceName || t('sharedDetails')}</Typography>
         </Toolbar>
       </AppBar>
       <div className={classes.content}>
         <Container maxWidth="sm">
-          <Paper>
+          <Paper elevation={0} className={classes.paper}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>{t('stateName')}</TableCell>
-                  <TableCell>{t('sharedName')}</TableCell>
-                  <TableCell>{t('stateValue')}</TableCell>
+                  <TableCell className={cx(classes.tableCell, classes.tableHeader)}>{t('stateName')}</TableCell>
+                  <TableCell className={cx(classes.tableCell, classes.tableHeader)}>{t('sharedName')}</TableCell>
+                  <TableCell className={cx(classes.tableCell, classes.tableHeader)}>{t('stateValue')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -94,11 +124,11 @@ const PositionPage = () => {
                     .filter((it) => it !== 'attributes')
                     .map((property) => (
                       <TableRow key={property}>
-                        <TableCell>{property}</TableCell>
-                        <TableCell>
+                        <TableCell className={classes.tableCell}>{property}</TableCell>
+                        <TableCell className={classes.tableCell}>
                           <strong>{positionAttributes[property]?.name}</strong>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className={classes.tableCell}>
                           <PositionValue position={item} property={property} />
                         </TableCell>
                       </TableRow>
@@ -106,11 +136,11 @@ const PositionPage = () => {
                 {item &&
                   Object.getOwnPropertyNames(item.attributes).map((attribute) => (
                     <TableRow key={attribute}>
-                      <TableCell>{attribute}</TableCell>
-                      <TableCell>
+                      <TableCell className={classes.tableCell}>{attribute}</TableCell>
+                      <TableCell className={classes.tableCell}>
                         <strong>{positionAttributes[attribute]?.name}</strong>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={classes.tableCell}>
                         <PositionValue position={item} attribute={attribute} />
                       </TableCell>
                     </TableRow>

@@ -25,24 +25,73 @@ const getAuthHeaders = (req = null) => {
   return headers;
 };
 
-const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+const getDevices = async () => {
+  if (MOCK_TRACCAR === 'true') return MOCK_DATA.devices;
+  const response = await fetchWithTimeout(`${TRACCAR_URL}/api/devices`, {
+    headers: getAuthHeaders()
+  });
+  if (!response.ok) await handleTraccarError(response, 'getDevices');
+  return response.json();
+};
+
+const getDevice = async (deviceId) => {
+  if (MOCK_TRACCAR === 'true') return MOCK_DATA.devices.find(d => d.id === (typeof deviceId === 'string' ? parseInt(deviceId) : deviceId));
+  const response = await fetchWithTimeout(`${TRACCAR_URL}/api/devices?id=${deviceId}`, {
+    headers: getAuthHeaders()
+  });
+  if (!response.ok) await handleTraccarError(response, 'getDevice');
+  const devices = await response.json();
+  return devices.length > 0 ? devices[0] : null;
+};
+
+const fetchWithTimeout = async (url, options = {}, timeout = 10000, retries = 2) => {
   if (MOCK_TRACCAR === 'true') {
      console.log(`[Traccar Mock] Intercepted request to ${url}`);
-     return { ok: true, json: async () => ({ id: Math.floor(Math.random() * 1000), ...JSON.parse(options.body || '{}') }) };
+     return { 
+       ok: true, 
+       status: 200,
+       json: async () => ({ id: Math.floor(Math.random() * 1000), ...(options.body ? JSON.parse(options.body) : {}) }),
+       text: async () => JSON.stringify({ id: Math.floor(Math.random() * 1000), ...(options.body ? JSON.parse(options.body) : {}) })
+     };
   }
 
-  return traccarBreaker.run(async () => {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    try {
-      const response = await fetch(url, { ...options, signal: controller.signal });
-      clearTimeout(id);
-      return response;
-    } catch (err) {
-      clearTimeout(id);
-      throw err;
-    }
-  });
+  const runFetch = async (attempt = 0) => {
+    return traccarBreaker.run(async () => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        if (!response.ok && attempt < retries && response.status >= 500) {
+           console.warn(`[Traccar] Internal error (${response.status}). Retrying... ${attempt + 1}/${retries}`);
+           return runFetch(attempt + 1);
+        }
+        return response;
+      } catch (err) {
+        clearTimeout(id);
+        if (attempt < retries && (err.name === 'AbortError' || err.code === 'ECONNREFUSED')) {
+           console.warn(`[Traccar] Connection error (${err.name}). Retrying... ${attempt + 1}/${retries}`);
+           return runFetch(attempt + 1);
+        }
+        throw err;
+      }
+    });
+  };
+
+  return runFetch();
+};
+
+const handleTraccarError = async (response, context) => {
+  let errorDetail;
+  try {
+    errorDetail = await response.text();
+  } catch (e) {
+    errorDetail = 'No detail provided';
+  }
+  const error = new Error(`Traccar ${context} failed: ${response.status}`);
+  error.status = response.status;
+  error.detail = errorDetail;
+  throw error;
 };
 
 const createUser = async (name, email, password, req = null) => {
@@ -51,7 +100,7 @@ const createUser = async (name, email, password, req = null) => {
     headers: getAuthHeaders(req),
     body: JSON.stringify({ name, email, password, attributes: {} })
   });
-  if (!response.ok) throw new Error(`Traccar createUser failed: ${response.status}`);
+  if (!response.ok) await handleTraccarError(response, 'createUser');
   return response.json();
 };
 
@@ -61,7 +110,17 @@ const createDevice = async (name, uniqueId) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ name, uniqueId })
   });
-  if (!response.ok) throw new Error(`Traccar createDevice failed: ${response.status}`);
+  if (!response.ok) await handleTraccarError(response, 'createDevice');
+  return response.json();
+};
+
+const updateDevice = async (deviceId, data) => {
+  const response = await fetchWithTimeout(`${TRACCAR_URL}/api/devices/${deviceId}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ id: deviceId, ...data })
+  });
+  if (!response.ok) await handleTraccarError(response, 'updateDevice');
   return response.json();
 };
 
@@ -71,6 +130,7 @@ const linkDeviceToUser = async (userId, deviceId) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ userId, deviceId })
   });
+  if (!response.ok) await handleTraccarError(response, 'linkDeviceToUser');
   return response.ok;
 };
 
@@ -106,7 +166,7 @@ const sendCommand = async (deviceId, type, attributes = {}) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ deviceId, type, attributes })
   });
-  if (!response.ok) throw new Error(`Traccar sendCommand failed: ${response.status}`);
+  if (!response.ok) await handleTraccarError(response, 'sendCommand');
   return response.json();
 };
 
@@ -116,7 +176,7 @@ const createGeofence = async (name, area) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ name, area })
   });
-  if (!response.ok) throw new Error(`Traccar createGeofence failed: ${response.status}`);
+  if (!response.ok) await handleTraccarError(response, 'createGeofence');
   return response.json();
 };
 
@@ -134,7 +194,22 @@ const linkGeofenceToDevice = async (deviceId, geofenceId) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ deviceId, geofenceId })
   });
+  if (!response.ok) await handleTraccarError(response, 'linkGeofenceToDevice');
   return response.ok;
+};
+
+const updateUser = async (userId, data) => {
+  const response = await fetchWithTimeout(`${TRACCAR_URL}/api/users/${userId}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ id: userId, ...data })
+  });
+  if (!response.ok) await handleTraccarError(response, 'updateUser');
+  return response.json();
+};
+
+const disableUser = async (userId, disabled = true) => {
+  return await updateUser(userId, { disabled });
 };
 
 const checkHealth = async () => {
@@ -148,8 +223,13 @@ const checkHealth = async () => {
 };
 
 module.exports = {
+  getDevices,
+  getDevice,
   createUser,
+  updateUser,
+  disableUser,
   createDevice,
+  updateDevice,
   linkDeviceToUser,
   getLatestPosition,
   deleteUser,

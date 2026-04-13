@@ -460,6 +460,14 @@ public class AtrackProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_SATELLITES, parser.nextInt());
             position.set(Position.KEY_RSSI, parser.nextInt());
 
+        } else if (sentence.startsWith("$ERROR")) {
+
+            deviceSession = getDeviceSession(channel, remoteAddress);
+            position.set(Position.KEY_RESULT, sentence);
+            if (sentence.contains("101")) {
+                position.addAlarm(Position.ALARM_POWER_CUT);
+            }
+
         } else {
 
             deviceSession = getDeviceSession(channel, remoteAddress);

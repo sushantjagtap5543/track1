@@ -76,9 +76,22 @@ const MainToolbar = ({
     Object.values(devices).filter((d) => d.status === status).length;
 
   return (
-    <Toolbar ref={toolbarRef} className={classes.toolbar}>
-      <IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
-        {devicesOpen ? <MapIcon /> : <DnsIcon />}
+    <Toolbar ref={toolbarRef} className={classes.toolbar} sx={{ px: 1, backgroundColor: 'transparent', minHeight: '48px !important' }}>
+      <IconButton 
+        edge="start" 
+        onClick={() => setDevicesOpen(!devicesOpen)}
+        sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          color: '#f8fafc',
+          borderRadius: '8px',
+          width: '36px',
+          height: '36px',
+          transition: 'all 0.2s ease',
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', transform: 'scale(1.05)' }
+        }}
+      >
+        {devicesOpen ? <MapIcon sx={{ fontSize: '18px' }} /> : <DnsIcon sx={{ fontSize: '18px' }} />}
       </IconButton>
       <OutlinedInput
         ref={inputRef}
@@ -89,13 +102,18 @@ const MainToolbar = ({
         onBlur={() => setDevicesAnchorEl(null)}
         endAdornment={
           <InputAdornment position="end">
-            <IconButton size="small" edge="end" onClick={() => setFilterAnchorEl(inputRef.current)}>
+            <IconButton 
+              size="small" 
+              edge="end" 
+              onClick={() => setFilterAnchorEl(inputRef.current)}
+              sx={{ color: '#f8fafc', opacity: 0.6, mr: 0.5 }}
+            >
               <Badge
-                color="info"
+                color="primary"
                 variant="dot"
                 invisible={!filter.statuses.length && !filter.groups.length}
               >
-                <TuneIcon fontSize="small" />
+                <TuneIcon sx={{ fontSize: '18px' }} />
               </Badge>
             </IconButton>
           </InputAdornment>
@@ -103,12 +121,31 @@ const MainToolbar = ({
         size="small"
         fullWidth
         sx={{
+          backgroundColor: 'rgba(15, 23, 42, 0.96)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '8px',
+          height: '36px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'rgba(255, 255, 255, 0.1)',
+            border: 'none',
           },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+          '&:hover': {
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
           },
+          '&.Mui-focused': {
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          },
+          '& .MuiOutlinedInput-input': {
+            color: '#f8fafc',
+            fontWeight: 500,
+            fontSize: '0.8rem',
+            '&::placeholder': {
+              color: 'rgba(255,255,255,0.3)',
+              opacity: 1,
+            }
+          }
         }}
       />
       <Popover
@@ -122,10 +159,17 @@ const MainToolbar = ({
         marginThreshold={0}
         slotProps={{
           paper: {
-            style: { width: `calc(${toolbarRef.current?.clientWidth}px - ${theme.spacing(4)})` },
+            style: { 
+              width: `calc(${toolbarRef.current?.clientWidth}px - ${theme.spacing(4)})`,
+              backgroundColor: 'rgba(15, 23, 42, 0.96)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '12px',
+              marginTop: '8px',
+            },
           },
         }}
-        elevation={1}
+        elevation={0}
         disableAutoFocus
         disableEnforceFocus
       >
@@ -133,7 +177,11 @@ const MainToolbar = ({
           <DeviceRow key={filteredDevices[index].id} devices={filteredDevices} index={index} />
         ))}
         {filteredDevices.length > 3 && (
-          <ListItemButton alignItems="center" onClick={() => setDevicesOpen(true)}>
+          <ListItemButton 
+            alignItems="center" 
+            onClick={() => setDevicesOpen(true)}
+            sx={{ borderRadius: '0 0 12px 12px' }}
+          >
             <ListItemText primary={t('notificationAlways')} style={{ textAlign: 'center' }} />
           </ListItemButton>
         )}
@@ -170,7 +218,7 @@ const MainToolbar = ({
               multiple
             >
               {Object.values(groups)
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
                 .map((group) => (
                   <MenuItem key={group.id} value={group.id}>
                     {group.name}
@@ -201,18 +249,44 @@ const MainToolbar = ({
           </FormGroup>
         </div>
       </Popover>
-      <IconButton edge="end" onClick={() => navigate('/ai-insights')}>
+      <IconButton 
+        edge="end" 
+        onClick={() => navigate('/ai-insights')}
+        sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          color: '#f8fafc',
+          borderRadius: '8px',
+          width: '36px',
+          height: '36px',
+          transition: 'all 0.2s ease',
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', transform: 'scale(1.05)' }
+        }}
+      >
         <Tooltip title="AI Insights" arrow>
-          <AutoAwesomeIcon sx={{ color: '#38bdf8' }} />
+          <AutoAwesomeIcon sx={{ fontSize: '18px' }} />
         </Tooltip>
       </IconButton>
-      <IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>
+      <IconButton 
+        edge="end" 
+        onClick={() => navigate('/settings/device')} 
+        disabled={deviceReadonly}
+        sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          color: '#f8fafc',
+          borderRadius: '8px',
+          width: '36px',
+          height: '36px',
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+        }}
+      >
         <Tooltip
           open={!deviceReadonly && Object.keys(devices).length === 0}
           title={t('deviceRegisterFirst')}
           arrow
         >
-          <AddIcon />
+          <AddIcon sx={{ fontSize: '18px' }} />
         </Tooltip>
       </IconButton>
     </Toolbar>

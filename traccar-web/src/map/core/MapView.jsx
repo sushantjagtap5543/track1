@@ -60,7 +60,7 @@ const MapView = ({ children }) => {
   const mapStyles = useMapStyles();
   const activeMapStyles = useAttributePreference(
     'activeMapStyles',
-    'locationIqStreets,locationIqDark,openFreeMap',
+    'locationIqStreets,locationIqDark,googleHybrid,esriSatellite,osm,carto,openTopoMap,stadiaSmooth',
   );
   const [defaultMapStyle] = usePersistedState(
     'selectedMapStyle',

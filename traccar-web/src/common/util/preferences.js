@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 
-const containsProperty = (object, key) => object.hasOwnProperty(key) && object[key] !== null;
+const containsProperty = (object, key) => !!object && Object.prototype.hasOwnProperty.call(object, key) && object[key] !== null;
 
 export const usePreference = (key, defaultValue) =>
   useSelector((state) => {

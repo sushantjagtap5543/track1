@@ -2,6 +2,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
+const logAudit = require('../utils/auditLogger');
 
 // Use env for DB URL to support AWS Lightsail (Postgres) vs Local (SQLite)
 const prisma = new PrismaClient();
@@ -40,7 +41,7 @@ exports.createOrder = async (req, res) => {
       data: {
         userId: req.user.userId,
         amount: amount,
-        status: 'CREATED',
+        status: 'PENDING',
         transactionId: order.id
       }
     });
@@ -73,7 +74,7 @@ exports.verifyPayment = async (req, res) => {
     // Update payment status
     await prisma.payment.updateMany({
       where: { transactionId: razorpay_order_id },
-      data: { status: 'COMPLETED', paymentMethod: 'RAZORPAY' }
+      data: { status: 'SUCCESS', paymentMethod: 'RAZORPAY' }
     });
 
     // Create or renew subscription
@@ -96,12 +97,28 @@ exports.verifyPayment = async (req, res) => {
       data: { isActive: true }
     });
 
+    await logAudit({ 
+      userId: req.user.userId, 
+      action: 'PAYMENT_SUCCESS', 
+      resource: 'Payment', 
+      ipAddress: req.ip,
+      payload: { orderId: razorpay_order_id, paymentId: razorpay_payment_id }
+    });
+
     res.json({ message: 'Payment verified successfully', success: true });
   } else {
     // Mark as failed
     await prisma.payment.updateMany({
       where: { transactionId: razorpay_order_id },
       data: { status: 'FAILED' }
+    });
+
+    await logAudit({ 
+      userId: req.user.userId, 
+      action: 'PAYMENT_FAILURE', 
+      resource: 'Payment', 
+      ipAddress: req.ip,
+      payload: { orderId: razorpay_order_id }
     });
 
     res.status(400).json({ error: 'Payment signature verification failed', success: false });
