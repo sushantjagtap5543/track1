@@ -44,7 +44,7 @@ export default makeStyles()((theme) => ({
     '& .MuiTableCell-root': {
       borderColor: 'rgba(255, 255, 255, 0.05)',
       padding: theme.spacing(1.5, 2),
-      color: '#94a3b8', // Slate 400
+      color: '#cbd5e1', // Slate 300 (lighter)
     },
     '& .MuiTableHead-root .MuiTableCell-root': {
       backgroundColor: 'rgba(15, 23, 42, 0.9) !important',
@@ -93,7 +93,7 @@ export default makeStyles()((theme) => ({
     letterSpacing: '-0.02em',
   },
   headerSubtitle: {
-    color: '#64748b',
+    color: '#94a3b8',
     fontSize: '0.82rem',
     marginTop: theme.spacing(0.3),
   },
@@ -126,7 +126,7 @@ export default makeStyles()((theme) => ({
     gap: theme.spacing(1),
   },
   statLabel: {
-    color: '#64748b',
+    color: '#94a3b8',
     fontSize: '0.75rem',
     fontWeight: 700,
     textTransform: 'uppercase',

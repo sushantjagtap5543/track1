@@ -54,43 +54,54 @@ export default {
   MuiButton: {
     styleOverrides: {
       root: {
-        borderRadius: '12px',
+        borderRadius: '14px',
         textTransform: 'none',
-        fontWeight: 600,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        letterSpacing: '0.01em',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         '&.Mui-disabled': {
-          opacity: 0.5,
+          opacity: 0.6,
           cursor: 'not-allowed',
-          pointerEvents: 'auto', // Ensure tooltips still work if any
+          pointerEvents: 'auto',
+          background: 'rgba(255, 255, 255, 0.03) !important',
+          color: 'rgba(255, 255, 255, 0.2) !important',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
         },
       },
       containedPrimary: {
-        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-        color: '#fff',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+        boxShadow: '0 4px 15px rgba(37, 99, 235, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
+        color: '#ffffff',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         '&:hover': {
           background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-          boxShadow: '0 8px 20px rgba(59, 130, 246, 0.5)',
-          transform: 'translateY(-1px)',
+          boxShadow: '0 8px 25px rgba(37, 99, 235, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
+          transform: 'translateY(-2px) scale(1.02)',
         },
         '&.Mui-disabled': {
-          background: 'rgba(255, 255, 255, 0.05) !important',
-          color: 'rgba(255, 255, 255, 0.15) !important',
+          background: 'rgba(255, 255, 255, 0.03) !important',
+          color: 'rgba(255, 255, 255, 0.2) !important',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: 'none',
         },
       },
       containedError: {
-        background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
-        boxShadow: '0 4px 12px rgba(244, 63, 94, 0.3)',
-        color: '#fff',
+        background: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)',
+        boxShadow: '0 4px 15px rgba(225, 29, 72, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
+        color: '#ffffff',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         '&:hover': {
           background: 'linear-gradient(135deg, #fb7185 0%, #f43f5e 100%)',
-          boxShadow: '0 8px 20px rgba(244, 63, 94, 0.5)',
-          transform: 'translateY(-1px)',
+          boxShadow: '0 8px 25px rgba(225, 29, 72, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
+          transform: 'translateY(-2px) scale(1.02)',
         },
         '&.Mui-disabled': {
-          background: 'rgba(255, 255, 255, 0.05) !important',
-          color: 'rgba(255, 255, 255, 0.15) !important',
+          background: 'rgba(255, 255, 255, 0.03) !important',
+          color: 'rgba(255, 255, 255, 0.2) !important',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: 'none',
         },
       },
@@ -141,14 +152,21 @@ export default {
   MuiIconButton: {
     styleOverrides: {
       root: {
-        transition: 'all 0.2s ease',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
         '&:hover': {
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          transform: 'scale(1.1)',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          transform: 'scale(1.1) translateY(-2px)',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
         },
         '&.Mui-disabled': {
-          opacity: 0.3,
-          color: 'rgba(255, 255, 255, 0.2) !important',
+          opacity: 0.4,
+          backgroundColor: 'transparent !important',
+          border: '1px solid rgba(255, 255, 255, 0.04) !important',
+          color: 'rgba(255, 255, 255, 0.15) !important',
+          backdropFilter: 'none',
         },
       },
     },
@@ -156,18 +174,22 @@ export default {
   MuiFab: {
     styleOverrides: {
       root: {
-        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-        boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
-        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+        boxShadow: '0 8px 30px rgba(37, 99, 235, 0.45)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         '&:hover': {
           background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-          transform: 'scale(1.1) rotate(5deg)',
-          boxShadow: '0 12px 35px rgba(59, 130, 246, 0.5)',
+          transform: 'scale(1.15) rotate(8deg)',
+          boxShadow: '0 15px 45px rgba(37, 99, 235, 0.6)',
         },
         '&.Mui-disabled': {
           background: 'rgba(255, 255, 255, 0.05) !important',
           color: 'rgba(255, 255, 255, 0.2) !important',
+          border: '1px solid rgba(255, 255, 255, 0.1) !important',
           boxShadow: 'none',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
         },
       },
     },
@@ -226,6 +248,17 @@ export default {
       },
       loading: {
         color: '#f8fafc !important',
+      },
+    },
+  },
+  MuiFormHelperText: {
+    styleOverrides: {
+      root: {
+        color: '#cbd5e1 !important',
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        marginTop: '6px',
+        opacity: 0.8,
       },
     },
   },

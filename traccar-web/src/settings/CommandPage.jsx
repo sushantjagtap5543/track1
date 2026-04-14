@@ -5,8 +5,10 @@ import {
   AccordionDetails,
   Typography,
   TextField,
+  Box,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import PublishIcon from '@mui/icons-material/Publish';
 import EditItemView from './components/EditItemView';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import BaseCommandView from './components/BaseCommandView';

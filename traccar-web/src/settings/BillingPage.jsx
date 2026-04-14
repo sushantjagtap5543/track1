@@ -74,6 +74,7 @@ const BillingPage = () => {
   const { classes } = useStyles();
   const t = useTranslation();
   const user = useSelector((state) => state.session.user);
+  const server = useSelector((state) => state.session.server);
   const devices = useSelector((state) => state.devices.items);
   const deviceCount = Object.keys(devices).length || 1;
   const [subscription, setSubscription] = useState(null);
@@ -101,13 +102,17 @@ const BillingPage = () => {
 
   const handleSubscribe = async (plan) => {
     try {
+      setError(null);
       const orderRes = await fetch('/api/billing/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: plan.price * deviceCount, planId: plan.id }),
+        body: JSON.stringify({ planId: plan.id, deviceCount }),
       });
 
-      if (!orderRes.ok) throw new Error('Order creation failed');
+      if (!orderRes.ok) {
+        const errorData = await orderRes.json();
+        throw new Error(errorData.error || 'Order creation failed');
+      }
 
       const order = await orderRes.json();
 
@@ -152,10 +157,10 @@ const BillingPage = () => {
     }
   };
 
-  // Admin-configurable custom pricing logic
+  // Admin-configurable global pricing logic
   const getPlanPrice = (baseId, basePrice) => {
-    const customPrice = user?.attributes[`billingPrice${baseId.charAt(0) + baseId.slice(1).toLowerCase()}`];
-    return customPrice ? parseInt(customPrice) : basePrice;
+    const customPrice = server?.attributes[`billingPrice${baseId}`];
+    return customPrice ? parseFloat(customPrice) : basePrice;
   };
 
   const plans = [
@@ -203,7 +208,7 @@ const BillingPage = () => {
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
                   Billing & Subscriptions
                 </Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <Typography sx={{ color: '#cbd5e1', fontSize: '0.85rem' }}>
                   Manage your fleet subscriptions, payment methods, and transaction history.
                 </Typography>
               </Box>
@@ -221,7 +226,7 @@ const BillingPage = () => {
                 <Box>
                   <Typography variant="subtitle2" sx={{ color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Subscription</Typography>
                   <Typography variant="h5" sx={{ fontWeight: 800, color: '#f8fafc' }}>{subscription.planId || 'No Active Plan'}</Typography>
-                  <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
+                  <Typography variant="body2" sx={{ color: '#cbd5e1', mt: 0.5 }}>
                     Status: <Box component="span" sx={{ color: subscription.status === 'ACTIVE' ? '#10b981' : '#ef4444', fontWeight: 800 }}>{subscription.status}</Box>
                     {subscription.expiresAt && ` | Expires: ${new Date(subscription.expiresAt).toLocaleDateString()}`}
                   </Typography>
@@ -250,7 +255,7 @@ const BillingPage = () => {
                       <Typography variant="h6" sx={{ fontWeight: 800, color: '#f8fafc' }}>{plan.name}</Typography>
                       <Box sx={{ my: 3 }}>
                         <Typography component="span" variant="h3" sx={{ fontWeight: 900, color: '#fff' }}>₹{plan.price}</Typography>
-                        <Typography component="span" variant="body2" sx={{ ml: 1, color: '#64748b', fontWeight: 600 }}>/dev/{plan.period}</Typography>
+                        <Typography component="span" variant="body2" sx={{ ml: 1, color: '#94a3b8', fontWeight: 600 }}>/dev/{plan.period}</Typography>
                         {deviceCount > 0 && (
                           <Typography variant="body2" sx={{ color: '#38bdf8', fontWeight: 700, mt: 1 }}>
                             Total: ₹{plan.price * deviceCount} for {deviceCount} {deviceCount === 1 ? 'device' : 'devices'}
@@ -261,7 +266,7 @@ const BillingPage = () => {
                         {plan.features.map((feature, i) => (
                           <ListItem key={i} disableGutters sx={{ py: 0.5 }}>
                             <ListItemIcon sx={{ minWidth: 32 }}><CheckCircleIcon sx={{ color: '#10b981', fontSize: 18 }} /></ListItemIcon>
-                            <ListItemText primary={feature} primaryTypographyProps={{ variant: 'body2', sx: { color: '#94a3b8', fontWeight: 500 } }} />
+                            <ListItemText primary={feature} primaryTypographyProps={{ variant: 'body2', sx: { color: '#ffffff', fontWeight: 500 } }} />
                           </ListItem>
                         ))}
                       </List>
@@ -302,7 +307,7 @@ const BillingPage = () => {
               </Typography>
               {payments.length === 0 ? (
                 <Box sx={{ py: 6, textAlign: 'center' }}>
-                    <Typography sx={{ color: '#475569', fontWeight: 600 }}>No transaction history found.</Typography>
+                    <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No transaction history found.</Typography>
                 </Box>
               ) : (
                 <List disablePadding>
@@ -325,7 +330,7 @@ const BillingPage = () => {
                             </Box>
                           }
                           secondary={
-                            <Typography sx={{ color: '#64748b', fontSize: '0.8rem', mt: 0.5 }}>
+                            <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem', mt: 0.5 }}>
                                 {new Date(payment.createdAt).toLocaleString()} | Transaction ID: <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{payment.transactionId || 'N/A'}</span>
                             </Typography>
                           }

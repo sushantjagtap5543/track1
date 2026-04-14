@@ -12,6 +12,7 @@ import {
   TableFooter,
   FormControlLabel,
   Chip,
+  Paper,
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import LinkIcon from '@mui/icons-material/Link';
@@ -112,7 +113,7 @@ const UsersPage = () => {
             </Box>
             <Box>
               <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('settingsUsers')}</Typography>
-              <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+              <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                 Manage user accounts, administrative permissions, and system access levels.
               </Typography>
             </Box>
@@ -215,7 +216,7 @@ const UsersPage = () => {
                       <TableCell colSpan={6} align="center">
                         <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                           <PersonIcon sx={{ fontSize: 48, color: 'rgba(255, 255, 255, 0.05)' }} />
-                          <Typography sx={{ color: '#475569', fontWeight: 600 }}>No users found</Typography>
+                          <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No users found</Typography>
                         </Box>
                       </TableCell>
                     </TableRow>

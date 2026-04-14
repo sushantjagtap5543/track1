@@ -19,17 +19,38 @@ if (!razorpay) {
   console.warn('[GeoSurePath] Warning: Razorpay keys are missing. Billing features will be limited.');
 }
 
+const traccar = require('../services/traccar');
+
+// Default plan prices
+const DEFAULT_PRICES = {
+  MONTHLY: 200,
+  HALFYEARLY: 1000,
+  YEARLY: 2000
+};
+
 // Create a new order
 exports.createOrder = async (req, res) => {
-  const { amount, planId } = req.body; // Amount in INR 
+  const { planId, deviceCount = 1 } = req.body;
 
   try {
     if (!razorpay) {
-      return res.status(503).json({ error: 'Payment gateway not configured.' });
+      return res.status(503).json({ 
+        error: 'Payment gateway not configured. Please contact administrator to set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.' 
+      });
     }
 
+    // Fetch global prices from Traccar server attributes
+    const server = await traccar.getServer();
+    const basePrice = server.attributes[`billingPrice${planId}`] || DEFAULT_PRICES[planId] || 0;
+    
+    if (basePrice === 0) {
+      return res.status(400).json({ error: 'Invalid plan selected or price not set.' });
+    }
+
+    const totalAmount = basePrice * deviceCount;
+
     const options = {
-      amount: amount * 100, // amount in the smallest currency unit (paise)
+      amount: totalAmount * 100, // amount in the smallest currency unit (paise)
       currency: "INR",
       receipt: `receipt_order_${Date.now()}`
     };
@@ -40,7 +61,7 @@ exports.createOrder = async (req, res) => {
     await prisma.payment.create({
       data: {
         userId: req.user.userId,
-        amount: amount,
+        amount: totalAmount,
         status: 'PENDING',
         transactionId: order.id
       }
@@ -49,7 +70,7 @@ exports.createOrder = async (req, res) => {
     res.json(order);
   } catch (error) {
     console.error('Razorpay order creation failed:', error);
-    res.status(500).json({ error: 'Failed to create payment order' });
+    res.status(500).json({ error: 'Failed to create payment order: ' + error.message });
   }
 };
 

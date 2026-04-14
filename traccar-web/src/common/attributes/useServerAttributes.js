@@ -69,6 +69,18 @@ export default (t) =>
         name: t('serverDisableShare'),
         type: 'boolean',
       },
+      billingPriceMONTHLY: {
+        name: 'Monthly Subscription Price (₹)',
+        type: 'number',
+      },
+      billingPriceHALFYEARLY: {
+        name: 'Half-Yearly Subscription Price (₹)',
+        type: 'number',
+      },
+      billingPriceYEARLY: {
+        name: 'Yearly Subscription Price (₹)',
+        type: 'number',
+      },
     }),
     [t],
   );

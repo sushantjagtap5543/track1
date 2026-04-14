@@ -44,7 +44,7 @@ import { useAdministrator, useRestriction, useManager } from '../common/util/per
 import { useCatch } from '../reactHelper';
 import useMapStyles from '../map/core/useMapStyles';
 import { map } from '../map/core/MapView';
-import useReportStyles from '../reports/common/useReportStyles';
+import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 
 const UserPage = () => {
@@ -159,7 +159,7 @@ const UserPage = () => {
               <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
                 {item.id ? item.name : t('settingsUser')}
               </Typography>
-              <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+              <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                 Manage profile details, system preferences, and security settings.
               </Typography>
             </Box>

@@ -74,7 +74,7 @@ const DriversPage = () => {
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
                   {t('sharedDrivers')}
                 </Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.8rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>
                   Manage personnel, driver identifiers, and RFID authentication tokens.
                 </Typography>
               </Box>
@@ -157,7 +157,7 @@ const DriversPage = () => {
                         <TableCell colSpan={3} align="center">
                             <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <AssignmentIndIcon sx={{ fontSize: 52, color: 'rgba(56, 189, 248, 0.2)' }} />
-                            <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Drivers Found</Typography>
+                            <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Drivers Found</Typography>
                             </Box>
                         </TableCell>
                         </TableRow>

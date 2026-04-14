@@ -7,6 +7,8 @@ import {
   Container,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LinkIcon from '@mui/icons-material/Link';
+import { Box } from '@mui/material';
 import LinkField from '../common/components/LinkField';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import SettingsMenu from './components/SettingsMenu';
@@ -28,12 +30,31 @@ const GroupConnectionsPage = () => {
       menu={<SettingsMenu />}
       breadcrumbs={['settingsTitle', 'groupDialog', 'sharedConnections']}
     >
-      <Container maxWidth="xs" className={classes.container}>
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">{t('sharedConnections')}</Typography>
-          </AccordionSummary>
-          <AccordionDetails className={classes.details}>
+      <div className={classes.container}>
+        <div className={classes.containerMain}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, ml: 1, animation: 'slide-in-right 0.5s ease-out' }}>
+            <Box sx={{
+              width: 56, height: 56, borderRadius: '18px',
+              background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.25) 0%, rgba(56, 189, 248, 0.25) 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2.5,
+              border: '1px solid rgba(129, 140, 248, 0.3)',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            }}>
+              <LinkIcon sx={{ color: '#818cf8', fontSize: 32 }} />
+            </Box>
+            <Box>
+              <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.75rem', letterSpacing: '-0.025em', lineHeight: 1.2 }}>{t('sharedConnections')}</Typography>
+              <Typography sx={{ color: '#cbd5e1', fontSize: '0.9rem', mt: 0.5 }}>
+                Manage relationships and administrative links between system entities.
+              </Typography>
+            </Box>
+          </Box>
+
+          <Accordion defaultExpanded sx={{ background: 'rgba(15, 23, 42, 0.3)', backdropFilter: 'blur(10px)', borderRadius: '20px !important', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', '&:before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#818cf8' }} />} sx={{ px: 3, py: 1 }}>
+              <Typography sx={{ color: '#818cf8', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('sharedConnections')}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 3, pb: 4, pt: 0 }}>
             <LinkField
               endpointAll="/api/geofences"
               endpointLinked={`/api/geofences?groupId=${id}`}
@@ -96,7 +117,8 @@ const GroupConnectionsPage = () => {
             )}
           </AccordionDetails>
         </Accordion>
-      </Container>
+        </div>
+      </div>
     </PageLayout>
   );
 };

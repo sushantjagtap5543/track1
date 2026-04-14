@@ -106,7 +106,7 @@ const GroupsPage = () => {
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
                   {t('settingsGroups')}
                 </Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.8rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>
                   Organize and manage your device fleet into logical administrative collections.
                 </Typography>
               </Box>
@@ -187,7 +187,7 @@ const GroupsPage = () => {
                       <TableCell colSpan={2} align="center">
                         <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                           <GroupIcon sx={{ fontSize: 52, color: 'rgba(56, 189, 248, 0.2)' }} />
-                          <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Groups Found</Typography>
+                          <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Groups Found</Typography>
                         </Box>
                       </TableCell>
                     </TableRow>

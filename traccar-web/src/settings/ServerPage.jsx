@@ -87,7 +87,7 @@ const ServerPage = () => {
             </Box>
             <Box>
             <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('settingsServer')}</Typography>
-            <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+            <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                 Manage global platform configurations, default units, and system-wide permissions.
             </Typography>
             </Box>

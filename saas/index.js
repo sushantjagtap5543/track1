@@ -118,15 +118,15 @@ if (isRecoveryMode) {
   app.get('/api/geofences/:id', (req, res) => res.json({ id: parseInt(req.params.id), name: "GeoSure HQ", area: "CIRCLE (18.5204 73.8567, 500)", attributes: {} }));
 
   app.get(['/api/notifications', '/api/notification'], (req, res) => {
-    const list = [
-      { id: 1, type: 'deviceOnline', always: true, description: 'Vehicle Online Alert', notificators: 'web,mail', attributes: {} },
-      { id: 2, type: 'deviceOffline', always: true, description: 'Vehicle Offline Alert', notificators: 'web,mail', attributes: {} },
-      { id: 3, type: 'ignitionOn', always: true, description: 'Engine Start Notification', notificators: 'web', attributes: {} },
-      { id: 4, type: 'geofenceEnter', always: false, description: 'HQ Entrance Alert', notificators: 'web,mail', attributes: { alarms: 'sos' } },
-      { id: 5, type: 'overspeed', always: true, description: 'Speeding Violation', notificators: 'web,mail,sms', attributes: { speedLimit: 80 } },
-      { id: 6, type: 'alarm', always: true, description: 'SOS Alarm', notificators: 'web,mail,sms', attributes: { alarms: 'sos,vibration' } }
-    ];
-    if (req.query.deviceId) return res.json([list[0], list[5]]);
+    const list = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      type: ['deviceOnline', 'deviceOffline', 'ignitionOn', 'geofenceEnter', 'overspeed', 'alarm'][i % 6],
+      always: true,
+      description: `Alert ${i + 1}: ${['Connection restablished', 'Connection lost', 'Engine started', 'Entered Warehouse', 'Speeding at 95km/h', 'SOS Button Pressed'][i % 6]}`,
+      notificators: 'web,mail',
+      attributes: { alarm: i % 6 === 5 ? 'sos' : null, speedLimit: 80 }
+    }));
+    if (req.query.deviceId) return res.json(list.filter(n => n.id % 2 === 0));
     res.json(list);
   });
   app.get('/api/notifications/:id', (req, res) => res.json({ id: parseInt(req.params.id), type: 'deviceOnline', always: true, description: 'Mock Notification', notificators: 'web', attributes: {} }));
@@ -140,9 +140,17 @@ if (isRecoveryMode) {
     { type: 'web' }, { type: 'mail' }, { type: 'sms' }, { type: 'traccar' }, { type: 'telegram' }, { type: 'pushover' }
   ]));
 
-  app.get(['/api/devices', '/api/device'], (req, res) => res.json([
-    { id: 1, name: 'Vehicle 1', uniqueId: '1', status: 'online', lastUpdate: new Date(), attributes: {} }
-  ]));
+  app.get(['/api/devices', '/api/device'], (req, res) => {
+    const list = Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      name: `Vehicle ${i + 1}`,
+      uniqueId: String(i + 1),
+      status: i % 3 === 0 ? 'online' : 'offline',
+      lastUpdate: new Date(),
+      attributes: { batteryLevel: 70 + (i % 30), ignition: i % 2 === 0 }
+    }));
+    res.json(list);
+  });
 
   app.get(['/api/positions', '/api/position'], (req, res) => {
     const { deviceId, from, to } = req.query;
@@ -208,8 +216,13 @@ if (isRecoveryMode) {
   
   app.get(['/api/commands', '/api/command'], (req, res) => res.json([
     { id: 1, deviceId: 1, type: "engineStop", description: "Stop Engine", attributes: {} },
-    { id: 2, deviceId: 1, type: "engineResume", description: "Resume Engine", attributes: {} }
+    { id: 2, deviceId: 1, type: "engineResume", description: "Resume Engine", attributes: {} },
+    { id: 3, deviceId: 1, type: "custom", description: "Reboot GPS", attributes: {} }
   ]));
+  app.post('/api/commands/send', (req, res) => {
+    console.log('[Mock Traccar] Command Sent:', req.body);
+    res.status(202).json({ id: Date.now(), ...req.body, status: 'sent' });
+  });
   app.get('/api/commands/:id', (req, res) => res.json({ id: parseInt(req.params.id), deviceId: 1, type: "custom", description: "Mock Command " + req.params.id, attributes: {} }));
 
   app.get(['/api/reports/combined', '/api/reports/events', '/api/reports/geofences', '/api/reports/trips', '/api/reports/stops', '/api/reports/summary', '/api/reports/route'], (req, res) => {

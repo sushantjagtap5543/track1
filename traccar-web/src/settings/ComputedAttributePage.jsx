@@ -13,8 +13,10 @@ import {
   Autocomplete,
   Button,
   Snackbar,
+  Box,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CodeIcon from '@mui/icons-material/Code';
 import EditItemView from './components/EditItemView';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import usePositionAttributes from '../common/attributes/usePositionAttributes';
@@ -91,7 +93,7 @@ const ComputedAttributePage = () => {
         </Box>
         <Box>
           <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedComputedAttribute')}</Typography>
-          <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+          <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
             Configure logic and expressions for dynamic attribute calculation.
           </Typography>
         </Box>

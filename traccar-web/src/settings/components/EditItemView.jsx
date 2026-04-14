@@ -11,7 +11,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useCatch, useEffectAsync } from '../../reactHelper';
 import { useTranslation } from '../../common/components/LocalizationProvider';
 import PageLayout from '../../common/components/PageLayout';
-import useReportStyles from '../../reports/common/useReportStyles';
+import useSettingsStyles from '../common/useSettingsStyles';
 import fetchOrThrow from '../../common/util/fetchOrThrow';
 
 const EditItemView = ({

@@ -64,7 +64,7 @@ const CommandsPage = () => {
                 </Box>
                 <Box>
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedSavedCommands')}</Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                     Configure pre-defined commands for remote device control and automation.
                 </Typography>
                 </Box>
@@ -143,7 +143,7 @@ const CommandsPage = () => {
                         <TableCell colSpan={3} align="center">
                             <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <PublishIcon sx={{ fontSize: 52, color: 'rgba(239, 68, 68, 0.2)' }} />
-                            <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Commands Found</Typography>
+                            <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Commands Found</Typography>
                             </Box>
                         </TableCell>
                         </TableRow>

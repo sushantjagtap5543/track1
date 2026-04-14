@@ -301,7 +301,7 @@ const PreferencesPage = () => {
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
                   {t('sharedPreferences')}
                 </Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                   Personalize your GeoSurePath experience and dashboard settings
                 </Typography>
               </Box>

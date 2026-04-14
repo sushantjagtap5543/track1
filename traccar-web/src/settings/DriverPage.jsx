@@ -37,7 +37,7 @@ const DriverPage = () => {
         </Box>
         <Box>
           <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedDriver')}</Typography>
-          <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+          <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
             Update driver profile information and identification tokens for personnel tracking.
           </Typography>
         </Box>

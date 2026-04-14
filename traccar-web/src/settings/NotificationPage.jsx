@@ -122,7 +122,7 @@ const NotificationPage = () => {
               <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.02em' }}>
                 {item.id ? 'Edit Notification' : 'New Notification'}
               </Typography>
-              <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+              <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                 Define trigger conditions and delivery methods for this alert.
               </Typography>
             </Box>

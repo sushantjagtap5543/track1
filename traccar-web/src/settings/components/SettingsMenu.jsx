@@ -89,7 +89,7 @@ const SettingsMenu = () => {
               <MenuItem
                 title={t('sharedCalendars')}
                 link="/settings/calendars"
-                icon={<TodayIcon sx={{ color: '#f8fafc !important' }} />}
+                icon={<TodayIcon />}
                 selected={location.pathname.startsWith('/settings/calendar')}
               />
             )}

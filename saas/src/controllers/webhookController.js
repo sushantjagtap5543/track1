@@ -16,7 +16,7 @@ const handleTraccarWebhook = async (req, res) => {
   }
 
   try {
-    const { deviceId, latitude, longitude, deviceTime, attributes } = req.body;
+    const { deviceId, latitude, longitude, speed, deviceTime, attributes } = req.body;
 
     if (!deviceId || latitude === undefined || longitude === undefined) {
       return res.status(400).json({ error: 'Missing required position fields' });

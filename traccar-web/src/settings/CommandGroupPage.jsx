@@ -24,7 +24,7 @@ import { useCatch } from '../reactHelper';
 import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 
-const CommandDevicePage = () => {
+const CommandGroupPage = () => {
   const navigate = useNavigate();
   const { classes } = useSettingsStyles();
   const t = useTranslation();
@@ -98,4 +98,4 @@ const CommandDevicePage = () => {
   );
 };
 
-export default CommandDevicePage;
+export default CommandGroupPage;

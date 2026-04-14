@@ -192,7 +192,7 @@ const NotificationsPage = () => {
                       <TableCell colSpan={5} align="center">
                         <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                           <NotificationsIcon sx={{ fontSize: 52, color: 'rgba(56, 189, 248, 0.2)' }} />
-                          <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Notifications Configured</Typography>
+                          <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Notifications Configured</Typography>
                         </Box>
                       </TableCell>
                     </TableRow>

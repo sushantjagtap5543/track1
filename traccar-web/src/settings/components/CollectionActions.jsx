@@ -9,9 +9,34 @@ import { makeStyles } from 'tss-react/mui';
 import RemoveDialog from '../../common/components/RemoveDialog';
 import { useTranslation } from '../../common/components/LocalizationProvider';
 
-const useStyles = makeStyles()(() => ({
+const useStyles = makeStyles()((theme) => ({
   row: {
     display: 'flex',
+    gap: theme.spacing(0.5),
+  },
+  iconButton: {
+    padding: '6px',
+    borderRadius: '10px',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    color: '#94a3b8',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.12)',
+      color: '#f1f5f9',
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+      transform: 'scale(1.05)',
+    },
+    '& .MuiSvgIcon-root': {
+      fontSize: '18px',
+    },
+  },
+  deleteIcon: {
+    '&:hover': {
+      color: '#ef4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderColor: 'rgba(239, 68, 68, 0.2)',
+    },
   },
 }));
 
@@ -24,7 +49,7 @@ const CollectionActions = ({
   readonly,
 }) => {
   const theme = useTheme();
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const navigate = useNavigate();
   const t = useTranslation();
 
@@ -59,8 +84,8 @@ const CollectionActions = ({
     <>
       {phone ? (
         <>
-          <IconButton size="small" onClick={(event) => setMenuAnchorEl(event.currentTarget)}>
-            <MoreVertIcon fontSize="small" />
+          <IconButton className={classes.iconButton} onClick={(event) => setMenuAnchorEl(event.currentTarget)}>
+            <MoreVertIcon />
           </IconButton>
           <Menu open={!!menuAnchorEl} anchorEl={menuAnchorEl} onClose={() => setMenuAnchorEl(null)}>
             {customActions &&
@@ -69,12 +94,10 @@ const CollectionActions = ({
                   {action.title}
                 </MenuItem>
               ))}
-            {!readonly && (
-              <>
-                {editPath && <MenuItem onClick={handleEdit}>{t('sharedEdit')}</MenuItem>}
-                <MenuItem onClick={handleRemove}>{t('sharedRemove')}</MenuItem>
-              </>
-            )}
+            <>
+              {editPath && <MenuItem disabled={readonly} onClick={handleEdit}>{t('sharedEdit')}</MenuItem>}
+              <MenuItem disabled={readonly} onClick={handleRemove}>{t('sharedRemove')}</MenuItem>
+            </>
           </Menu>
         </>
       ) : (
@@ -82,27 +105,29 @@ const CollectionActions = ({
           {customActions &&
             customActions.map((action) => (
               <Tooltip title={action.title} key={action.key}>
-                <IconButton size="small" onClick={() => handleCustom(action)}>
+                <IconButton className={classes.iconButton} onClick={() => handleCustom(action)}>
                   {action.icon}
                 </IconButton>
               </Tooltip>
             ))}
-          {!readonly && (
-            <>
-              {editPath && (
-                <Tooltip title={t('sharedEdit')}>
-                  <IconButton size="small" onClick={handleEdit}>
-                    <EditIcon fontSize="small" />
+          <>
+            {editPath && (
+              <Tooltip title={t('sharedEdit')}>
+                <span>
+                  <IconButton className={classes.iconButton} onClick={handleEdit} disabled={readonly}>
+                    <EditIcon />
                   </IconButton>
-                </Tooltip>
-              )}
-              <Tooltip title={t('sharedRemove')}>
-                <IconButton size="small" onClick={handleRemove}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                </span>
               </Tooltip>
-            </>
-          )}
+            )}
+            <Tooltip title={t('sharedRemove')}>
+              <span>
+                <IconButton className={cx(classes.iconButton, classes.deleteIcon)} onClick={handleRemove} disabled={readonly}>
+                  <DeleteIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </>
         </div>
       )}
       <RemoveDialog

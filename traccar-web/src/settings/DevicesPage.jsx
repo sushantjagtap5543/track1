@@ -134,7 +134,7 @@ const DevicesPage = () => {
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
                   {t('deviceTitle')}
                 </Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                   Manage and monitor your hardware fleet with real-time status tracking.
                 </Typography>
               </Box>
@@ -164,7 +164,7 @@ const DevicesPage = () => {
                             }}
                         />
                     }
-                    label={<Typography sx={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600 }}>{t('notificationAlways')}</Typography>}
+                    label={<Typography sx={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}>{t('notificationAlways')}</Typography>}
                     labelPlacement="start"
                     disabled={!manager}
                 />
@@ -246,7 +246,7 @@ const DevicesPage = () => {
                                             />
                                         </Typography>
                                     ) : (
-                                        <Typography sx={{ color: '#475569', fontSize: '0.8rem' }}>Location missing</Typography>
+                                        <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>Location missing</Typography>
                                     )}
                                 </TableCell>
                                 {manager && (
@@ -271,7 +271,7 @@ const DevicesPage = () => {
                             <TableCell colSpan={manager ? 8 : 7} align="center">
                                 <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                                     <DevicesIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.05)' }} />
-                                    <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Devices Found</Typography>
+                                    <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Devices Found</Typography>
                                 </Box>
                             </TableCell>
                         </TableRow>

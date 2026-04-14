@@ -75,7 +75,7 @@ const ComputedAttributesPage = () => {
                 </Box>
                 <Box>
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedComputedAttributes')}</Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                     Extend platform functionality with custom logic and dynamic data transformations.
                 </Typography>
                 </Box>
@@ -156,7 +156,7 @@ const ComputedAttributesPage = () => {
                         <TableCell colSpan={4} align="center">
                             <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <CodeIcon sx={{ fontSize: 52, color: 'rgba(56, 189, 248, 0.2)' }} />
-                            <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Computed Attributes Found</Typography>
+                            <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Computed Attributes Found</Typography>
                             </Box>
                         </TableCell>
                         </TableRow>

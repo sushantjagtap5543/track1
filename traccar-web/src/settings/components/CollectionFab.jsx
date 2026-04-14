@@ -21,16 +21,13 @@ const CollectionFab = ({ editPath, disabled }) => {
 
   const readonly = useRestriction('readonly');
 
-  if (!readonly && !disabled) {
-    return (
-      <div className={classes.fab}>
-        <Fab size="medium" color="primary" onClick={() => navigate(editPath)}>
-          <AddIcon />
-        </Fab>
-      </div>
-    );
-  }
-  return '';
+  return (
+    <div className={classes.fab}>
+      <Fab size="medium" color="primary" disabled={readonly || disabled} onClick={() => navigate(editPath)}>
+        <AddIcon />
+      </Fab>
+    </div>
+  );
 };
 
 export default CollectionFab;

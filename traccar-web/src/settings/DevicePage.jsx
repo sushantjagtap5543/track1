@@ -82,7 +82,7 @@ const DevicePage = () => {
         </Box>
         <Box>
           <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.75rem', letterSpacing: '-0.025em', lineHeight: 1.2 }}>{t('sharedDevice')}</Typography>
-          <Typography sx={{ color: '#94a3b8', fontSize: '0.9rem', mt: 0.5 }}>
+          <Typography sx={{ color: '#cbd5e1', fontSize: '0.9rem', mt: 0.5 }}>
             Configure technical parameters, identification tokens, and category icons for your hardware.
           </Typography>
         </Box>
@@ -194,7 +194,7 @@ const DevicePage = () => {
                       <Checkbox
                         checked={item.disabled}
                         onChange={(event) => setItem({ ...item, disabled: event.target.checked })}
-                        sx={{ color: '#475569', '&.Mui-checked': { color: '#38bdf8' } }}
+                        sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#38bdf8' } }}
                       />
                     }
                     label={<Typography sx={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 600 }}>{t('sharedDisabled')}</Typography>}
@@ -263,7 +263,7 @@ const DevicePage = () => {
                             <Checkbox
                             checked={item.attributes?.vltForwarding || false}
                             onChange={(event) => setItem({ ...item, attributes: { ...item.attributes, vltForwarding: event.target.checked } })}
-                            sx={{ color: '#475569', '&.Mui-checked': { color: '#10b981' } }}
+                            sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#10b981' } }}
                             />
                         }
                         label={<Typography sx={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 600 }}>Enable Government VLT Forwarding</Typography>}

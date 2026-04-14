@@ -57,7 +57,7 @@ const GeofencePage = () => {
         </Box>
         <Box>
           <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedGeofence')}</Typography>
-          <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+          <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
             Define geographic boundaries, security zones, and exclusion areas for automated operational logic.
           </Typography>
         </Box>

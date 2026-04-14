@@ -40,12 +40,26 @@ export default (server, darkMode, direction) =>
                 backdrop-filter: blur(8px);
                 border: 1px solid rgba(255,255,255,0.1);
               }
-              input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+                            input[type="datetime-local"]::-webkit-calendar-picker-indicator,
               input[type="date"]::-webkit-calendar-picker-indicator {
                 filter: invert(1);
                 cursor: pointer;
               }
               
+              /* MapLibre Draw Controls - White Icons Override */
+              .maplibregl-ctrl-group button.mapbox-gl-draw_polygon,
+              .maplibregl-ctrl-group button.mapbox-gl-draw_line,
+              .maplibregl-ctrl-group button.mapbox-gl-draw_trash {
+                filter: invert(1) brightness(2);
+                opacity: 0.9;
+              }
+              .maplibregl-ctrl-group button.mapbox-gl-draw_polygon:hover,
+              .maplibregl-ctrl-group button.mapbox-gl-draw_line:hover,
+              .maplibregl-ctrl-group button.mapbox-gl-draw_trash:hover {
+                filter: invert(1) brightness(5);
+                opacity: 1;
+              }
+
               /* Custom Premium Scrollbar */
               * {
                 scrollbar-width: thin;

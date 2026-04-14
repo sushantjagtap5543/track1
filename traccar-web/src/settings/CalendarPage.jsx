@@ -11,8 +11,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Box,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { MuiFileInput } from 'mui-file-input';
 import EditItemView from './components/EditItemView';
 import EditAttributesAccordion from './components/EditAttributesAccordion';

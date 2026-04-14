@@ -212,12 +212,22 @@ const disableUser = async (userId, disabled = true) => {
   return await updateUser(userId, { disabled });
 };
 
+const getServer = async () => {
+  if (MOCK_TRACCAR === 'true') return { attributes: {} };
+  const response = await fetchWithTimeout(`${TRACCAR_URL}/api/server`, {
+    headers: getAuthHeaders()
+  });
+  if (!response.ok) await handleTraccarError(response, 'getServer');
+  return response.json();
+};
+
 const checkHealth = async () => {
-  if (MOCK_TRACCAR === 'true') return true;
   try {
-    const response = await fetchWithTimeout(`${TRACCAR_URL}/api/server`, { timeout: 2000 });
+    const response = await fetchWithTimeout(`${TRACCAR_URL}/api/server`, {
+      headers: getAuthHeaders()
+    });
     return response.ok;
-  } catch (err) {
+  } catch (error) {
     return false;
   }
 };
@@ -238,6 +248,7 @@ module.exports = {
   createGeofence,
   deleteGeofence,
   linkGeofenceToDevice,
-  checkHealth
+  checkHealth,
+  getServer
 };
 

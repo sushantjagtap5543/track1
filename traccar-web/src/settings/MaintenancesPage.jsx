@@ -108,7 +108,7 @@ const MaintenancesPage = () => {
                 </Box>
                 <Box>
                 <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('sharedMaintenance')}</Typography>
-                <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                     Track service intervals and equipment maintenance schedules for fleet reliability.
                 </Typography>
                 </Box>
@@ -212,7 +212,7 @@ const MaintenancesPage = () => {
                         <TableCell colSpan={5} align="center">
                             <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <BuildIcon sx={{ fontSize: 52, color: 'rgba(234, 179, 8, 0.2)' }} />
-                            <Typography sx={{ color: '#475569', fontWeight: 600 }}>No Maintenance Tasks Found</Typography>
+                            <Typography sx={{ color: '#94a3b8', fontWeight: 600 }}>No Maintenance Tasks Found</Typography>
                             </Box>
                         </TableCell>
                         </TableRow>
