@@ -66,6 +66,22 @@ public class GeofenceReportProvider {
         var result = new ArrayList<GeofenceReportItem>();
         for (Device device : DeviceUtil.getAccessibleDevices(storage, userId, deviceIds, groupIds)) {
             var openEvents = new HashMap<Long, Event>();
+            
+            // Look back for last events before the period
+            for (long geofenceId : geofenceIds) {
+                Event lastEvent = storage.getObject(Event.class, new Request(
+                        new Columns.All(),
+                        new Condition.And(
+                                new Condition.Equals("deviceId", device.getId()),
+                                new Condition.And(
+                                        new Condition.Equals("geofenceId", geofenceId),
+                                        new Condition.Compare("eventTime", "<", from))),
+                        new Order("eventTime", true, 1)));
+                if (lastEvent != null && Event.TYPE_GEOFENCE_ENTER.equals(lastEvent.getType())) {
+                    openEvents.put(geofenceId, lastEvent);
+                }
+            }
+
             for (Event event : getEvents(device.getId(), from, to)) {
                 long geofenceId = event.getGeofenceId();
                 if (geofenceIds.contains(geofenceId)) {
@@ -73,12 +89,12 @@ public class GeofenceReportProvider {
                         openEvents.put(geofenceId, event);
                     } else if (Event.TYPE_GEOFENCE_EXIT.equals(event.getType())) {
                         Event enterEvent = openEvents.remove(geofenceId);
-                        if (enterEvent != null && !event.getEventTime().before(enterEvent.getEventTime())) {
+                        if (enterEvent != null) {
                             GeofenceReportItem item = new GeofenceReportItem();
                             item.setDeviceId(device.getId());
                             item.setDeviceName(device.getName());
                             item.setGeofenceId(geofenceId);
-                            item.setStartTime(enterEvent.getEventTime());
+                            item.setStartTime(new Date(Math.max(enterEvent.getEventTime().getTime(), from.getTime())));
                             item.setEndTime(event.getEventTime());
                             result.add(item);
                         }

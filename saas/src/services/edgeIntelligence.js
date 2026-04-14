@@ -1,12 +1,10 @@
-// src/services/edgeIntelligence.js
-
 /**
  * Edge Intelligence Service
  * Simulates intelligence at the edge/gateway level.
  * Features: Data deduplication, Outlier detection, Priority flagging.
  */
 
-const processEdgeData = (payload) => {
+export const processEdgeData = (payload) => {
   const { latitude, longitude, speed, attributes } = payload;
   
   // 1. Basic Outlier Detection (Self-healing logic)
@@ -31,6 +29,6 @@ const processEdgeData = (payload) => {
   return { status: 'accepted', data: optimizedPayload };
 };
 
-module.exports = {
+export default {
   processEdgeData
 };

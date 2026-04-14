@@ -101,7 +101,7 @@ public class ItsProtocolDecoder extends BaseProtocolDecoder {
             .number("(d+.?d*),")                 // adc1
             .number("(d+.?d*),")                 // adc2
             .or()
-            .number("(d+.d+),")                  // adc1
+            .number("(d+.d+),")                  // altitude
             .number("(d+),")                     // odometer
             .number("(d{6}),")                   // index
             .expression("([^,]+),")              // response format

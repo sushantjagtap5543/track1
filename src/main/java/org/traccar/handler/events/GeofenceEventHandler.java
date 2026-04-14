@@ -37,7 +37,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
 
     @Override
     public void onPosition(Position position, Callback callback) {
-        if (!PositionUtil.isLatest(cacheManager, position)) {
+        if (!org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

@@ -1,5 +1,5 @@
-const { parentPort, workerData } = require('worker_threads');
-const crypto = require('crypto');
+import { parentPort, workerData } from 'worker_threads';
+import crypto from 'crypto';
 
 /**
  * Anti-Gravity Crypto Worker

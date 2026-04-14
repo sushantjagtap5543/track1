@@ -1,16 +1,17 @@
-// src/routes/reports.js
-const express = require('express');
+import express from 'express';
+import { getTrips, getStops, getSummary, getCombined, getEvents, getGeofences, getHistory } from '../controllers/reportController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const reportController = require('../controllers/reportController');
-const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.use(authenticateToken);
 
-router.get('/trips', reportController.getTrips);
-router.get('/stops', reportController.getStops);
-router.get('/summary', reportController.getSummary);
-router.get('/combined', reportController.getCombined);
-router.get('/events', reportController.getEvents);
-router.get('/geofences', reportController.getGeofences);
+router.get('/trips', getTrips);
+router.get('/stops', getStops);
+router.get('/summary', getSummary);
+router.get('/combined', getCombined);
+router.get('/events', getEvents);
+router.get('/geofences', getGeofences);
+router.get('/history', getHistory);
 
-module.exports = router;
+export default router;

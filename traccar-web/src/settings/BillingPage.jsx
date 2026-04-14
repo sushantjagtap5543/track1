@@ -18,6 +18,9 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -79,6 +82,7 @@ const BillingPage = () => {
   const deviceCount = Object.keys(devices).length || 1;
   const [subscription, setSubscription] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(Object.keys(devices)[0] || '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -106,7 +110,7 @@ const BillingPage = () => {
       const orderRes = await fetch('/api/billing/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: plan.id, deviceCount }),
+        body: JSON.stringify({ planId: plan.id, vehicleId: selectedDeviceId }),
       });
 
       if (!orderRes.ok) {
@@ -130,7 +134,7 @@ const BillingPage = () => {
             body: JSON.stringify({
               ...response,
               planId: plan.id,
-              deviceCount,
+              vehicleId: selectedDeviceId,
             }),
           });
 
@@ -209,48 +213,139 @@ const BillingPage = () => {
                   Billing & Subscriptions
                 </Typography>
                 <Typography sx={{ color: '#cbd5e1', fontSize: '0.85rem' }}>
-                  Manage your fleet subscriptions, payment methods, and transaction history.
-                </Typography>
-              </Box>
-            </Box>
+                      Manage your fleet subscriptions, payment methods, and transaction history.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography sx={{ color: '#fff', fontWeight: 600 }}>Select Device:</Typography>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <Select
+                      value={selectedDeviceId}
+                      onChange={(e) => setSelectedDeviceId(e.target.value)}
+                      sx={{
+                        background: 'rgba(255,255,255,0.05)',
+                        color: '#fff',
+                        borderRadius: '10px',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.1)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.2)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#38bdf8',
+                        },
+                        '& .MuiSvgIcon-root': {
+                          color: '#38bdf8',
+                        },
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            bgcolor: '#0f172a',
+                            backgroundImage: 'none',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '12px',
+                            mt: 1,
+                            '& .MuiMenuItem-root': {
+                              color: '#cbd5e1',
+                              fontSize: '0.9rem',
+                              '&:hover': {
+                                bgcolor: 'rgba(56, 189, 248, 0.1)',
+                                color: '#fff',
+                              },
+                              '&.Mui-selected': {
+                                bgcolor: 'rgba(56, 189, 248, 0.2)',
+                                color: '#38bdf8',
+                                '&:hover': {
+                                  bgcolor: 'rgba(56, 189, 248, 0.3)',
+                                },
+                              },
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      {Object.values(devices).map((d) => (
+                        <MenuItem key={d.id} value={d.id}>
+                          {d.name} ({d.uniqueId})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
 
             {error && <Alert severity="error" sx={{ mb: 4, borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.2)' }}>{error}</Alert>}
 
             {subscription && (
               <Box sx={{ 
-                p: 3, mb: 4, borderRadius: '20px', 
-                background: 'rgba(56, 189, 248, 0.1)', 
-                border: '1px solid rgba(56, 189, 248, 0.2)',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                p: 3, mb: 4, borderRadius: '24px', 
+                background: 'rgba(56, 189, 248, 0.08)', 
+                border: '1px solid rgba(56, 189, 248, 0.15)',
+                backdropFilter: 'blur(20px)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
               }}>
                 <Box>
-                  <Typography variant="subtitle2" sx={{ color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Subscription</Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#f8fafc' }}>{subscription.planId || 'No Active Plan'}</Typography>
-                  <Typography variant="body2" sx={{ color: '#cbd5e1', mt: 0.5 }}>
-                    Status: <Box component="span" sx={{ color: subscription.status === 'ACTIVE' ? '#10b981' : '#ef4444', fontWeight: 800 }}>{subscription.status}</Box>
-                    {subscription.expiresAt && ` | Expires: ${new Date(subscription.expiresAt).toLocaleDateString()}`}
+                  <Typography variant="subtitle2" sx={{ color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.75rem' }}>Current Subscription</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#f8fafc', mt: 0.5 }}>{subscription.planId || 'No Active Plan'}</Typography>
+                  <Typography variant="body2" sx={{ color: '#cbd5e1', mt: 0.8, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box component="span" sx={{ 
+                      px: 1.5, py: 0.4, borderRadius: '8px', 
+                      background: subscription.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: subscription.status === 'ACTIVE' ? '#10b981' : '#ef4444',
+                      fontWeight: 800, fontSize: '0.75rem', border: '1px solid rgba(16, 185, 129, 0.1)'
+                    }}>{subscription.status}</Box>
+                    {subscription.expiresAt && <Box component="span" sx={{ color: '#94a3b8' }}>• Expires: {new Date(subscription.expiresAt).toLocaleDateString()}</Box>}
                   </Typography>
                 </Box>
                 {subscription.status === 'ACTIVE' && (
-                  <Chip label="PRO PLAN" size="small" sx={{ background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', color: '#fff', fontWeight: 900, fontSize: '0.7rem' }} />
+                  <Chip 
+                    label="PRO PLAN" 
+                    sx={{ 
+                      background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', 
+                      color: '#fff', 
+                      fontWeight: 900, 
+                      fontSize: '0.75rem',
+                      height: '32px',
+                      boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)',
+                      border: 'none'
+                    }} 
+                  />
                 )}
               </Box>
             )}
 
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
               {plans.map((plan) => (
                 <Grid item xs={12} md={4} key={plan.id}>
-                  <Card className={`${classes.card} ${plan.premium ? classes.premiumCard : ''}`} sx={{ 
-                    backgroundColor: 'rgba(30, 41, 59, 0.4)', 
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '24px',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  <Card sx={{ 
+                    position: 'relative',
+                    background: 'rgba(15, 23, 42, 0.4)', 
+                    backdropFilter: 'blur(20px)',
+                    border: plan.premium ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '28px',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    overflow: 'visible',
                     '&:hover': {
-                        transform: 'translateY(-10px)',
-                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
-                        borderColor: '#38bdf8'
+                        transform: 'translateY(-12px)',
+                        boxShadow: plan.premium ? '0 30px 60px -12px rgba(56, 189, 248, 0.25)' : '0 30px 60px -12px rgba(0, 0, 0, 0.5)',
+                        borderColor: plan.premium ? '#38bdf8' : 'rgba(255, 255, 255, 0.2)',
+                        '& .plan-icon-box': {
+                          transform: 'scale(1.1) rotate(5deg)',
+                        }
                     }
                   }}>
+                    {plan.premium && (
+                      <Box sx={{ 
+                        position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                        background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
+                        color: '#fff', fontSize: '0.7rem', fontWeight: 900, px: 2, py: 0.5, borderRadius: '99px',
+                        boxShadow: '0 4px 12px rgba(56, 189, 248, 0.4)', zIndex: 1, letterSpacing: '0.05em'
+                      }}>MOST POPULAR</Box>
+                    )}
                     <CardContent sx={{ p: 4 }}>
                       <Typography variant="h6" sx={{ fontWeight: 800, color: '#f8fafc' }}>{plan.name}</Typography>
                       <Box sx={{ my: 3 }}>

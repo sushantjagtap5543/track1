@@ -1,6 +1,5 @@
-// src/services/queue.js
-const { Queue, Worker } = require('bullmq');
-const IORedis = require('ioredis');
+import { Queue, Worker } from 'bullmq';
+import IORedis from 'ioredis';
 
 const redisConnection = new IORedis({
   host: process.env.REDIS_HOST || '127.0.0.1',
@@ -48,12 +47,12 @@ const createResilientQueue = (name) => {
   return queue;
 };
 
-const emailQueue = createResilientQueue('EmailQueue');
-const alertQueue = createResilientQueue('AlertQueue');
-const billingQueue = createResilientQueue('BillingQueue');
+export const emailQueue = createResilientQueue('EmailQueue');
+export const alertQueue = createResilientQueue('AlertQueue');
+export const billingQueue = createResilientQueue('BillingQueue');
 
 // Initialize Workers
-const startWorkers = () => {
+export const startWorkers = () => {
   if (redisConnection.status !== 'ready' && redisConnection.status !== 'connecting') {
      console.log('[GeoSurePath] Skipping background workers (Redis unavailable).');
      return;
@@ -82,11 +81,4 @@ const startWorkers = () => {
   // Event listeners for workers
   emailWorker.on('completed', job => console.log(`[EmailWorker] Job ${job.id} completed.`));
   emailWorker.on('failed', (job, err) => console.error(`[EmailWorker] Job ${job.id} failed:`, err));
-};
-
-module.exports = {
-  emailQueue,
-  alertQueue,
-  billingQueue,
-  startWorkers
 };

@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const traccar = require('./traccar');
+import { PrismaClient } from '@prisma/client';
+import traccar from './traccar.js';
 const prisma = new PrismaClient();
 
 /**
@@ -54,4 +54,4 @@ const healthService = {
   }
 };
 
-module.exports = healthService;
+export default healthService;

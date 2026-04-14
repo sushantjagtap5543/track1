@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>
+<properties>
+
+    <!-- 
+        SCALED CONFIGURATION (10,000+ DEVICES)
+        This configuration is optimized for high-concurrency ingestion and 
+        horizontal scalability.
+    -->
+
+    <!-- Database Connection Pool Optimization -->
+    <entry key='database.driver'>org.postgresql.Driver</entry>
+    <entry key='database.url'>jdbc:postgresql://${DB_HOST:-db}:5432/${DB_NAME:-geosurepath}?currentSchema=public&amp;prepareThreshold=0</entry>
+    <entry key='database.user'>${DB_USER:-geosurepath}</entry>
+    <entry key='database.password'>${DB_PASSWORD:?DB_PASSWORD_REQUIRED}</entry>
+    
+    <!-- Large pool for high concurrent writes -->
+    <entry key='database.maxPoolSize'>100</entry>
+    <entry key='database.minPoolSize'>20</entry>
+    <entry key='database.checkoutTimeout'>10000</entry>
+
+    <!-- Web Server Configuration -->
+    <entry key='web.port'>8082</entry>
+    <entry key='web.path'>./modern</entry>
+    
+    <!-- 
+        Data Decoupling (Kafka/RabbitMQ Forwarding) 
+        Uncomment and configure to forward data to a processing queue.
+    -->
+    <!-- 
+    <entry key='forward.enable'>true</entry>
+    <entry key='forward.url'>http://kafka-bridge:8080/ingest</entry>
+    <entry key='forward.json'>true</entry>
+    -->
+
+    <!-- Performance Filtering (Aggressive) -->
+    <!-- Reduces DB load by filtering minor movements and duplicates -->
+    <entry key='filter.enable'>true</entry>
+    <entry key='filter.limit'>15</entry> <!-- Ignore points within 15s of last -->
+    <entry key='filter.distance'>30</entry> <!-- Ignore points within 30m of last -->
+    <entry key='filter.invalid'>true</entry>
+    <entry key='filter.duplicate'>true</entry>
+    <entry key='filter.stationary'>true</entry>
+
+    <!-- Resource Utilization -->
+    <entry key='logger.level'>warn</entry> <!-- Minimize log I/O -->
+    <entry key='logger.enable'>true</entry>
+    
+    <!-- Statistics collection may impact performance at extreme scale -->
+    <entry key='server.statistics'>https://www.traccar.org/analytics/</entry>
+
+    <!-- Security & Managed Environment -->
+    <entry key='registration.enable'>false</entry>
+    <entry key='geofence.polyline'>true</entry>
+
+</properties>

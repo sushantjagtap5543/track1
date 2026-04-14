@@ -27,7 +27,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import FenceIcon from '@mui/icons-material/Fence';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { devicesActions } from '../store';
+import { devicesActions, sessionActions } from '../store';
 import {
   formatAlarm,
   formatBoolean,
@@ -173,6 +173,12 @@ const DeviceRow = ({ devices, index, style }) => {
     e.stopPropagation();
     const action = position?.attributes?.ignition ? 'engineStop' : 'engineResume';
     if (window.confirm(`Are you sure you want to ${action === 'engineStop' ? 'BLOCK' : 'RESUME'} engine for ${item.name}?`)) {
+      if (position) {
+        dispatch(sessionActions.updatePositions([{
+          ...position,
+          attributes: { ...position.attributes, ignition: action === 'engineResume' }
+        }]));
+      }
       try {
         const response = await fetch('/api/saas/vehicles/engine', {
           method: 'POST',
@@ -208,6 +214,12 @@ const DeviceRow = ({ devices, index, style }) => {
   const handleSafeParkingToggle = async (e) => {
     e.stopPropagation();
     const enable = !item.attributes?.safeParking;
+    
+    dispatch(devicesActions.update([{
+      ...item,
+      attributes: { ...(item.attributes || {}), safeParking: enable }
+    }]));
+
     try {
       const response = await fetch('/api/saas/vehicles/safe-parking', {
         method: 'POST',
@@ -243,7 +255,6 @@ const DeviceRow = ({ devices, index, style }) => {
   return (
     <div style={style}>
       <ListItemButton
-        disableRipple
         key={item.id}
         onClick={() => dispatch(devicesActions.selectId(item.id))}
         disabled={!admin && item.disabled}
@@ -268,45 +279,53 @@ const DeviceRow = ({ devices, index, style }) => {
           }
           secondary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
-              {position && (
+              {true && (
                 <>
                   <Stack direction="row" spacing={0.8} alignItems="center">
                     <Tooltip title="Ignition">
                       <Box className={classes.actionButton} onClick={handleIgnitionToggle}>
-                        <PowerSettingsNewIcon className={position.attributes.ignition ? classes.ignitionActive : classes.neutral} />
-                        <Typography variant="caption" sx={{ ml: 0.5, fontWeight: 800, fontSize: '0.55rem', color: position.attributes.ignition ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
-                          {position.attributes.ignition ? 'ON' : 'OFF'}
+                        <PowerSettingsNewIcon className={position?.attributes?.ignition ? classes.ignitionActive : classes.neutral} />
+                        <Typography variant="caption" sx={{ ml: 0.5, fontWeight: 800, fontSize: '0.55rem', color: position?.attributes?.ignition ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
+                          {position?.attributes?.ignition ? 'ON' : 'OFF'}
                         </Typography>
                       </Box>
                     </Tooltip>
 
-                    <Tooltip title={!position.attributes.ignition ? 'Engine Stopped' : (position.speed > 1 ? 'Moving' : 'Idling')}>
+                    <Tooltip title={!position?.attributes?.ignition ? 'Engine Stopped' : (position?.speed > 1 ? 'Moving' : 'Idling')}>
                       <Box className={classes.actionButton}>
-                        {!position.attributes.ignition ? (
+                        {!position?.attributes?.ignition ? (
                           <StopIcon className={classes.error} />
                         ) : (
-                          position.speed > 1 ? <PlayArrowIcon className={classes.success} /> : <PauseIcon className={classes.warning} />
+                          position?.speed > 1 ? <PlayArrowIcon className={classes.success} /> : <PauseIcon className={classes.warning} />
                         )}
                       </Box>
                     </Tooltip>
 
                     <Tooltip title="Safe Parking">
-                      <IconButton className={classes.actionButton} onClick={handleSafeParkingToggle} sx={{ p: '4px' }}>
+                      <Box className={classes.actionButton} onClick={handleSafeParkingToggle}>
                         <SecurityIcon className={item.attributes?.safeParking ? classes.success : classes.neutral} />
-                      </IconButton>
+                      </Box>
                     </Tooltip>
 
-                    <Tooltip title={`Geofences${position.geofenceIds?.length ? ` (${position.geofenceIds.length})` : ''}`}>
+                    <Tooltip title={`Geofences${position?.geofenceIds?.length ? ` (${position.geofenceIds.length})` : ''}`}>
                       <Box className={classes.actionButton}>
-                        <FenceIcon className={position.geofenceIds?.length ? classes.success : classes.neutral} />
+                        <FenceIcon className={position?.geofenceIds?.length ? classes.success : classes.neutral} />
                       </Box>
                     </Tooltip>
                   </Stack>
 
-                  {position.attributes.hasOwnProperty('batteryLevel') && (
+                  {position?.attributes?.hasOwnProperty('batteryLevel') && (
                     <Box className={classes.batteryLevel}>
-                      {position.attributes.batteryLevel > 30 ? <BatteryFullIcon className={classes.success} /> : <Battery20Icon className={classes.error} />}
-                      <span>{position.attributes.batteryLevel}%</span>
+                      {position.attributes.charge ? (
+                        position.attributes.batteryLevel > 80 ? <BatteryChargingFullIcon className={classes.success} /> :
+                        position.attributes.batteryLevel > 40 ? <BatteryCharging60Icon className={classes.warning} /> :
+                        <BatteryCharging20Icon className={classes.error} />
+                      ) : (
+                        position.attributes.batteryLevel > 80 ? <BatteryFullIcon className={classes.success} /> :
+                        position.attributes.batteryLevel > 40 ? <Battery60Icon className={classes.warning} /> :
+                        <Battery20Icon className={classes.error} />
+                      )}
+                      <span>{Math.round(position.attributes.batteryLevel)}%</span>
                     </Box>
                   )}
                 </>

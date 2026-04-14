@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Rnd } from 'react-rnd';
 import {
@@ -27,6 +28,11 @@ import SendIcon from '@mui/icons-material/Send';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SpeedIcon from '@mui/icons-material/Speed';
+import PinDropIcon from '@mui/icons-material/PinDrop';
+import StraightenIcon from '@mui/icons-material/Straighten';
+import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
 
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
@@ -132,15 +138,19 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   },
 }));
 
-const StatusRow = ({ name, content }) => {
+const StatusRow = ({ name, content, icon: Icon }) => {
   const { classes } = useStyles({ desktopPadding: 0 });
+  const theme = useTheme();
 
   return (
     <TableRow>
       <TableCell className={classes.cell}>
-        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem', fontWeight: 500 }}>{name}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {Icon && <Icon sx={{ fontSize: '16px', color: 'rgba(255, 255, 255, 0.3)' }} />}
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem', fontWeight: 500 }}>{name}</Typography>
+        </Box>
       </TableCell>
-      <TableCell className={classes.cell}>
+      <TableCell className={classes.cell} align="right">
         <Typography variant="body2" sx={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: 600 }}>
           {content}
         </Typography>
@@ -274,9 +284,9 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                                overflow: 'hidden'
                              }}>
                                 <Box sx={{ 
-                                  width: `${position.attributes.fuelLevel || (position.attributes.fuel % 100)}%`, 
+                                  width: `${Math.min(100, Math.max(0, position.attributes.fuelLevel ?? position.attributes.fuel ?? 100))}%`, 
                                   height: '100%', 
-                                  backgroundColor: (position.attributes.fuelLevel || 100) > 20 ? '#38bdf8' : '#ef4444' 
+                                  backgroundColor: (position.attributes.fuelLevel ?? position.attributes.fuel ?? 100) > 20 ? '#38bdf8' : '#ef4444' 
                                 }} />
                              </Box>
                              <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
@@ -302,19 +312,29 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                           (key) =>
                             position.hasOwnProperty(key) || (position.attributes && position.attributes.hasOwnProperty(key)),
                         )
-                        .map((key) => (
-                          <StatusRow
-                            key={key}
-                            name={positionAttributes[key]?.name || key}
-                            content={
-                              <PositionValue
-                                position={position}
-                                property={position.hasOwnProperty(key) ? key : null}
-                                attribute={position.hasOwnProperty(key) ? null : key}
-                              />
-                            }
-                          />
-                        ))}
+                        .map((key) => {
+                          let Icon = null;
+                          if (key === 'fixTime') Icon = AccessTimeIcon;
+                          if (key === 'address') Icon = PinDropIcon;
+                          if (key === 'speed') Icon = SpeedIcon;
+                          if (key === 'totalDistance') Icon = StraightenIcon;
+                          if (key.toLowerCase().includes('odometer')) Icon = SettingsInputComponentIcon;
+                          
+                          return (
+                            <StatusRow
+                              key={key}
+                              name={positionAttributes[key]?.name || key}
+                              icon={Icon}
+                              content={
+                                <PositionValue
+                                  position={position}
+                                  property={position.hasOwnProperty(key) ? key : null}
+                                  attribute={position.hasOwnProperty(key) ? null : key}
+                                />
+                              }
+                            />
+                          );
+                        })}
                     </TableBody>
                     <TableFooter>
                       <TableRow>

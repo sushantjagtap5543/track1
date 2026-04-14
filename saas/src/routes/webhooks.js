@@ -1,12 +1,12 @@
-// src/routes/webhooks.js
-const express = require('express');
+import express from 'express';
+import { handleTraccarWebhook } from '../controllers/webhookController.js';
+
 const router = express.Router();
-const webhookController = require('../controllers/webhookController');
 
 /**
  * Public Webhook for Traccar
  * In production, this should be secured via IP whitelisting or a shared secret.
  */
-router.post('/traccar', webhookController.handleTraccarWebhook);
+router.post('/traccar', handleTraccarWebhook);
 
-module.exports = router;
+export default router;

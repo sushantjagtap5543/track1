@@ -1,21 +1,21 @@
-// src/routes/billing.js
-const express = require('express');
+import express from 'express';
+import { createOrder, verifyPayment, getSubscription, getPayments } from '../controllers/billingController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const billingController = require('../controllers/billingController');
-const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.use(authenticateToken);
 
 // Create order for Razorpay checkout
-router.post('/create-order', billingController.createOrder);
+router.post('/create-order', createOrder);
 
 // Verify payment
-router.post('/verify', billingController.verifyPayment);
+router.post('/verify', verifyPayment);
 
 // Get current subscription
-router.get('/subscription', billingController.getSubscription);
+router.get('/subscription', getSubscription);
 
 // Get payment history
-router.get('/history', billingController.getPayments);
+router.get('/history', getPayments);
 
-module.exports = router;
+export default router;

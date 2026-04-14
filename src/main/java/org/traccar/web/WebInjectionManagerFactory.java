@@ -49,9 +49,9 @@ public class WebInjectionManagerFactory implements InjectionManagerFactory {
         return injectGuiceBridge(originalFactory.create(parent));
     }
 
-    @Override
-    public InjectionManager create(Object parent, Configuration configuration) {
-        return injectGuiceBridge(originalFactory.create(parent, configuration));
-    }
+//    @Override
+//    public InjectionManager create(Object parent, Configuration configuration) {
+//        return injectGuiceBridge(originalFactory.create(parent, configuration));
+//    }
 
 }

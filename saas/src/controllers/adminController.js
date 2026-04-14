@@ -1,7 +1,9 @@
-// src/controllers/adminController.js
-const os = require('os');
-const { PrismaClient } = require('@prisma/client');
-const adminService = require('../services/adminService');
+import os from 'os';
+import { PrismaClient } from '@prisma/client';
+import adminService from '../services/adminService.js';
+import healthService from '../services/healthService.js';
+import traccar from '../services/traccar.js';
+import logAudit from '../utils/auditLogger.js';
 
 // Use env for DB URL to support AWS Lightsail (Postgres) vs Local (SQLite)
 const prisma = new PrismaClient({ 
@@ -18,7 +20,7 @@ const prisma = new PrismaClient({
  */
 
 // Get System Health (CPU, Memory, Uptime)
-exports.getSystemHealth = async (req, res) => {
+export const getSystemHealth = async (req, res) => {
   try {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
@@ -41,7 +43,7 @@ exports.getSystemHealth = async (req, res) => {
 };
 
 // Get Dashboard Statistics
-exports.getStats = async (req, res) => {
+export const getStats = async (req, res) => {
   try {
     const totalClients = await prisma.user.count({ where: { role: 'CLIENT', deletedAt: null } });
     const totalVehicles = await prisma.vehicle.count({ where: { deletedAt: null } });
@@ -59,7 +61,7 @@ exports.getStats = async (req, res) => {
 };
 
 // Manage Clients (Suspend / Activate)
-exports.updateClientStatus = async (req, res) => {
+export const updateClientStatus = async (req, res) => {
   const { clientId, isActive } = req.body;
 
   try {
@@ -71,7 +73,7 @@ exports.updateClientStatus = async (req, res) => {
 };
 
 // Delete client (Soft Delete)
-exports.deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
   const { clientId } = req.body;
 
   try {
@@ -83,11 +85,11 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Placeholder for other admin actions (v1000+)
-exports.getFailedLogins = async (req, res) => res.json([]);
+// Placeholder for other admin actions
+export const getFailedLogins = async (req, res) => res.json([]);
 
 // Force Password Reset for a specific client
-exports.forcePasswordReset = async (req, res) => {
+export const forcePasswordReset = async (req, res) => {
   const { clientId } = req.body;
   try {
     // Logic to set a temporary password or reset flag
@@ -97,10 +99,8 @@ exports.forcePasswordReset = async (req, res) => {
   }
 };
 
-const healthService = require('../services/healthService');
-
-// Platform Integrity Audit (Resolves 1000+ scenarios)
-exports.runIntegrityAudit = async (req, res) => {
+// Platform Integrity Audit
+export const runIntegrityAudit = async (req, res) => {
   try {
     const results = await healthService.runIntegrityAudit();
     res.json({ 
@@ -110,5 +110,25 @@ exports.runIntegrityAudit = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to run integrity audit', details: error.message });
+  }
+};
+// Update Subscription Pricing (Stored in Traccar Server Attributes)
+export const updatePricing = async (req, res) => {
+  const { planId, amount } = req.body;
+  try {
+    const server = await traccar.getServer();
+    const attributes = { ...server.attributes, [`billingPrice${planId}`]: amount };
+    await traccar.updateServer({ ...server, attributes });
+    
+    await logAudit({
+      userId: req.user.userId,
+      action: 'UPDATE_PRICING',
+      resource: 'Server',
+      payload: { planId, amount }
+    });
+
+    res.json({ message: `Price for ${planId} updated to ${amount}` });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update pricing' });
   }
 };

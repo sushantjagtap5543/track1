@@ -1,6 +1,6 @@
 /**
  * Anti-Gravity Log Redactor
- * Automatically scrubs PII from application logs.
+ * Automatically scrub PII from application logs.
  */
 
 const PII_KEYS = ['email', 'password', 'token', 'secret', 'phone', 'name'];
@@ -25,4 +25,4 @@ const redact = (obj, seen = new WeakSet()) => {
   return newObj;
 };
 
-module.exports = redact;
+export default redact;

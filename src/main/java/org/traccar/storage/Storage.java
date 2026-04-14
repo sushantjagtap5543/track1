@@ -30,6 +30,8 @@ public abstract class Storage {
 
     public abstract <T> long addObject(T entity, Request request) throws StorageException;
 
+    public abstract <T> long[] addObjects(List<T> entities, Request request) throws StorageException;
+
     public abstract <T> void updateObject(T entity, Request request) throws StorageException;
 
     public abstract void removeObject(Class<?> clazz, Request request) throws StorageException;

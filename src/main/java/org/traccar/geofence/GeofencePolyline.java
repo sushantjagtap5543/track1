@@ -51,6 +51,17 @@ public class GeofencePolyline extends GeofenceGeometry {
     }
 
     @Override
+    public double calculateDistance(double latitude, double longitude) {
+        double minDistance = Double.MAX_VALUE;
+        for (int i = 1; i < coordinates.size(); i++) {
+            minDistance = Math.min(minDistance, DistanceCalculator.distanceToLine(
+                    latitude, longitude, coordinates.get(i - 1).lat(), coordinates.get(i - 1).lon(),
+                    coordinates.get(i).lat(), coordinates.get(i).lon()));
+        }
+        return minDistance;
+    }
+
+    @Override
     public String toWkt() {
         StringBuilder buf = new StringBuilder();
         buf.append("LINESTRING (");

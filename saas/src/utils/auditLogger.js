@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
@@ -25,4 +25,4 @@ const logAudit = async ({ userId, action, resource, payload, ipAddress }) => {
   }
 };
 
-module.exports = logAudit;
+export default logAudit;

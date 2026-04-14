@@ -2,8 +2,8 @@
 # GeoSurePath DB Partitioning Automation v1.0.0
 # Automates PostgreSQL table partitioning for high-frequency GPS data.
 
-TABLE_NAME="Positions"
-PARTITION_COLUMN="deviceTime"
+TABLE_NAME="tc_positions"
+PARTITION_COLUMN="devicetime"
 
 echo "🚀 Starting Database Partitioning for ${TABLE_NAME}..."
 
@@ -40,7 +40,7 @@ cat <<EOF > "scripts/partitions/${PARTITION_NAME}.sql"
 CREATE TABLE IF NOT EXISTS "${PARTITION_NAME}" PARTITION OF "${TABLE_NAME}"
 FOR VALUES FROM ('${START_DATE}') TO ('${END_DATE}');
 
-CREATE INDEX IF NOT EXISTS "${PARTITION_NAME}_device_idx" ON "${PARTITION_NAME}" ("deviceId");
+CREATE INDEX IF NOT EXISTS "${PARTITION_NAME}_device_idx" ON "${PARTITION_NAME}" ("deviceid");
 CREATE INDEX IF NOT EXISTS "${PARTITION_NAME}_time_idx" ON "${PARTITION_NAME}" ("${PARTITION_COLUMN}" DESC);
 EOF
 

@@ -25,4 +25,4 @@ const memoryGuard = (req, res, next) => {
   next();
 };
 
-module.exports = memoryGuard;
+export default memoryGuard;

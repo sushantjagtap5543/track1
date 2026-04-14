@@ -1,13 +1,14 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const speakeasy = require('speakeasy');
-const QRCode = require('qrcode');
-const { z } = require('zod');
-const { PrismaClient } = require('@prisma/client');
-const traccarService = require('../services/traccar');
-const { emailQueue } = require('../services/queue');
-const logAudit = require('../utils/auditLogger');
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
+import { z } from 'zod';
+import { PrismaClient } from '@prisma/client';
+import traccarService from '../services/traccar.js';
+import { emailQueue } from '../services/queue.js';
+import logAudit from '../utils/auditLogger.js';
+import cache from '../services/cache.js';
 
 const prisma = new PrismaClient();
 
@@ -31,7 +32,7 @@ const loginSchema = z.object({
   device: z.string().optional(),
 });
 
-exports.register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   let traccarUser = null;
   let traccarDevice = null;
 
@@ -151,7 +152,7 @@ exports.register = async (req, res, next) => {
   }
 };
 
-exports.login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const parseResult = loginSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -290,7 +291,7 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.forgotPassword = async (req, res, next) => {
+export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
@@ -313,7 +314,7 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-exports.resetPassword = async (req, res, next) => {
+export const resetPassword = async (req, res, next) => {
   try {
     const { token, newPassword } = req.body;
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
@@ -343,7 +344,7 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-exports.verifyEmail = async (req, res, next) => {
+export const verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.params;
     const user = await prisma.user.findFirst({ 
@@ -365,13 +366,11 @@ exports.verifyEmail = async (req, res, next) => {
   }
 };
 
-exports.setupMFA = async (req, res, next) => {
+export const setupMFA = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     const secret = speakeasy.generateSecret({ name: `GeoSurePath (${user.email})` });
     
-    // Store temporarily in memory or a cache if possible, 
-    // here we store in DB but not enabled yet.
     await prisma.user.update({
       where: { id: user.id },
       data: { totpSecret: secret.base32, isTotpEnabled: false }
@@ -384,7 +383,7 @@ exports.setupMFA = async (req, res, next) => {
   }
 };
 
-exports.verifyMFA = async (req, res, next) => {
+export const verifyMFA = async (req, res, next) => {
   try {
     const { token } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
@@ -411,14 +410,12 @@ exports.verifyMFA = async (req, res, next) => {
   }
 };
 
-const cache = require('../services/cache');
-
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (token) {
-    // Blacklist for 7 days (matching default JWT_EXPIRATION)
+    // Blacklist for 7 days
     await cache.set(`revoked_token:${token}`, true, 7 * 24 * 60 * 60);
     
     await logAudit({

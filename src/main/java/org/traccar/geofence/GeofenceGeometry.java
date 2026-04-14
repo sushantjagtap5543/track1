@@ -24,6 +24,14 @@ public abstract class GeofenceGeometry {
     private Coordinate min;
     private Coordinate max;
 
+    public Coordinate getMin() {
+        return min;
+    }
+
+    public Coordinate getMax() {
+        return max;
+    }
+
     protected void setMin(Coordinate min) {
         this.min = min;
     }
@@ -60,11 +68,15 @@ public abstract class GeofenceGeometry {
     }
 
     public boolean containsPoint(double latitude, double longitude) {
-        if (min.lon >= 0 || max.lon < 0) {
-            if (latitude < min.lat || latitude > max.lat) {
+        if (latitude < min.lat || latitude > max.lat) {
+            return false;
+        }
+        if (min.lon <= max.lon) {
+            if (longitude < min.lon || longitude > max.lon) {
                 return false;
             }
-            if (longitude < min.lon || longitude > max.lon) {
+        } else {
+            if (longitude < min.lon && longitude > max.lon) {
                 return false;
             }
         }
@@ -74,6 +86,8 @@ public abstract class GeofenceGeometry {
     protected abstract boolean containsPointInternal(double latitude, double longitude);
 
     public abstract double calculateArea();
+    
+    public abstract double calculateDistance(double latitude, double longitude);
 
     public abstract String toWkt();
 

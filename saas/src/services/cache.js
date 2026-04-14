@@ -1,4 +1,5 @@
-const Redis = require('ioredis');
+import Redis from 'ioredis';
+
 const redis = new Redis({ 
   host: process.env.REDIS_HOST || 'redis',
   retryStrategy: (times) => {
@@ -62,4 +63,4 @@ const cache = {
   }
 };
 
-module.exports = cache;
+export default cache;

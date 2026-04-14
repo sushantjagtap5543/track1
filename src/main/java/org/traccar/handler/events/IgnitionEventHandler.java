@@ -35,7 +35,7 @@ public class IgnitionEventHandler extends BaseEventHandler {
     @Override
     public void onPosition(Position position, Callback callback) {
         Device device = cacheManager.getObject(Device.class, position.getDeviceId());
-        if (device == null || !PositionUtil.isLatest(cacheManager, position)) {
+        if (device == null || !org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

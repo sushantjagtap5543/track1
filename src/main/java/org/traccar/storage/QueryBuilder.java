@@ -329,6 +329,33 @@ public final class QueryBuilder {
         }
     }
 
+    public QueryBuilder addBatch() throws SQLException {
+        return setValue(statement::addBatch);
+    }
+
+    public long[] executeBatch() throws SQLException {
+        if (query != null) {
+            try {
+                logQuery();
+                int[] results = statement.executeBatch();
+                long[] ids = new long[results.length];
+                if (returnGeneratedKeys) {
+                    try (ResultSet resultSet = statement.getGeneratedKeys()) {
+                        int index = 0;
+                        while (resultSet.next() && index < ids.length) {
+                            ids[index++] = resultSet.getLong(1);
+                        }
+                    }
+                }
+                return ids;
+            } finally {
+                statement.close();
+                connection.close();
+            }
+        }
+        return new long[0];
+    }
+
     public long executeUpdate() throws SQLException {
         if (query != null) {
             try {

@@ -50,7 +50,7 @@ const COMMAND_MAP = {
  * @param {any} value - Optional dynamic value (e.g., sensitivity level)
  * @returns {Object} { type: string, attributes: object }
  */
-const resolveCommand = (identifier = 'generic', action, value = null) => {
+export const resolveCommand = (identifier = 'generic', action, value = null) => {
   const idLower = identifier.toLowerCase();
   
   // Find matching brand in the map
@@ -71,6 +71,6 @@ const resolveCommand = (identifier = 'generic', action, value = null) => {
   return mapping;
 };
 
-module.exports = {
+export default {
   resolveCommand
 };

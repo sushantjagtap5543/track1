@@ -122,16 +122,47 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState(location.state?.email || '');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
+  const [errors, setErrors] = useState({});
+  const [rememberMe, setRememberMe] = useState(false);
+
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    } else if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, [location.state?.email]);
+
+  const validate = () => {
+    const newErrors = {};
+    if (!email) {
+      newErrors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+    if (!password) {
+      newErrors.password = 'Password is required.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = useCatch(async (event) => {
     event.preventDefault();
-    setLoading(true);
     setErrorText('');
+    setErrors({});
+    if (!validate()) {
+      return;
+    }
+
+    setLoading(true);
     try {
       // Step 1: Authenticate with Traccar (Primary Session)
       const traccarResponse = await fetch('/api/session', {
@@ -143,6 +174,12 @@ const Login = () => {
       });
 
       if (traccarResponse.ok) {
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+
         const user = await traccarResponse.json();
         
         // Step 2: Authenticate with SaaS API (JWT Session)
@@ -155,6 +192,8 @@ const Login = () => {
           if (saasResponse.ok) {
             const saasData = await saasResponse.json();
             if (saasData.token) localStorage.setItem('saasToken', saasData.token);
+          } else {
+            console.warn('[GeoSurePath] SaaS auth sync returned non-ok response.');
           }
         } catch (saasErr) {
           console.warn('[GeoSurePath] SaaS auth sync failed (non-fatal):', saasErr);
@@ -163,11 +202,18 @@ const Login = () => {
         dispatch(sessionActions.updateUser(user));
         navigate('/');
       } else {
-        const errorData = await traccarResponse.json().catch(() => ({}));
-        setErrorText(errorData.error || 'Invalid email or password. Please try again.');
+        let errorMsg = 'Invalid email or password. Please try again.';
+        const textError = await traccarResponse.text().catch(() => '');
+        try {
+          const errorData = JSON.parse(textError);
+          errorMsg = errorData.error || errorData.message || errorMsg;
+        } catch (parseErr) {
+          if (textError) errorMsg = textError;
+        }
+        setErrorText(errorMsg);
       }
     } catch (e) {
-      setErrorText('Connection failure. Please check if the GeoSurePath engine is running.');
+      setErrorText('Connection error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }
@@ -201,7 +247,7 @@ const Login = () => {
       >
         <motion.div className={classes.header} variants={itemVariants}>
           <Typography className={classes.title}>Sign In</Typography>
-          <Typography className={classes.subText}>Elite Fleet Intelligence Engine</Typography>
+          <Typography className={classes.subText}>Access your account</Typography>
         </motion.div>
 
         {errorText && (
@@ -230,7 +276,9 @@ const Login = () => {
             type="email"
             value={email}
             autoComplete="email"
-            onChange={(event) => setEmail(event.target.value)}
+            error={!!errors.email}
+            helperText={errors.email}
+            onChange={(event) => { setEmail(event.target.value); if(errors.email) setErrors({...errors, email: ''}); }}
             className={classes.input}
             slotProps={{
               input: {
@@ -248,12 +296,14 @@ const Login = () => {
           <TextField
             required
             fullWidth
-            label="Security Password"
+            label="Password"
             name="password"
             value={password}
             type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
-            onChange={(event) => setPassword(event.target.value)}
+            error={!!errors.password}
+            helperText={errors.password}
+            onChange={(event) => { setPassword(event.target.value); if(errors.password) setErrors({...errors, password: ''}); }}
             className={classes.input}
             slotProps={{
               input: {
@@ -276,10 +326,15 @@ const Login = () => {
 
         <motion.div className={classes.footer} variants={itemVariants}>
           <FormControlLabel
-            control={<Checkbox sx={{ color: 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#3b82f6' } }} />}
-            label={<Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 500 }}>Remember Secure Session</Typography>}
+            control={
+              <Checkbox 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                sx={{ color: 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#3b82f6' } }} 
+              />
+            }
+            label={<Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 500 }}>Remember Me</Typography>}
           />
-          <Link href="/reset-password" className={classes.link}>Recovery Access?</Link>
         </motion.div>
 
         <motion.div variants={itemVariants}>
@@ -287,21 +342,13 @@ const Login = () => {
             variant="contained"
             fullWidth
             type="submit"
-            disabled={loading || !email || !password}
+            disabled={loading}
             className={classes.loginButton}
           >
-            {loading ? <CircularProgress size={26} color="inherit" /> : 'Authorize Access'}
+            {loading ? <CircularProgress size={26} color="inherit" /> : 'Sign In'}
           </Button>
         </motion.div>
 
-        <motion.div variants={itemVariants}>
-          <Typography className={classes.signupText}>
-            New to the platform?
-            <Link onClick={() => navigate('/register')} component="button" type="button" className={classes.signupLink}>
-              Create Elite Account
-            </Link>
-          </Typography>
-        </motion.div>
 
         <motion.div variants={itemVariants} style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
           <Box

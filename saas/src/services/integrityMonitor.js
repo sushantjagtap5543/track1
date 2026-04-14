@@ -1,5 +1,5 @@
-const healthService = require('./healthService');
-const logAudit = require('../utils/auditLogger');
+import healthService from './healthService.js';
+import logAudit from '../utils/auditLogger.js';
 
 /**
  * Integrity Monitor Service
@@ -22,8 +22,7 @@ class IntegrityMonitor {
       console.log(`[IntegrityMonitor] Starting Deep Scan (Triggered by: ${adminUserId})`);
       const issues = await healthService.runIntegrityAudit();
       
-      // Automatic Resolution Logic (v1000+)
-      // Example: If suspension mismatch, fix it.
+      // Automatic Resolution Logic
       for (const mismatch of issues.suspensionMismatches) {
          console.log(`[Self-Healing] Resolving suspension mismatch for ${mismatch.id}`);
          // implementation logic to sync Traccar...
@@ -46,4 +45,4 @@ class IntegrityMonitor {
   }
 }
 
-module.exports = new IntegrityMonitor();
+export default new IntegrityMonitor();

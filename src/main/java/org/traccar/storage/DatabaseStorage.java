@@ -108,6 +108,32 @@ public class DatabaseStorage extends Storage {
     }
 
     @Override
+    public <T> long[] addObjects(List<T> entities, Request request) throws StorageException {
+        if (entities.isEmpty()) {
+            return new long[0];
+        }
+        Class<?> clazz = entities.get(0).getClass();
+        List<String> columns = request.getColumns().getColumns(clazz, "get");
+        StringBuilder query = new StringBuilder("INSERT INTO ");
+        query.append(getStorageName(clazz));
+        query.append("(");
+        query.append(formatColumns(columns, c -> c));
+        query.append(") VALUES (");
+        query.append(formatColumns(columns, c -> "?"));
+        query.append(")");
+        try {
+            QueryBuilder builder = QueryBuilder.create(config, dataSource, objectMapper, query.toString(), true);
+            for (T entity : entities) {
+                builder.setObject(entity, columns);
+                builder.addBatch();
+            }
+            return builder.executeBatch();
+        } catch (SQLException e) {
+            throw new StorageException(e);
+        }
+    }
+
+    @Override
     public <T> void updateObject(T entity, Request request) throws StorageException {
         List<String> columns = request.getColumns().getColumns(entity.getClass(), "get");
         StringBuilder query = new StringBuilder("UPDATE ");

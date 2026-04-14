@@ -63,7 +63,7 @@ public class OverspeedEventHandler extends BaseEventHandler {
         if (device == null) {
             return;
         }
-        if (!PositionUtil.isLatest(cacheManager, position)) {
+        if (!org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

@@ -93,6 +93,19 @@ model Vehicle {
   updatedAt         DateTime  @updatedAt
   /// Soft-delete timestamp.
   deletedAt         DateTime?
+  /// Independent Billing Logic
+  subscriptionPlan  String?   @default("MONTHLY")
+  planAmount        Float?    @default(200.0)
+  subscriptionStart DateTime? @default(now())
+  subscriptionEnd   DateTime?
+  nextBillingDate   DateTime?
+  paymentStatus     String    @default("PENDING")
+  lastPaymentDate   DateTime?
+  paymentMode       String?
+  transactionId     String?
+  billingCycleCount Int       @default(0)
+  remarks           String?
+
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -178,6 +191,7 @@ model SignedPosition {
 
   @@index([deviceId])
   @@index([timestamp])
+  @@index([deviceId, timestamp])
 }
 
 /// System-wide audit logs for sensitive actions.
@@ -191,7 +205,7 @@ model AuditLog {
   /// Affected resource type.
   resource  String
   /// JSON payload with action details.
-  payload   String?
+  payload   Json?
   /// Requester's IP address.
   ipAddress String?
   /// Creation timestamp.
@@ -200,4 +214,61 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@index([resource])
+  @@index([userId, action, createdAt])
+}
+
+/// Traccar Core: Position (Hot Storage)
+model TcPosition {
+  id         Int      @id @default(autoincrement())
+  deviceId   Int
+  latitude   Float
+  longitude  Float
+  speed      Float
+  course     Float
+  attributes String?
+  fixtime    DateTime
+  servertime DateTime @default(now())
+
+  @@map("tc_positions")
+  @@index([deviceId, fixtime])
+}
+
+/// Traccar Core: Event (Hot Storage)
+model TcEvent {
+  id         Int      @id @default(autoincrement())
+  deviceId   Int
+  type       String
+  eventtime  DateTime
+  attributes String?
+
+  @@map("tc_events")
+  @@index([deviceId, eventtime])
+}
+
+/// Traccar Archive: Position (Cold Storage)
+model TcPositionArchive {
+  id         Int      @id
+  deviceId   Int
+  latitude   Float
+  longitude  Float
+  speed      Float
+  course     Float
+  attributes String?
+  fixtime    DateTime
+  servertime DateTime
+
+  @@map("tc_positions_archive")
+  @@index([deviceId, fixtime])
+}
+
+/// Traccar Archive: Event (Cold Storage)
+model TcEventArchive {
+  id         Int      @id
+  deviceId   Int
+  type       String
+  eventtime  DateTime
+  attributes String?
+
+  @@map("tc_events_archive")
+  @@index([deviceId, eventtime])
 }

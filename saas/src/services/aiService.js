@@ -1,5 +1,3 @@
-// saas/src/services/aiService.js
-
 /**
  * AI Service for GeoSurePath
  * Handles predictive maintenance, anomaly detection, and sensory sensitivity logic.
@@ -11,7 +9,7 @@
  * @param {Array} history - Recent positions/trips
  * @returns {Date} Predicted maintenance date
  */
-const predictMaintenance = (vehicle, history) => {
+export const predictMaintenance = (vehicle, history) => {
     // Basic logic: Maintenance every 5000 km
     const maintenanceInterval = 5000;
     const currentMileage = vehicle.mileage || 0;
@@ -35,7 +33,7 @@ const predictMaintenance = (vehicle, history) => {
  * @param {Object} position - Latest position with attributes
  * @returns {Object|null} Anomaly report or null
  */
-const detectAnomalies = (position) => {
+export const detectAnomalies = (position) => {
     const { attributes } = position;
     if (!attributes) return null;
 
@@ -59,11 +57,11 @@ const detectAnomalies = (position) => {
  * @param {boolean} isSafeParkingEnabled 
  * @returns {number} Sensitivity level (1-10)
  */
-const getRequiredSensitivity = (isSafeParkingEnabled) => {
+export const getRequiredSensitivity = (isSafeParkingEnabled) => {
     return isSafeParkingEnabled ? 9 : 3; // Increase to 9 when safe parking, else default 3
 };
 
-module.exports = {
+export default {
     predictMaintenance,
     detectAnomalies,
     getRequiredSensitivity

@@ -20,7 +20,7 @@ import com.google.inject.servlet.GuiceFilter;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.SessionCookieConfig;
 import jakarta.servlet.http.HttpServletRequest;
-import org.eclipse.jetty.compression.server.CompressionHandler;
+// import org.eclipse.jetty.compression.server.CompressionHandler;
 import org.eclipse.jetty.ee10.proxy.AsyncProxyServlet;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.ResourceServlet;
@@ -100,7 +100,7 @@ public class WebServer implements LifecycleObject {
         Handler.Sequence handlers = new Handler.Sequence();
         initClientProxy(servletHandler);
         handlers.addHandler(servletHandler);
-        handlers.addHandler(new CompressionHandler());
+//        handlers.addHandler(new CompressionHandler());
         server.setHandler(handlers);
 
         if (config.hasKey(Keys.WEB_REQUEST_LOG_PATH)) {
@@ -172,6 +172,7 @@ public class WebServer implements LifecycleObject {
         }
 
         if (config.getBoolean(Keys.WEB_MCP_ENABLE)) {
+/*
             mcpServerHolder = injector.getInstance(McpServerHolder.class);
             var mcpServletHolder = new ServletHolder(mcpServerHolder.getServlet());
             mcpServletHolder.setAsyncSupported(true);
@@ -179,6 +180,7 @@ public class WebServer implements LifecycleObject {
             servletHandler.addFilter(
                     new FilterHolder(new McpAuthFilter(injector.getInstance(LoginService.class))),
                     McpServerHolder.PATH + "/*", EnumSet.of(DispatcherType.REQUEST));
+*/
         }
 
         ResourceConfig resourceConfig = new ResourceConfig();

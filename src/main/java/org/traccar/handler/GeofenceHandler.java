@@ -17,6 +17,7 @@ package org.traccar.handler;
 
 import jakarta.inject.Inject;
 import org.traccar.helper.model.GeofenceUtil;
+import org.traccar.model.Device;
 import org.traccar.model.Position;
 import org.traccar.session.cache.CacheManager;
 
@@ -34,9 +35,21 @@ public class GeofenceHandler extends BasePositionHandler {
     @Override
     public void onPosition(Position position, Callback callback) {
 
-        List<Long> geofenceIds = GeofenceUtil.getCurrentGeofences(cacheManager, position);
-        if (!geofenceIds.isEmpty()) {
-            position.setGeofenceIds(geofenceIds);
+        double maxAccuracy = cacheManager.getObject(Device.class, position.getDeviceId()).getDouble("geofenceMaxAccuracy");
+        if (maxAccuracy == 0) {
+            maxAccuracy = 50.0;
+        }
+
+        if (position.getAccuracy() > 0 && position.getAccuracy() > maxAccuracy) {
+            Position lastPosition = cacheManager.getPosition(position.getDeviceId());
+            if (lastPosition != null && lastPosition.getGeofenceIds() != null) {
+                position.setGeofenceIds(lastPosition.getGeofenceIds());
+            }
+        } else {
+            List<Long> geofenceIds = GeofenceUtil.getCurrentGeofences(cacheManager, position);
+            if (!geofenceIds.isEmpty()) {
+                position.setGeofenceIds(geofenceIds);
+            }
         }
         callback.processed(false);
     }

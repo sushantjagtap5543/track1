@@ -81,13 +81,7 @@ public class NotificationManager {
         }
     }
 
-    private void updateEvent(Event event, Position position) {
-        try {
-            event.setId(storage.addObject(event, new Request(new Columns.Exclude("id"))));
-        } catch (StorageException error) {
-            LOGGER.warn("Event save error", error);
-        }
-
+    private void processEvent(Event event, Position position) {
         forwardEvent(event, position);
 
         if (System.currentTimeMillis() - event.getEventTime().getTime() > timeThreshold) {
@@ -175,13 +169,27 @@ public class NotificationManager {
     }
 
     public void updateEvents(Map<Event, Position> events) {
+        if (events.isEmpty()) {
+            return;
+        }
+
+        try {
+            var eventList = events.keySet().stream().toList();
+            long[] ids = storage.addObjects(eventList, new Request(new Columns.Exclude("id")));
+            for (int i = 0; i < eventList.size(); i++) {
+                eventList.get(i).setId(ids[i]);
+            }
+        } catch (StorageException error) {
+            LOGGER.warn("Event save error", error);
+        }
+
         for (Entry<Event, Position> entry : events.entrySet()) {
             Event event = entry.getKey();
             Position position = entry.getValue();
             var key = new Object();
             try {
                 cacheManager.addDevice(event.getDeviceId(), key);
-                updateEvent(event, position);
+                processEvent(event, position);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             } finally {

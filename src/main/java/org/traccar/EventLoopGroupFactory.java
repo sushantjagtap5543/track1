@@ -16,8 +16,7 @@
 package org.traccar;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.MultiThreadIoEventLoopGroup;
-import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.traccar.config.Config;
@@ -31,11 +30,8 @@ public class EventLoopGroupFactory {
 
     @Inject
     public EventLoopGroupFactory(Config config) {
-        var ioHandlerFactory = NioIoHandler.newFactory();
-        bossGroup = new MultiThreadIoEventLoopGroup(
-                config.getInteger(Keys.SERVER_NETTY_BOSS_THREADS), ioHandlerFactory);
-        workerGroup = new MultiThreadIoEventLoopGroup(
-                config.getInteger(Keys.SERVER_NETTY_WORKER_THREADS), ioHandlerFactory);
+        bossGroup = new NioEventLoopGroup(config.getInteger(Keys.SERVER_NETTY_BOSS_THREADS));
+        workerGroup = new NioEventLoopGroup(config.getInteger(Keys.SERVER_NETTY_WORKER_THREADS));
     }
 
     public EventLoopGroup getBossGroup() {

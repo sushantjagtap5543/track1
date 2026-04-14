@@ -138,6 +138,15 @@ public class MemoryStorage extends Storage {
     }
 
     @Override
+    public <T> long[] addObjects(List<T> entities, Request request) {
+        long[] ids = new long[entities.size()];
+        for (int i = 0; i < entities.size(); i++) {
+            ids[i] = addObject(entities.get(i), request);
+        }
+        return ids;
+    }
+
+    @Override
     public <T> void updateObject(T entity, Request request) {
         Collection<Object> items;
         if (request.getCondition() != null) {

@@ -1,7 +1,7 @@
-const client = require('prom-client');
+import client from 'prom-client';
 
 // Create a Registry which registers the metrics
-const register = new client.Registry();
+export const register = new client.Registry();
 
 // Add a default label which is added to all metrics
 register.setDefaultLabels({
@@ -22,7 +22,7 @@ const httpRequestDurationMicroseconds = new client.Histogram({
 // Register the histogram
 register.registerMetric(httpRequestDurationMicroseconds);
 
-const metricsMiddleware = (req, res, next) => {
+export const metricsMiddleware = (req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
@@ -31,9 +31,4 @@ const metricsMiddleware = (req, res, next) => {
       .observe(duration);
   });
   next();
-};
-
-module.exports = {
-  metricsMiddleware,
-  register
 };

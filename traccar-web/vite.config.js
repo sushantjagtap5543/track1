@@ -19,15 +19,15 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_SAAS_URL || 'http://127.0.0.1:3001',
           changeOrigin: true,
         },
-        // Traccar WebSocket (must be before the /api catch-all)
+        // Traccar WebSocket
         '/api/socket': {
-          target: env.VITE_TRACCAR_WS_URL || 'ws://127.0.0.1:3001',
+          target: env.VITE_TRACCAR_WS_URL || 'ws://127.0.0.1:8082',
           ws: true,
           changeOrigin: true,
         },
-        // Traccar REST API — catch-all (routed to SaaS in mock mode)
+        // Traccar REST API — catch-all
         '/api': {
-          target: env.VITE_SAAS_URL || 'http://127.0.0.1:3001',
+          target: env.VITE_TRACCAR_URL || 'http://127.0.0.1:8082',
           changeOrigin: true,
           filter: (pathname) => pathname.startsWith('/api') && !pathname.includes('.jsx'),
         },

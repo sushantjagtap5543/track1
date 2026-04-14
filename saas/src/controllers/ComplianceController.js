@@ -1,10 +1,10 @@
-const integrityMonitor = require('../services/integrityMonitor');
+import integrityMonitor from '../services/integrityMonitor.js';
 
 /**
  * Compliance Controller
  * Exposes the Deep Scan and Automated Resolution engine for 1000+ scenarios.
  */
-exports.triggerDeepScan = async (req, res) => {
+export const triggerDeepScan = async (req, res) => {
   try {
     const results = await integrityMonitor.runDeepScan(req.user.userId);
     res.json({
@@ -16,7 +16,12 @@ exports.triggerDeepScan = async (req, res) => {
   }
 };
 
-exports.getComplianceStatus = async (req, res) => {
+export const getComplianceStatus = async (req, res) => {
   // Logic to fetch last scan results from AuditLog or specialized table
   res.json({ status: 'CERTIFIED', scenarios: 1000, lastScan: new Date().toISOString() });
+};
+
+export default {
+  triggerDeepScan,
+  getComplianceStatus
 };

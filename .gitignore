@@ -1,32 +1,41 @@
-target
-nbactions.xml
+# Build and IDE
+target/
+build/
+.gradle/
+out/
+bin/
+.idea/
+*.iml
+.vscode/
 .classpath
 .project
 .settings
-.idea
-*.iml
+nbactions.xml
 .DS_Store
-.checkstyle
-.gradle
-out
-build
-.vscode
-bin
+
+# Logs and Data
+logs/
+data/
+*.log
+frontend_stderr.log
+frontend_stdout.log
+saas_stderr.log
+saas_stdout.log
+traccar_error.log
+
+# Environment and Secrets
+.env
+saas/.env
+*.pem
 11111.pem
-*.env
-node_modules
-dist
-logs
-data
+registration.json
+
+# Dependencies
+node_modules/
+
+# Miscellaneous
 track.tar.gz
 deploy.tar.gz
 setup_saas.sql
-traccar_error.log
 unified_schema.prisma
-*.log
-*.pem
-build/
 tree.txt
-*.log
-saas/.env
-.env

@@ -1,7 +1,5 @@
-const request = require('supertest');
-const { expect } = require('chai');
-// Note: In a real environment, you would use a test DB
-// This is a template for architectural QA.
+import request from 'supertest';
+import { expect } from 'chai';
 
 const API_URL = process.env.TEST_API_URL || 'http://localhost:3001';
 

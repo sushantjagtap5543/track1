@@ -26,6 +26,8 @@ import DnsIcon from '@mui/icons-material/Dns';
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { useDeviceReadonly } from '../common/util/permissions';
 import DeviceRow from './DeviceRow';
@@ -265,6 +267,46 @@ const MainToolbar = ({
       >
         <Tooltip title="AI Insights" arrow>
           <AutoAwesomeIcon sx={{ fontSize: '18px' }} />
+        </Tooltip>
+      </IconButton>
+      <IconButton 
+        edge="end" 
+        onClick={() => {
+           window.location.reload(); 
+        }}
+        sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          color: '#f8fafc',
+          borderRadius: '8px',
+          width: '36px',
+          height: '36px',
+          transition: 'all 0.2s ease',
+          ml: 1,
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', transform: 'rotate(180deg)' }
+        }}
+      >
+        <Tooltip title={t('sharedRefresh')} arrow>
+          <RefreshIcon sx={{ fontSize: '18px' }} />
+        </Tooltip>
+      </IconButton>
+      <IconButton 
+        edge="end" 
+        onClick={() => navigate('/demo/vehicles')}
+        sx={{ 
+          backgroundColor: 'rgba(56, 189, 248, 0.1)', 
+          border: '1px solid rgba(56, 189, 248, 0.2)',
+          color: '#38bdf8',
+          borderRadius: '8px',
+          width: '36px',
+          height: '36px',
+          transition: 'all 0.2s ease',
+          ml: 1,
+          '&:hover': { backgroundColor: 'rgba(56, 189, 248, 0.2)', transform: 'scale(1.1)' }
+        }}
+      >
+        <Tooltip title="Live Vehicle Demo" arrow>
+          <DirectionsCarIcon sx={{ fontSize: '18px' }} />
         </Tooltip>
       </IconButton>
       <IconButton 

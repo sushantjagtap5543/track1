@@ -50,13 +50,14 @@ const App = () => {
   });
 
   useEffectAsync(async () => {
-    // Force refresh by unregistering old service workers
+    // Force refresh by unregistering old service workers (non-blocking)
     if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        await registration.unregister();
-        console.log('[GeoSurePath] ServiceWorker unregistered to force asset refresh');
-      }
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister();
+          console.log('[GeoSurePath] ServiceWorker unregistered to force asset refresh');
+        }
+      });
     }
 
     if (!user) {

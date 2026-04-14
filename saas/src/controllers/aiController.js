@@ -1,12 +1,11 @@
-// saas/src/controllers/aiController.js
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+import traccarService from '../services/traccar.js';
 const prisma = new PrismaClient();
-const traccarService = require('../services/traccar');
 
 /**
  * Fetch AI Insights using OpenRouter
  */
-exports.getVehicleInsights = async (req, res, next) => {
+export const getVehicleInsights = async (req, res, next) => {
     try {
         const { vehicleId } = req.params;
         
@@ -71,7 +70,7 @@ exports.getVehicleInsights = async (req, res, next) => {
     }
 };
 
-exports.getGlobalInsights = async (req, res, next) => {
+export const getGlobalInsights = async (req, res, next) => {
     try {
         const userId = req.user.userId;
         const vehicleCount = await prisma.vehicle.count({ where: { userId } });

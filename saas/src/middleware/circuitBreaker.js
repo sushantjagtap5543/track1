@@ -57,4 +57,4 @@ class CircuitBreaker {
 
 const traccarBreaker = new CircuitBreaker('TraccarAPI');
 
-module.exports = traccarBreaker;
+export default traccarBreaker;

@@ -77,7 +77,7 @@ public class Calendar extends ExtendedModel {
             Instant instant = date.toInstant();
             return calendar.<VEvent>getComponents(Component.VEVENT).stream()
                     .flatMap(event -> {
-                        Temporal sample = event.getDateTimeStart().getDate();
+                        Temporal sample = event.getDateTimeStart().get().getDate();
                         var period = new Period<>(convertToMatchingTemporal(instant, sample), Duration.ZERO);
                         return event.calculateRecurrenceSet(period).stream();
                     })

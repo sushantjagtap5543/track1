@@ -1,8 +1,10 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
+  Box,
   Drawer,
   IconButton,
+  Button,
   List,
   ListItemButton,
   ListItemText,
@@ -11,6 +13,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import DeleteIcon from '@mui/icons-material/Delete';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { formatNotificationTitle, formatTime } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { eventsActions } from '../store';
@@ -96,6 +99,46 @@ const EventsDrawer = ({ open, onClose }) => {
         <Typography variant="h6" className={classes.title}>
           {t('reportEvents')}
         </Typography>
+
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<NotificationsActiveIcon />}
+          sx={{ mr: 2, bgcolor: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', fontWeight: 800, border: '1px solid rgba(245, 158, 11, 0.4)', '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.4)' } }}
+          onClick={() => {
+            const traccarEventTypes = [
+               { type: 'deviceOnline' }, { type: 'deviceOffline' }, { type: 'deviceMoving' },
+               { type: 'deviceStopped' }, { type: 'deviceOverspeed' }, { type: 'geofenceEnter' },
+               { type: 'geofenceExit' }, { type: 'ignitionOn' }, { type: 'ignitionOff' },
+               { type: 'alarm', attributes: { alarm: 'sos' } },
+               { type: 'alarm', attributes: { alarm: 'vibration' } },
+               { type: 'alarm', attributes: { alarm: 'movement' } },
+               { type: 'alarm', attributes: { alarm: 'lowBattery' } },
+               { type: 'alarm', attributes: { alarm: 'powerCut' } },
+               { type: 'alarm', attributes: { alarm: 'tow' } },
+               { type: 'alarm', attributes: { alarm: 'hardAcceleration' } },
+               { type: 'alarm', attributes: { alarm: 'hardBraking' } },
+               { type: 'alarm', attributes: { alarm: 'hardCornering' } },
+               { type: 'alarm', attributes: { alarm: 'fatigueDriving' } },
+               { type: 'alarm', attributes: { alarm: 'jamming' } },
+               { type: 'maintenance' }
+            ];
+            
+            const activeDeviceId = Object.keys(devices)[0] || 0;
+            
+            // Dispatch 20+ alerts sequentially to test popups, details and sound.
+            traccarEventTypes.forEach((ev, i) => {
+               setTimeout(() => {
+                 window.dispatchEvent(new CustomEvent('sim_events', { 
+                   detail: [{ ...ev, id: Date.now() + i, deviceId: activeDeviceId, eventTime: new Date().toISOString() }] 
+                 }));
+               }, i * 2000); // Deploy an event every 2 seconds to allow popups and sound verification
+            });
+          }}
+        >
+          TEST 20+ ALERTS
+        </Button>
+
         <IconButton
           size="small"
           color="inherit"

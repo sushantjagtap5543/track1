@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Load Balancer for Ingestion
+  haproxy:
+    image: haproxy:alpine
+    container_name: geosurepath_lb
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "5001-5150:5001-5150"     # GPS Device Protocols (TCP)
+      - "5001-5150:5001-5150/udp" # GPS Device Protocols (UDP)
+      - "8082:8082"               # Traccar API
+    networks:
+      - backend-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Horizontal Scaled Traccar Nodes
+  traccar-node:
+    build:
+      context: ../..
+      dockerfile: deploy/traccar.Dockerfile
+    image: geosurepath/traccar:latest
+    restart: unless-stopped
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx2g
+      - DB_HOST=db-cluster-endpoint # Replace with managed DB endpoint
+    volumes:
+      - ../../logs:/opt/traccar/logs:rw
+      - ./traccar-scaled.xml:/opt/traccar/conf/traccar.xml:ro
+    networks:
+      - backend-net
+    deploy:
+      replicas: 3 # Scale this up based on 10,000+ devices
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 3G
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+  # SaaS API (Stateless)
+  saas-api:
+    build:
+      context: ../..
+      dockerfile: deploy/saas.Dockerfile
+    image: geosurepath/saas-api:latest
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db-cluster-endpoint:5432/${DB_NAME}?schema=saas
+      - REDIS_HOST=redis-cluster-endpoint
+    networks:
+      - backend-net
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+
+networks:
+  backend-net:
+    driver: overlay # Use overlay if deploying on Swarm/K8s

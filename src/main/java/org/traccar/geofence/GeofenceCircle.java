@@ -31,8 +31,10 @@ public class GeofenceCircle extends GeofenceGeometry {
         centerLatitude = decoded.latitude;
         centerLongitude = decoded.longitude;
         radius = decoded.radius;
-        setMin(new Coordinate(centerLatitude - radius, centerLongitude - radius));
-        setMax(new Coordinate(centerLatitude + radius, centerLongitude + radius));
+        double latDelta = DistanceCalculator.getLatitudeDelta(radius);
+        double lonDelta = DistanceCalculator.getLongitudeDelta(radius, centerLatitude);
+        setMin(new Coordinate(centerLatitude - latDelta, centerLongitude - lonDelta));
+        setMax(new Coordinate(centerLatitude + latDelta, centerLongitude + lonDelta));
     }
 
     @Override
@@ -43,6 +45,11 @@ public class GeofenceCircle extends GeofenceGeometry {
     @Override
     public double calculateArea() {
         return Math.PI * radius * radius;
+    }
+
+    @Override
+    public double calculateDistance(double latitude, double longitude) {
+        return Math.abs(DistanceCalculator.distance(centerLatitude, centerLongitude, latitude, longitude) - radius);
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.locationtech.spatial4j.shape.jts.JtsShapeFactory;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import org.traccar.helper.DistanceCalculator;
 
 public class GeofencePolygon extends GeofenceGeometry {
 
@@ -107,6 +108,18 @@ public class GeofencePolygon extends GeofenceGeometry {
             polygonBuilder.pointXY(coordinate.lon(), coordinate.lat());
         }
         return polygonBuilder.build().getArea(SpatialContext.GEO) * DistanceUtils.DEG_TO_KM * DistanceUtils.DEG_TO_KM;
+    }
+
+    @Override
+    public double calculateDistance(double latitude, double longitude) {
+        double minDistance = Double.MAX_VALUE;
+        for (int i = 0; i < coordinates.size(); i++) {
+            Coordinate c1 = coordinates.get(i);
+            Coordinate c2 = coordinates.get((i + 1) % coordinates.size());
+            minDistance = Math.min(minDistance, DistanceCalculator.distanceToLine(
+                    latitude, longitude, c1.lat(), c1.lon(), c2.lat(), c2.lon()));
+        }
+        return minDistance;
     }
 
     @Override

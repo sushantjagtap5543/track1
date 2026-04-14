@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 /**
  * Anti-Gravity Schema Guard
@@ -22,4 +22,4 @@ const schemaGuard = () => {
   }
 };
 
-module.exports = schemaGuard;
+export default schemaGuard;

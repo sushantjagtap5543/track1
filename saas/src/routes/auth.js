@@ -1,30 +1,30 @@
-// src/routes/auth.js
-const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/authController');
+import express from 'express';
+import { register, login, forgotPassword, resetPassword, verifyEmail, setupMFA, verifyMFA, logout } from '../controllers/authController.js';
 
-// Registration (Step 1, 2, 3 combined into one payload)
-router.post('/register', authController.register);
+const router = express.Router();
+
+// Registration
+router.post('/register', register);
 
 // Secure Login
-router.post('/login', authController.login);
+router.post('/login', login);
 
 // Forgot Password
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', forgotPassword);
 
 // Reset Password
-router.post('/reset-password', authController.resetPassword);
+router.post('/reset-password', resetPassword);
 
 // Verify Email
-router.get('/verify-email/:token', authController.verifyEmail);
+router.get('/verify-email/:token', verifyEmail);
 
 // MFA Setup
-router.post('/mfa/setup', authController.setupMFA);
+router.post('/mfa/setup', setupMFA);
 
 // MFA Verify
-router.post('/mfa/verify', authController.verifyMFA);
+router.post('/mfa/verify', verifyMFA);
 
 // Logout
-router.post('/logout', authController.logout);
+router.post('/logout', logout);
 
-module.exports = router;
+export default router;

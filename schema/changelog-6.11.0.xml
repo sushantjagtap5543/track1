@@ -16,15 +16,9 @@
     </preConditions>
 
     <sql splitStatements="true" endDelimiter=";">
-      CREATE EXTENSION IF NOT EXISTS timescaledb;
+      SELECT 1;
 
       ALTER TABLE tc_actions DROP CONSTRAINT IF EXISTS tc_actions_pkey;
-
-      SELECT create_hypertable(
-        'tc_actions',
-        'actiontime',
-        migrate_data => TRUE
-      );
 
       CREATE INDEX IF NOT EXISTS tc_actions_id_idx ON tc_actions(id);
     </sql>

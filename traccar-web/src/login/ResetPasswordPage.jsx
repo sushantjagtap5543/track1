@@ -105,34 +105,9 @@ const ResetPasswordPage = () => {
   const isEmailValid = email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   const isPasswordValid = password.length >= 8;
 
-  const handleSubmit = useCatch(async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    setErrorText('');
-    setLoading(true);
-
-    try {
-      if (!token) {
-        if (!isEmailValid) throw new Error('Security: Valid email required.');
-        await fetchOrThrow('/api/auth/forgot-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-      } else {
-        if (!isPasswordValid) throw new Error('Security: Password length requirement not met.');
-        await fetchOrThrow('/api/auth/reset-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, password }),
-        });
-      }
-      setSnackbarOpen(true);
-    } catch (err) {
-      setErrorText(err.message || 'Cipher error during recovery attempt.');
-    } finally {
-      setLoading(false);
-    }
-  });
+  };
 
   return (
     <LoginLayout>
@@ -141,76 +116,56 @@ const ResetPasswordPage = () => {
       </IconButton>
 
       <Box
-        component={motion.form}
+        component={motion.div}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={classes.container}
-        onSubmit={handleSubmit}
+        sx={{ textAlign: 'center', py: 4 }}
       >
         <div className={classes.header}>
           <Typography className={classes.title}>
-            {token ? 'Secure Recovery' : 'Account Recovery'}
+            Support Assistance
           </Typography>
           <Typography className={classes.subText}>
-            {token ? 'Establish new access credentials' : 'Enter registered email for decryption link'}
+            Technical Support & Account Access
           </Typography>
         </div>
 
-        {errorText && (
-          <Alert severity="error" sx={{ 
-            borderRadius: '16px', 
-            background: 'rgba(239, 68, 68, 0.1)', 
-            color: '#f87171',
-            border: '1px solid rgba(239, 68, 68, 0.2)'
-          }}>
-            {errorText}
-          </Alert>
-        )}
-
-        {!token ? (
-          <TextField
-            required
-            fullWidth
-            type="email"
-            label="Recovery Email Address"
-            name="email"
-            value={email}
-            autoComplete="email"
-            onChange={(event) => setEmail(event.target.value)}
-            className={classes.input}
-          />
-        ) : (
-          <TextField
-            required
-            fullWidth
-            label="New Access Password"
-            name="password"
-            value={password}
-            type="password"
-            autoComplete="new-password"
-            onChange={(event) => setPassword(event.target.value)}
-            className={classes.input}
-            helperText="Establish an 8+ character shield"
-          />
-        )}
+        <Box sx={{ 
+          mt: 4, 
+          p: 3, 
+          borderRadius: '24px', 
+          background: 'rgba(59, 130, 246, 0.05)',
+          border: '1px solid rgba(59, 130, 246, 0.1)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <Typography sx={{ color: '#fff', fontSize: '1.1rem', fontWeight: 600, mb: 1 }}>
+            Support Team
+          </Typography>
+          <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '1rem' }}>
+            [Details will be added after testing]
+          </Typography>
+        </Box>
         
         <Button
-          variant="contained"
+          variant="outlined"
           fullWidth
-          type="submit"
-          disabled={loading || (!token ? !isEmailValid : !isPasswordValid)}
-          className={classes.actionButton}
+          onClick={() => navigate('/login')}
+          sx={{
+            mt: 4,
+            borderRadius: '16px',
+            padding: theme.spacing(1.5),
+            color: '#3b82f6',
+            borderColor: 'rgba(59, 130, 246, 0.5)',
+            '&:hover': {
+              borderColor: '#3b82f6',
+              background: 'rgba(59, 130, 246, 0.05)',
+            }
+          }}
         >
-          {loading ? <CircularProgress size={26} color="inherit" /> : (token ? 'Update Access' : 'Initiate Recovery')}
+          Return to Secure Login
         </Button>
       </Box>
-
-      <Snackbar
-        open={snackbarOpen}
-        onClose={() => navigate('/login')}
-        autoHideDuration={snackBarDurationShortMs}
-        message={!token ? 'Recovery protocols initiated. Check your email.' : 'Access credentials updated successfully.'}
-      />
     </LoginLayout>
   );
 };

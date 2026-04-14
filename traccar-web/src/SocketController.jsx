@@ -198,8 +198,18 @@ const SocketController = () => {
 
   useEffect(() => {
     handleNativeNotificationListeners.add(handleNativeNotification);
-    return () => handleNativeNotificationListeners.delete(handleNativeNotification);
-  }, [handleNativeNotification]);
+    
+    // Support testing 20+ Traccar backend events manually
+    const handleSimEvents = (e) => {
+      handleEvents(e.detail);
+    };
+    window.addEventListener('sim_events', handleSimEvents);
+    
+    return () => {
+      handleNativeNotificationListeners.delete(handleNativeNotification);
+      window.removeEventListener('sim_events', handleSimEvents);
+    };
+  }, [handleNativeNotification, handleEvents]);
 
   useEffect(() => {
     if (!authenticated) return;
@@ -230,13 +240,36 @@ const SocketController = () => {
 
   return (
     <>
-      {notifications.map((notification) => (
+      {notifications.length > 1 && (
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => setNotifications([])}
+          sx={{
+            position: 'fixed',
+            top: '8px',
+            right: '420px',
+            zIndex: 1500,
+            bgcolor: 'rgba(15, 23, 42, 0.9)',
+            color: '#38bdf8',
+            fontWeight: 800,
+            borderRadius: '8px',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            backdropFilter: 'blur(10px)',
+            '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)' }
+          }}
+        >
+          DISMISS ALL ({notifications.length})
+        </Button>
+      )}
+      {notifications.map((notification, index) => (
         <Snackbar
           key={notification.id}
           open={notification.show}
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           autoHideDuration={snackBarDurationLongMs}
-          onClose={() => setNotifications(notifications.filter((e) => e.id !== notification.id))}
+          onClose={() => setNotifications((prev) => prev.filter((e) => e.id !== notification.id))}
+          style={{ top: `${8 + index * 104}px`, right: '8px', position: 'fixed' }}
         >
           <Box
             className={cx('premium-snack', (notification.type === 'alarm' || notification.type === 'sos') && 'critical-alert')}

@@ -58,7 +58,7 @@ public class MotionEventHandler extends BaseEventHandler {
 
         long deviceId = position.getDeviceId();
         Device device = cacheManager.getObject(Device.class, deviceId);
-        if (device == null || !PositionUtil.isLatest(cacheManager, position)) {
+        if (device == null || !org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

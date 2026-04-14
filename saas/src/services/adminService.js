@@ -1,7 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-const traccar = require('./traccar');
-const cache = require('./cache');
-const logAudit = require('../utils/auditLogger');
+import { PrismaClient } from '@prisma/client';
+import traccar from './traccar.js';
+import cache from './cache.js';
+import logAudit from '../utils/auditLogger.js';
+
 const prisma = new PrismaClient();
 
 /**
@@ -79,4 +80,4 @@ const adminService = {
   }
 };
 
-module.exports = adminService;
+export default adminService;

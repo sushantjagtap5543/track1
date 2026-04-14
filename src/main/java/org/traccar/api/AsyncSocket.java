@@ -32,10 +32,14 @@ import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 
 import java.nio.channels.ClosedChannelException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncSocket implements Session.Listener.AutoDemanding, ConnectionManager.UpdateListener {
 
@@ -45,6 +49,9 @@ public class AsyncSocket implements Session.Listener.AutoDemanding, ConnectionMa
     private static final String KEY_POSITIONS = "positions";
     private static final String KEY_EVENTS = "events";
     private static final String KEY_LOGS = "logs";
+
+    private final Map<String, Collection<Object>> buffer = new HashMap<>();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     private final ObjectMapper objectMapper;
     private final ConnectionManager connectionManager;
@@ -59,6 +66,7 @@ public class AsyncSocket implements Session.Listener.AutoDemanding, ConnectionMa
         this.connectionManager = connectionManager;
         this.storage = storage;
         this.userId = userId;
+        executor.scheduleWithFixedDelay(this::flush, 1, 1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -75,10 +83,10 @@ public class AsyncSocket implements Session.Listener.AutoDemanding, ConnectionMa
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason, Callback callback) {
+    public void onWebSocketClose(int statusCode, String reason) {
         connectionManager.removeListener(userId, this);
+        executor.shutdown();
         session = null;
-        callback.succeed();
     }
 
     @Override
@@ -107,27 +115,43 @@ public class AsyncSocket implements Session.Listener.AutoDemanding, ConnectionMa
 
     @Override
     public void onUpdateDevice(Device device) {
-        sendData(Map.of(KEY_DEVICES, List.of(device)));
+        addToBuffer(KEY_DEVICES, device);
     }
 
     @Override
     public void onUpdatePosition(Position position) {
-        sendData(Map.of(KEY_POSITIONS, List.of(position)));
+        addToBuffer(KEY_POSITIONS, position);
     }
 
     @Override
     public void onUpdateEvent(Event event) {
-        sendData(Map.of(KEY_EVENTS, List.of(event)));
+        addToBuffer(KEY_EVENTS, event);
     }
 
     @Override
     public void onUpdateLog(LogRecord record) {
         if (includeLogs) {
-            sendData(Map.of(KEY_LOGS, List.of(record)));
+            addToBuffer(KEY_LOGS, record);
         }
     }
 
-    private void sendData(Map<String, Collection<?>> data) {
+    private synchronized void addToBuffer(String key, Object value) {
+        buffer.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+    }
+
+    private void flush() {
+        Map<String, Collection<Object>> data;
+        synchronized (this) {
+            if (buffer.isEmpty()) {
+                return;
+            }
+            data = new HashMap<>(buffer);
+            buffer.clear();
+        }
+        sendData(data);
+    }
+
+    private void sendData(Map<String, ?> data) {
         if (session != null && session.isOpen()) {
             try {
                 session.sendText(objectMapper.writeValueAsString(data), Callback.NOOP);

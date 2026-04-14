@@ -101,6 +101,10 @@ public class Geofence extends ExtendedModel implements Schedulable {
     }
 
     public boolean containsPosition(Position position) {
+        return containsPosition(position, 0);
+    }
+
+    public boolean containsPosition(Position position, double hysteresis) {
         double floor = position.getDouble("floor");
         if (floor != 0 && position.getAltitude() < floor) {
             return false;
@@ -111,7 +115,15 @@ public class Geofence extends ExtendedModel implements Schedulable {
             return false;
         }
 
-        return getGeometry().containsPoint(position.getLatitude(), position.getLongitude());
+        boolean inside = getGeometry().containsPoint(position.getLatitude(), position.getLongitude());
+        if (!inside && hysteresis > 0) {
+            return getGeometry().calculateDistance(position.getLatitude(), position.getLongitude()) <= hysteresis;
+        }
+        return inside;
+    }
+
+    public double calculateDistance(Position position) {
+        return getGeometry().calculateDistance(position.getLatitude(), position.getLongitude());
     }
 
 }

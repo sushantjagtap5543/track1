@@ -1,9 +1,10 @@
-// src/controllers/vehicleController.js
-const { PrismaClient } = require('@prisma/client');
-const traccarService = require('../services/traccar');
-const aiService = require('../services/aiService');
+import { PrismaClient } from '@prisma/client';
+import traccarService from '../services/traccar.js';
+import aiService from '../services/aiService.js';
+import { optimizePositions } from '../utils/responseOptimizer.js';
+import mapper from '../utils/commandMapper.js';
+import logAudit from '../utils/auditLogger.js';
 
-// Use env for DB URL to support AWS Lightsail (Postgres) vs Local (SQLite)
 const prisma = new PrismaClient({ 
   datasources: { 
     db: { 
@@ -12,11 +13,11 @@ const prisma = new PrismaClient({
   } 
 });
 
-// Get user's vehicles
-exports.getVehicles = async (req, res) => {
+// Get user's vehicles (Basic Metadata)
+export const getVehicles = async (req, res) => {
   try {
     const vehicles = await prisma.vehicle.findMany({
-      where: { userId: req.user.userId }
+      where: { userId: req.user.userId, deletedAt: null }
     });
     res.json(vehicles);
   } catch (error) {
@@ -24,12 +25,50 @@ exports.getVehicles = async (req, res) => {
   }
 };
 
+// Get user's vehicles with live locations (Optimized Batch Fetching)
+export const getVehiclesWithLocations = async (req, res) => {
+  const { slim = 'true', fields } = req.query;
+  try {
+    // 1. Fetch SaaS vehicles
+    const vehicles = await prisma.vehicle.findMany({
+      where: { userId: req.user.userId, deletedAt: null }
+    });
+
+    const deviceIds = vehicles.map(v => v.traccarDeviceId).filter(Boolean);
+    
+    // 2. Fetch all positions in one call
+    let positions = [];
+    if (deviceIds.length > 0) {
+      positions = await traccarService.getPositions(deviceIds);
+    }
+
+    // 3. Optimize positions
+    const optimizedPositions = optimizePositions(positions, {
+      slim: slim === 'true',
+      fields: fields ? fields.split(',') : null
+    });
+
+    // 4. Merge data
+    const merged = vehicles.map(vehicle => {
+      const position = optimizedPositions.find(p => p.deviceId === vehicle.traccarDeviceId);
+      return {
+        ...vehicle,
+        location: position || null
+      };
+    });
+
+    res.json(merged);
+  } catch (error) {
+    console.error('Batch location fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch vehicles with locations' });
+  }
+};
+
 // Toggle Engine (Ignition Control System)
-exports.toggleEngine = async (req, res) => {
+export const toggleEngine = async (req, res) => {
   const { vehicleId, action } = req.body; // action: 'engineResume' or 'engineStop'
 
   try {
-    // Support both SaaS UUID and Traccar Device ID
     const isNumericId = !isNaN(vehicleId) && Number.isInteger(Number(vehicleId));
     const vehicle = await prisma.vehicle.findFirst({
       where: {
@@ -42,7 +81,6 @@ exports.toggleEngine = async (req, res) => {
       return res.status(404).json({ error: 'Vehicle not found or not linked to device' });
     }
 
-    // Prevention: Cannot stop engine while driving over 20km/h for safety
     if (action === 'engineStop') {
       const position = await traccarService.getLatestPosition(vehicle.traccarDeviceId);
       if (position && position.speed > 20) {
@@ -50,11 +88,8 @@ exports.toggleEngine = async (req, res) => {
       }
     }
 
-    // Enterprise Integration: Map command based on brand/device model
-    const mapper = require('../utils/commandMapper');
     const { type: finalType, attributes: finalAttributes } = mapper.resolveCommand(vehicle.model || vehicle.type || 'generic', action);
 
-    // Send command to Traccar
     await traccarService.sendCommand(vehicle.traccarDeviceId, finalType, finalAttributes);
 
     res.json({ 
@@ -69,11 +104,10 @@ exports.toggleEngine = async (req, res) => {
 };
 
 // Toggle Safe Parking
-exports.toggleSafeParking = async (req, res) => {
+export const toggleSafeParking = async (req, res) => {
   const { vehicleId, enable, lat, lng, radius } = req.body;
 
   try {
-    // Support both SaaS UUID and Traccar Device ID
     const isNumericId = !isNaN(vehicleId) && Number.isInteger(Number(vehicleId));
     const vehicle = await prisma.vehicle.findFirst({
       where: {
@@ -93,47 +127,44 @@ exports.toggleSafeParking = async (req, res) => {
     let traccarGeofenceId = vehicle.traccarGeofenceId;
 
     if (enable) {
-      // 1. Create Geofence in Traccar (Circle format)
       const area = `CIRCLE (${lat} ${lng}, ${radius || 20})`;
       const geofence = await traccarService.createGeofence(`SafeParking_${vehicle.name}`, area);
       traccarGeofenceId = geofence.id;
 
-      // 2. Link Geofence to Device in Traccar
-      await traccarService.linkGeofenceToDevice(vehicle.traccarDeviceId, traccarGeofenceId);
-
-      // 3. AI-Driven Sensitivity Increase
       const sensitivity = aiService.getRequiredSensitivity(enable);
-      const mapper = require('../utils/commandMapper');
       const sensitivityCommand = mapper.resolveCommand(vehicle.model || vehicle.type || 'generic', 'setSensitivity', sensitivity);
-      await traccarService.sendCommand(vehicle.traccarDeviceId, sensitivityCommand.type, sensitivityCommand.attributes);
 
-      // Sync attributes with Traccar for UI persistence
-      const traccarDevice = await traccarService.getDevice(vehicle.traccarDeviceId);
-      if (traccarDevice) {
-        const attributes = { ...(traccarDevice.attributes || {}), safeParking: enable };
-        await traccarService.updateDevice(vehicle.traccarDeviceId, { attributes });
-      }
+      await Promise.all([
+        traccarService.linkGeofenceToDevice(vehicle.traccarDeviceId, traccarGeofenceId),
+        traccarService.sendCommand(vehicle.traccarDeviceId, sensitivityCommand.type, sensitivityCommand.attributes),
+        (async () => {
+          const traccarDevice = await traccarService.getDevice(vehicle.traccarDeviceId);
+          if (traccarDevice) {
+            const attributes = { ...(traccarDevice.attributes || {}), safeParking: enable };
+            await traccarService.updateDevice(vehicle.traccarDeviceId, { attributes });
+          }
+        })()
+      ]);
     } else if (traccarGeofenceId) {
-      // 4. Delete Geofence and REVERT sensitivity
-      await traccarService.deleteGeofence(traccarGeofenceId).catch(e => console.error('Failed delete geofence:', e));
-      traccarGeofenceId = null;
-      
       const sensitivity = aiService.getRequiredSensitivity(false);
-      const mapper = require('../utils/commandMapper');
       const sensitivityCommand = mapper.resolveCommand(vehicle.model || vehicle.type || 'generic', 'setSensitivity', sensitivity);
-      await traccarService.sendCommand(vehicle.traccarDeviceId, sensitivityCommand.type, sensitivityCommand.attributes);
 
-      // Sync attributes with Traccar for UI persistence
-      const traccarDevice = await traccarService.getDevice(vehicle.traccarDeviceId);
-      if (traccarDevice) {
-        const attributes = { ...(traccarDevice.attributes || {}), safeParking: false };
-        await traccarService.updateDevice(vehicle.traccarDeviceId, { attributes });
-      }
+      await Promise.all([
+        traccarService.deleteGeofence(traccarGeofenceId).catch(e => console.error('Failed delete geofence:', e)),
+        traccarService.sendCommand(vehicle.traccarDeviceId, sensitivityCommand.type, sensitivityCommand.attributes),
+        (async () => {
+          const traccarDevice = await traccarService.getDevice(vehicle.traccarDeviceId);
+          if (traccarDevice) {
+            const attributes = { ...(traccarDevice.attributes || {}), safeParking: false };
+            await traccarService.updateDevice(vehicle.traccarDeviceId, { attributes });
+          }
+        })()
+      ]);
+      traccarGeofenceId = null;
     }
 
-    // 5. Update local DB
     await prisma.vehicle.update({
-      where: { id: vehicleId },
+      where: { id: vehicle.id },
       data: {
         safeParkingOn: enable,
         parkingLat: enable ? lat : null,
@@ -153,14 +184,11 @@ exports.toggleSafeParking = async (req, res) => {
   }
 };
 
-const logAudit = require('../utils/auditLogger');
-
 // Delete vehicle (Soft Delete)
-exports.deleteVehicle = async (req, res) => {
+export const deleteVehicle = async (req, res) => {
   const { vehicleId } = req.params;
 
   try {
-    // Support both SaaS UUID and Traccar Device ID
     const isNumericId = !isNaN(vehicleId) && Number.isInteger(Number(vehicleId));
     const vehicle = await prisma.vehicle.findFirst({
       where: {
@@ -174,9 +202,8 @@ exports.deleteVehicle = async (req, res) => {
       return res.status(404).json({ error: 'Vehicle not found' });
     }
 
-    // Soft Delete
     await prisma.vehicle.update({
-      where: { id: vehicleId },
+      where: { id: vehicle.id },
       data: { deletedAt: new Date() }
     });
 

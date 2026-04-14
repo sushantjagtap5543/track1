@@ -1,17 +1,29 @@
 // src/controllers/webhookController.js
-const { PrismaClient } = require('@prisma/client');
-const { Worker } = require('worker_threads');
-const path = require('path');
-const edgeIntelligence = require('../services/edgeIntelligence');
+import { PrismaClient } from '@prisma/client';
+import { Worker } from 'worker_threads';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import edgeIntelligence from '../services/edgeIntelligence.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const prisma = new PrismaClient();
 
 /**
  * Traccar Webhook Controller
  * Receives position data, signs it via cryptoWorker, and stores it immutably.
  */
-const handleTraccarWebhook = async (req, res) => {
+export const handleTraccarWebhook = async (req, res) => {
   const webhookSecret = req.headers['x-traccar-secret'];
-  if (process.env.WEBHOOK_SECRET && webhookSecret !== process.env.WEBHOOK_SECRET) {
+  const configuredSecret = process.env.WEBHOOK_SECRET;
+
+  if (!configuredSecret) {
+    console.error('[CRITICAL] WEBHOOK_SECRET is not configured in environment variables. Rejecting all requests for safety.');
+    return res.status(500).json({ error: 'Webhook configuration error' });
+  }
+
+  if (webhookSecret !== configuredSecret) {
     return res.status(401).json({ error: 'Unauthorized webhook request' });
   }
 
@@ -69,8 +81,4 @@ const handleTraccarWebhook = async (req, res) => {
     console.error('[Webhook Error]', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-};
-
-module.exports = {
-  handleTraccarWebhook
 };

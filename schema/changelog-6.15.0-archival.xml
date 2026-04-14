@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+  logicalFilePath="changelog-6.15.0-archival">
+
+  <changeSet author="senior-expert" id="changelog-6.15.0-archive-tables" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <dbms type="postgresql"/>
+    </preConditions>
+
+    <sql splitStatements="false">
+      <![CDATA[
+      SELECT 1; -- TimescaleDB specific features disabled
+      -- Create Archive Tables (Clone of original schema)
+      CREATE TABLE IF NOT EXISTS tc_positions_archive (LIKE tc_positions INCLUDING ALL);
+      CREATE TABLE IF NOT EXISTS tc_events_archive (LIKE tc_events INCLUDING ALL);
+
+      -- Stored Procedure for Archival Movement
+      CREATE OR REPLACE PROCEDURE archive_old_data(retention_days INT)
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+          -- Move Positions
+          INSERT INTO tc_positions_archive 
+          SELECT * FROM tc_positions 
+          WHERE fixtime < NOW() - (retention_days || ' days')::INTERVAL
+          ON CONFLICT DO NOTHING;
+
+          DELETE FROM tc_positions 
+          WHERE fixtime < NOW() - (retention_days || ' days')::INTERVAL;
+
+          -- Move Events
+          INSERT INTO tc_events_archive 
+          SELECT * FROM tc_events 
+          WHERE eventtime < NOW() - (retention_days || ' days')::INTERVAL
+          ON CONFLICT DO NOTHING;
+
+          DELETE FROM tc_events 
+          WHERE eventtime < NOW() - (retention_days || ' days')::INTERVAL;
+      END;
+      $$;
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>
