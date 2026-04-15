@@ -45,7 +45,7 @@ export const getStatusHtml = async () => {
     status.traccar = process.env.MOCK_TRACCAR === 'true' ? (isHealthy ? 'MOCK (ENGINE UP)' : 'MOCK (DYNAMIC FALLBACK)') : 'UP'; 
   } catch (e) { status.traccar = 'DOWN'; }
 
-  const template = `
+  let html = `
     <html>
       <head>
         <title>GeoSurePath | Anti-Gravity Status</title>
@@ -66,15 +66,15 @@ export const getStatusHtml = async () => {
           <p>System Recovery Mode | Comprehensive Dashboard</p>
           
           <div class="card status-grid">
-            <div><h3>Database</h3><p class="${status.db === 'UP' ? 'status-up' : 'status-down'}">${status.db}</p></div>
-            <div><h3>Redis</h3><p class="${status.redis === 'UP' ? 'status-up' : 'status-down'}">${status.redis}</p></div>
-            <div><h3>Traccar</h3><p class="${status.traccar === 'UP' ? 'status-up' : 'status-down'}">${status.traccar}</p></div>
+            <div><h3>Database</h3><p class="ST_DB_CLASS">ST_DB_VAL</p></div>
+            <div><h3>Redis</h3><p class="ST_REDIS_CLASS">ST_REDIS_VAL</p></div>
+            <div><h3>Traccar</h3><p class="ST_TRACCAR_CLASS">ST_TRACCAR_VAL</p></div>
           </div>
 
           <div class="card ai-insight">
             <h3>GeoSure AI Status</h3>
-            <p>AI Insights Engine is ${process.env.OPENROUTER_API_KEY ? 'CONFIGURED' : 'UNCONFIGURED'}.</p>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Using model: ${process.env.OPENROUTER_MODEL || 'default'}</p>
+            <p>AI Insights Engine is ST_AI_CONFIG.</p>
+            <p style="font-size: 0.85rem; color: #94a3b8;">Using model: ST_AI_MODEL</p>
           </div>
 
           <div class="card">
@@ -90,5 +90,14 @@ export const getStatusHtml = async () => {
     </html>
   `;
 
-  return template;
+  html = html.replace('ST_DB_VAL', status.db)
+             .replace('ST_DB_CLASS', status.db === 'UP' ? 'status-up' : 'status-down')
+             .replace('ST_REDIS_VAL', status.redis)
+             .replace('ST_REDIS_CLASS', status.redis === 'UP' ? 'status-up' : 'status-down')
+             .replace('ST_TRACCAR_VAL', status.traccar)
+             .replace('ST_TRACCAR_CLASS', status.traccar === 'UP' ? 'status-up' : 'status-down')
+             .replace('ST_AI_CONFIG', process.env.OPENROUTER_API_KEY ? 'CONFIGURED' : 'UNCONFIGURED')
+             .replace('ST_AI_MODEL', process.env.OPENROUTER_MODEL || 'default');
+
+  return html;
 };
