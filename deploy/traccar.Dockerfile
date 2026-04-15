@@ -10,7 +10,7 @@ RUN ./gradlew dependencies --no-daemon || true
 
 # Build the application
 COPY . .
-RUN ./gradlew assemble --no-daemon
+RUN chmod +x gradlew && ./gradlew assemble --no-daemon
 
 # Stage 2: Build Frontend
 FROM node:20-alpine AS web-build
