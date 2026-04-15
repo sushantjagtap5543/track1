@@ -30,6 +30,7 @@ COPY --from=builder /app ./
 # Setup non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -u 1001 -S -G nodejs nodejs && \
+    mkdir -p /app/backups && \
     chown -R nodejs:nodejs /app
 
 USER nodejs
