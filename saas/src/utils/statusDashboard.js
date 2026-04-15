@@ -66,15 +66,15 @@ export const getStatusHtml = async () => {
           <p>System Recovery Mode | Comprehensive Dashboard</p>
           
           <div class="card status-grid">
-            <div><h3>Database</h3><p class="\${status.db === 'UP' ? 'status-up' : 'status-down'}">\${status.db}</p></div>
-            <div><h3>Redis</h3><p class="\${status.redis === 'UP' ? 'status-up' : 'status-down'}">\${status.redis}</p></div>
-            <div><h3>Traccar</h3><p class="\${status.traccar === 'UP' ? 'status-up' : 'status-down'}">\${status.traccar}</p></div>
+            <div><h3>Database</h3><p class="${status.db === 'UP' ? 'status-up' : 'status-down'}">${status.db}</p></div>
+            <div><h3>Redis</h3><p class="${status.redis === 'UP' ? 'status-up' : 'status-down'}">${status.redis}</p></div>
+            <div><h3>Traccar</h3><p class="${status.traccar === 'UP' ? 'status-up' : 'status-down'}">${status.traccar}</p></div>
           </div>
 
           <div class="card ai-insight">
             <h3>GeoSure AI Status</h3>
-            <p>AI Insights Engine is \${process.env.OPENROUTER_API_KEY ? 'CONFIGURED' : 'UNCONFIGURED'}.</p>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Using model: \${process.env.OPENROUTER_MODEL || 'default'}</p>
+            <p>AI Insights Engine is ${process.env.OPENROUTER_API_KEY ? 'CONFIGURED' : 'UNCONFIGURED'}.</p>
+            <p style="font-size: 0.85rem; color: #94a3b8;">Using model: ${process.env.OPENROUTER_MODEL || 'default'}</p>
           </div>
 
           <div class="card">

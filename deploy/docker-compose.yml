@@ -150,9 +150,6 @@ services:
       - REDIS_HOST=redis
       - TRACCAR_URL=http://traccar:8082
       - NODE_ENV=production
-      - VIRTUAL_HOST=${DOMAIN}
-      - VIRTUAL_PATH=/api/
-      - VIRTUAL_DEST=/api/
     networks:
       - backend-net
       - frontend-net
