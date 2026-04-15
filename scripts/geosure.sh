@@ -27,21 +27,21 @@ function help() {
 
 case $COMMAND in
     up)
-        docker compose -f deploy/docker-compose.yml up -d
+        docker compose --env-file .env -f deploy/docker-compose.yml up -d
         echo "Stack is starting. Use './scripts/geosure.sh logs' to follow."
         ;;
     down)
-        docker compose -f deploy/docker-compose.yml down
+        docker compose --env-file .env -f deploy/docker-compose.yml down
         echo "Stack stopped."
         ;;
     logs)
-        docker compose -f deploy/docker-compose.yml logs -f
+        docker compose --env-file .env -f deploy/docker-compose.yml logs -f
         ;;
     build)
-        docker compose -f deploy/docker-compose.yml build
+        docker compose --env-file .env -f deploy/docker-compose.yml build
         ;;
     seed)
-        docker compose -f deploy/docker-compose.yml exec saas-api npm run seed
+        docker compose --env-file .env -f deploy/docker-compose.yml exec saas-api npm run seed
         ;;
     doctor)
         echo "Diagnosing GeoSurePath environment..."
@@ -68,7 +68,7 @@ case $COMMAND in
         echo "Diagnosis complete. All systems stable."
         ;;
     migrate)
-        docker-compose -f deploy/docker-compose.yml exec saas-api npx prisma migrate deploy
+        docker compose --env-file .env -f deploy/docker-compose.yml exec saas-api npx prisma migrate deploy
         ;;
     check)
         ./scripts/check-readiness.sh
@@ -77,7 +77,7 @@ case $COMMAND in
         ls -lh .gemini/antigravity/brain/a80f4a03-d03a-4533-a816-8f35536179c1/comprehensive_audit_final_*.md
         ;;
     shell)
-        docker-compose -f deploy/docker-compose.yml exec saas-api sh
+        docker compose --env-file .env -f deploy/docker-compose.yml exec saas-api sh
         ;;
     help|*)
         help
