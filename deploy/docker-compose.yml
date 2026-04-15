@@ -183,7 +183,3 @@ networks:
     driver: bridge
   frontend-net:
     driver: bridge
-
-volumes:
-  # Using local bind mounts for easier management in this setup, 
-  # but named volumes could also be used.
