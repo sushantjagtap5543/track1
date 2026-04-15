@@ -5,7 +5,7 @@
     <entry key='database.driver'>org.postgresql.Driver</entry>
     <entry key='database.url'>jdbc:postgresql://db:5432/geosurepath?currentSchema=public</entry>
     <entry key='database.user'>geosurepath</entry>
-    <entry key='database.password'>change-this-to-something-long-and-random</entry>
+    <entry key='database.password'>SecurePass123!</entry>
 
     <entry key='database.maxPoolSize'>100</entry>
     <entry key='database.minPoolSize'>20</entry>

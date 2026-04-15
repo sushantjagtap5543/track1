@@ -303,7 +303,7 @@ const Login = () => {
             autoComplete="current-password"
             error={!!errors.password}
             helperText={errors.password}
-            onChange={(event) => { setPassword(event.target.value); if(errors.password) setErrors({...errors, password: ''}); }}
+            onChange={(event) => { setPassword(event.target.value); if(errors.password) setErrors({...errors, password: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
             slotProps={{
               input: {

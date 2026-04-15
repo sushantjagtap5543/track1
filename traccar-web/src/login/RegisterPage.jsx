@@ -130,6 +130,10 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Vehicle/Device onboarding (Synchronized)
+  const [vehicleName, setVehicleName] = useState('');
+  const [deviceImei, setDeviceImei] = useState('');
+
   // UI state
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
@@ -156,6 +160,15 @@ const Register = () => {
     if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match.';
     }
+    
+    // Optional but validated if provided
+    if (deviceImei && !/^\d{15}$/.test(deviceImei)) {
+      newErrors.deviceImei = 'IMEI must be exactly 15 digits.';
+    }
+    if (deviceImei && !vehicleName.trim()) {
+      newErrors.vehicleName = 'Vehicle name is required if IMEI is provided.';
+    }
+
     if (!acceptedTerms) {
       newErrors.terms = 'You must accept the terms and conditions.';
     }
@@ -182,6 +195,8 @@ const Register = () => {
         email,
         phone: phone || undefined,
         password,
+        vehicleName,
+        deviceImei,
       };
 
       const response = await fetch('/api/auth/register', {
@@ -278,7 +293,7 @@ const Register = () => {
             autoComplete="name"
             error={!!errors.name}
             helperText={errors.name}
-            onChange={(e) => { setName(e.target.value); if(errors.name) setErrors({...errors, name: ''}); }}
+            onChange={(e) => { setName(e.target.value); if(errors.name) setErrors({...errors, name: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
           />
         </motion.div>
@@ -294,7 +309,7 @@ const Register = () => {
             autoComplete="email"
             error={!!errors.email}
             helperText={errors.email}
-            onChange={(e) => { setEmail(e.target.value); if(errors.email) setErrors({...errors, email: ''}); }}
+            onChange={(e) => { setEmail(e.target.value); if(errors.email) setErrors({...errors, email: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
           />
         </motion.div>
@@ -308,7 +323,35 @@ const Register = () => {
             autoComplete="tel"
             error={!!errors.phone}
             helperText={errors.phone}
-            onChange={(e) => { setPhone(e.target.value); if(errors.phone) setErrors({...errors, phone: ''}); }}
+            onChange={(e) => { setPhone(e.target.value); if(errors.phone) setErrors({...errors, phone: ''}); if(errorText) setErrorText(''); }}
+            className={classes.input}
+          />
+        </motion.div>
+
+        <Divider className={classes.divider} sx={{ my: 1 }}>VEHICLE ONBOARDING (OPTIONAL)</Divider>
+
+        <motion.div variants={itemVariants}>
+          <TextField
+            fullWidth
+            label="Vehicle Name (e.g. My Truck)"
+            name="vehicleName"
+            value={vehicleName}
+            error={!!errors.vehicleName}
+            helperText={errors.vehicleName}
+            onChange={(e) => { setVehicleName(e.target.value); if(errors.vehicleName) setErrors({...errors, vehicleName: ''}); if(errorText) setErrorText(''); }}
+            className={classes.input}
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <TextField
+            fullWidth
+            label="Device IMEI (15 Digits)"
+            name="deviceImei"
+            value={deviceImei}
+            error={!!errors.deviceImei}
+            helperText={errors.deviceImei}
+            onChange={(e) => { setDeviceImei(e.target.value); if(errors.deviceImei) setErrors({...errors, deviceImei: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
           />
         </motion.div>
@@ -324,7 +367,7 @@ const Register = () => {
             autoComplete="new-password"
             error={!!errors.password}
             helperText={errors.password || 'Must be at least 8 characters long'}
-            onChange={(e) => { setPassword(e.target.value); if(errors.password) setErrors({...errors, password: ''}); }}
+            onChange={(e) => { setPassword(e.target.value); if(errors.password) setErrors({...errors, password: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
             slotProps={{
               input: {
@@ -351,7 +394,7 @@ const Register = () => {
             autoComplete="new-password"
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
-            onChange={(e) => { setConfirmPassword(e.target.value); if(errors.confirmPassword) setErrors({...errors, confirmPassword: ''}); }}
+            onChange={(e) => { setConfirmPassword(e.target.value); if(errors.confirmPassword) setErrors({...errors, confirmPassword: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
           />
         </motion.div>
@@ -361,7 +404,7 @@ const Register = () => {
             control={
               <Checkbox
                 checked={acceptedTerms}
-                onChange={(e) => { setAcceptedTerms(e.target.checked); if(errors.terms) setErrors({...errors, terms: ''}); }}
+                onChange={(e) => { setAcceptedTerms(e.target.checked); if(errors.terms) setErrors({...errors, terms: ''}); if(errorText) setErrorText(''); }}
                 sx={{ color: errors.terms ? '#f87171' : 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#3b82f6' } }}
               />
             }

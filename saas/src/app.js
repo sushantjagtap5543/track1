@@ -35,7 +35,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org", "https://*.mapbox.com"],
-      connectSrc: ["'self'", "ws:", "wss:", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:8082", "http://127.0.0.1:8082"]
+      connectSrc: ["'self'", "ws:", "wss:", "http://3.108.114.12", "https://3.108.114.12", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:8082", "http://127.0.0.1:8082"]
     }
   },
   crossOriginEmbedderPolicy: false,
@@ -64,12 +64,27 @@ app.use('/api/auth', authLimiter);
 
 const corsOptions = {
   origin: (origin, callback) => {
-    const whitelist = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
-    if (!origin || whitelist.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (same-server fetches, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    const whitelist = process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+      : [];
+
+    // Always allow if origin is in whitelist
+    if (whitelist.includes(origin)) return callback(null, true);
+    
+    // In non-production, allow everything
+    if (process.env.NODE_ENV !== 'production') return callback(null, true);
+    
+    // In production, also allow requests coming from the same server IP
+    // (e.g., browser on 3.108.114.12:80 calling /api/auth)
+    const serverIp = process.env.DOMAIN || process.env.SERVER_IP;
+    if (serverIp && (origin.includes(serverIp) || origin === `http://${serverIp}` || origin === `https://${serverIp}`)) {
+      return callback(null, true);
     }
+
+    callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-Id'],

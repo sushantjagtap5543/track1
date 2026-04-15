@@ -150,6 +150,10 @@ services:
       - REDIS_HOST=redis
       - TRACCAR_URL=http://traccar:8082
       - NODE_ENV=production
+      - ALLOWED_ORIGINS=http://3.108.114.12,https://3.108.114.12,http://localhost:3000,http://127.0.0.1:3000
+      - JWT_SECRET=${JWT_SECRET:-super-secret-key-for-local-audit}
+      - TRACCAR_ADMIN_EMAIL=${TRACCAR_ADMIN_EMAIL:-admin@example.com}
+      - TRACCAR_ADMIN_PASSWORD=${TRACCAR_ADMIN_PASSWORD:-admin}
     networks:
       - backend-net
       - frontend-net
