@@ -15,7 +15,7 @@ const execAsync = util.promisify(exec);
  */
 class GoogleDriveBackupService {
   constructor() {
-    this.backupDir = path.join(__dirname, '../../../backups');
+    this.backupDir = path.join(process.cwd(), 'backups');
     if (!fs.existsSync(this.backupDir)) {
       fs.mkdirSync(this.backupDir, { recursive: true });
     }
