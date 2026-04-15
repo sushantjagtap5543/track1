@@ -27,21 +27,21 @@ function help() {
 
 case $COMMAND in
     up)
-        docker-compose -f deploy/docker-compose.yml up -d
+        docker compose -f deploy/docker-compose.yml up -d
         echo "Stack is starting. Use './scripts/geosure.sh logs' to follow."
         ;;
     down)
-        docker-compose -f deploy/docker-compose.yml down
+        docker compose -f deploy/docker-compose.yml down
         echo "Stack stopped."
         ;;
     logs)
-        docker-compose -f deploy/docker-compose.yml logs -f
+        docker compose -f deploy/docker-compose.yml logs -f
         ;;
     build)
-        docker-compose -f deploy/docker-compose.yml build
+        docker compose -f deploy/docker-compose.yml build
         ;;
     seed)
-        docker-compose -f deploy/docker-compose.yml exec saas-api npm run seed
+        docker compose -f deploy/docker-compose.yml exec saas-api npm run seed
         ;;
     doctor)
         echo "Diagnosing GeoSurePath environment..."
