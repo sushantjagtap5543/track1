@@ -37,7 +37,7 @@ COPY --from=build --chown=appuser:appuser /app/schema ./schema
 COPY --from=build --chown=appuser:appuser /app/templates ./templates
 
 # Copy frontend artifacts (modern build)
-COPY --from=web-build --chown=appuser:appuser /app/traccar-web/dist ./modern/
+COPY --from=web-build --chown=appuser:appuser /app/traccar-web/build ./modern/
 
 # Copy configuration
 COPY config/traccar/traccar.xml ./conf/traccar.xml
