@@ -166,6 +166,7 @@ tasks.register('copyDependencies', Copy) {
 assemble.dependsOn(copyDependencies)
 
 jar {
+    archiveFileName = 'tracker-server.jar'
     manifest {
         attributes(
                 "Main-Class": "org.traccar.Main",
