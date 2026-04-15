@@ -3,7 +3,7 @@
 <properties>
 
     <entry key='database.driver'>org.postgresql.Driver</entry>
-    <entry key='database.url'>jdbc:postgresql://localhost:5432/geosurepath?currentSchema=public</entry>
+    <entry key='database.url'>jdbc:postgresql://db:5432/geosurepath?currentSchema=public</entry>
     <entry key='database.user'>geosurepath</entry>
     <entry key='database.password'>change-this-to-something-long-and-random</entry>
 
