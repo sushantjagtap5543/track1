@@ -18,3 +18,8 @@ dist
 .system_generated/
 **/.DS_Store
 **/Thumbs.db
+deploy/volumes
+deploy/acme
+deploy/certs
+deploy/html
+**/volumes
