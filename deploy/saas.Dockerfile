@@ -2,14 +2,14 @@
 FROM node:18-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache build-base python3
-COPY package*.json ./
+COPY saas/package*.json ./
 # Install ALL dependencies (including devDeps for build)
-RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Stage 2: Build the application
 FROM base AS builder
 WORKDIR /app
-COPY . .
+COPY saas/ ./
 RUN npx prisma generate
 # Here you would typically run 'npm run build' if using TS or a framework
 
@@ -19,8 +19,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install only production dependencies
-COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps
+COPY saas/package*.json ./
+RUN npm install --only=production --legacy-peer-deps
 
 # Copy built assets and generated prisma client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
