@@ -6,7 +6,7 @@
 echo "Fixing permissions for GeoSurePath volumes..."
 
 # Directories to fix
-DIRS=("saas/data" "traccar/logs" "traccar/data" "nginx/logs")
+DIRS=("logs" "data" "deploy/volumes" "backups")
 
 for dir in "${DIRS[@]}"; do
   if [ -d "$dir" ]; then
