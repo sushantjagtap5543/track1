@@ -12,6 +12,9 @@ install.sh
 nginx.conf
 build
 dist
-C:\Users\sushant\Desktop\track\track1\.gemini
-C:\Users\sushant\Desktop\track\track1\.agents
-C:\Users\sushant\Desktop\track\track1\.agent
+.gemini/
+.agents/
+.agent/
+.system_generated/
+**/.DS_Store
+**/Thumbs.db
