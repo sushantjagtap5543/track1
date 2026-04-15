@@ -31,7 +31,7 @@ const MapPositions = ({
   const mapCluster = useAttributePreference('mapCluster', true);
   const directionType = useAttributePreference('mapDirection', 'selected');
 
-  const createFeature = (devices, position, selectedPositionId) => {
+  const createFeature = useCallback((devices, position, selectedPositionId) => {
     const device = devices[position.deviceId];
     let showDirection;
     switch (directionType) {
@@ -55,7 +55,7 @@ const MapPositions = ({
       rotation: position.course,
       direction: showDirection,
     };
-  };
+  }, [directionType, showStatus]);
 
   const onMouseEnter = () => (map.getCanvas().style.cursor = 'pointer');
   const onMouseLeave = () => (map.getCanvas().style.cursor = '');
@@ -204,24 +204,27 @@ const MapPositions = ({
 
   useEffect(() => {
     [id, selected].forEach((source) => {
-      map.getSource(source)?.setData({
-        type: 'FeatureCollection',
-        features: positions
-          .filter((it) => devices.hasOwnProperty(it.deviceId))
-          .filter((it) =>
-            source === id ? it.deviceId !== selectedDeviceId : it.deviceId === selectedDeviceId,
-          )
-          .map((position) => ({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [position.longitude, position.latitude],
-            },
-            properties: createFeature(devices, position, selectedPosition && selectedPosition.id),
-          })),
-      });
+      const sourceInstance = map.getSource(source);
+      if (sourceInstance) {
+        sourceInstance.setData({
+          type: 'FeatureCollection',
+          features: positions
+            .filter((it) => devices && devices[it.deviceId]) // Safe check for devices
+            .filter((it) =>
+              source === id ? it.deviceId !== selectedDeviceId : it.deviceId === selectedDeviceId,
+            )
+            .map((position) => ({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [position.longitude, position.latitude],
+              },
+              properties: createFeature(devices, position, selectedPosition && selectedPosition.id),
+            })),
+        });
+      }
     });
-  }, [mapCluster, clusters, onMarkerClick, onClusterClick, devices, positions, selectedPosition]);
+  }, [id, selected, devices, positions, selectedDeviceId, selectedPosition, createFeature]);
 
   return null;
 };

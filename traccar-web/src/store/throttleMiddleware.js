@@ -29,7 +29,12 @@ export default () => (next) => {
         if (action.type === devicesActions.update.type) {
           action.payload.forEach((item) => (deviceUpdates[item.id] = item));
         } else if (action.type === sessionActions.updatePositions.type) {
-          action.payload.forEach((item) => (positionUpdates[item.deviceId] = item));
+          action.payload.forEach((item) => {
+            if (!positionUpdates[item.deviceId]) {
+              positionUpdates[item.deviceId] = [];
+            }
+            positionUpdates[item.deviceId].push(item);
+          });
         }
       });
 
@@ -38,7 +43,7 @@ export default () => (next) => {
         next({ type: devicesActions.update.type, payload: mergedDeviceUpdates });
       }
 
-      const mergedPositionUpdates = Object.values(positionUpdates);
+      const mergedPositionUpdates = Object.values(positionUpdates).flat();
       if (mergedPositionUpdates.length) {
         next({ type: sessionActions.updatePositions.type, payload: mergedPositionUpdates });
       }

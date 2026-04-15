@@ -23,7 +23,7 @@ export const interpolateTurbo = (value) => {
 };
 
 const getSpeedColor = (speed, minSpeed, maxSpeed) => {
-  const normalizedSpeed = (speed - minSpeed) / (maxSpeed - minSpeed);
+  const normalizedSpeed = maxSpeed > minSpeed ? (speed - minSpeed) / (maxSpeed - minSpeed) : 0;
 
   const [r, g, b] = interpolateTurbo(normalizedSpeed);
 

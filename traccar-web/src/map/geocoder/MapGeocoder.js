@@ -17,7 +17,11 @@ const MapGeocoder = () => {
         const features = [];
         try {
           const request = `https://nominatim.openstreetmap.org/search?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1`;
-          const response = await fetch(request);
+          const response = await fetch(request, {
+            headers: {
+              'User-Agent': 'GeoSurePath-Tracking-Platform',
+            },
+          });
           const geojson = await response.json();
           geojson.features.forEach((feature) => {
             const center = [

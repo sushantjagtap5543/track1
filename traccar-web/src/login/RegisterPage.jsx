@@ -192,6 +192,7 @@ const Register = () => {
 
       if (response.ok) {
         setSuccessText('Account successfully created! Redirecting to login...');
+        setLoading(false); // Stop loading to show success state clearly
         setTimeout(() => {
           navigate('/login', { state: { registered: true, email } });
         }, 1800);
@@ -205,6 +206,7 @@ const Register = () => {
           if (textError) errorMsg = textError;
         }
         setErrorText(errorMsg);
+        setLoading(false); // Reset loading on error
       }
     } catch (e) {
       console.error('[GeoSurePath] Registration Error:', e);

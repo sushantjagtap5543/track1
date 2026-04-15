@@ -136,10 +136,10 @@ const SocketController = () => {
           // ignore errors
         }
         clearReconnectTimeout();
-        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = setTimeout(() => {
           reconnectTimeoutRef.current = null;
           connectSocket();
-        }, 60000);
+        }, 5000);
       }
     };
 

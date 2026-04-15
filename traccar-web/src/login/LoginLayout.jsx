@@ -10,6 +10,10 @@ const useStyles = makeStyles()((theme) => ({
     height: '100vh',
     width: '100vw',
     backgroundColor: '#020617',
+    backgroundImage: 'linear-gradient(to right, rgba(2, 6, 23, 0.9), rgba(2, 6, 23, 0.5)), url(/geosurepath_login_bg.png)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
     position: 'relative',
     overflow: 'hidden',
     '&::before': {
