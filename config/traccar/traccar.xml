@@ -11,8 +11,7 @@
     <entry key='database.minPoolSize'>20</entry>
     <entry key='database.checkoutTimeout'>10000</entry>
 
-    <!-- Protocol Hardening: Enable only required binary decoders -->
-    <entry key='protocols.enable'>osmand,teltonika,gt06,tk103,gps103,gl200,h02,meitrack,ruptela,queclink,l100,its</entry>
+    <!-- Enabled all supported device binary decoders -->
 
     <entry key='l100.port'>5064</entry>
     <entry key='its.port'>5180</entry>
