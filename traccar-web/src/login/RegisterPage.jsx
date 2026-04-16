@@ -204,7 +204,7 @@ const Register = () => {
       };
       if (phone.trim()) payload.phone = phone.trim();
 
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/saas/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -412,7 +412,17 @@ const Register = () => {
 
             error={!!errors.password}
             helperText={errors.password || t('sharedPasswordLength')}
-            onChange={(e) => { setPassword(e.target.value); if(errors.password) setErrors({...errors, password: ''}); if(errorText) setErrorText(''); }}
+            onChange={(e) => { 
+                const value = e.target.value;
+                setPassword(value); 
+                if(errors.password) setErrors(prev => ({...prev, password: ''})); 
+                if (confirmPassword && value !== confirmPassword) {
+                    setErrors(prev => ({ ...prev, confirmPassword: t('registrationPasswordMismatch') || 'Passwords do not match' }));
+                } else if (confirmPassword && value === confirmPassword) {
+                    setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                }
+                if(errorText) setErrorText(''); 
+            }}
             className={classes.input}
             slotProps={{
               input: {
@@ -450,7 +460,16 @@ const Register = () => {
 
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
-            onChange={(e) => { setConfirmPassword(e.target.value); if(errors.confirmPassword) setErrors({...errors, confirmPassword: ''}); if(errorText) setErrorText(''); }}
+            onChange={(e) => { 
+                const value = e.target.value;
+                setConfirmPassword(value); 
+                if (value && value !== password) {
+                    setErrors(prev => ({ ...prev, confirmPassword: t('registrationPasswordMismatch') || 'Passwords do not match' }));
+                } else {
+                    setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                }
+                if (errorText) setErrorText(''); 
+            }}
             className={classes.input}
             slotProps={{
               input: {
