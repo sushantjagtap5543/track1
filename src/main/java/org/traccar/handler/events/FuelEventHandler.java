@@ -18,7 +18,7 @@ package org.traccar.handler.events;
 import jakarta.inject.Inject;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
-import PositionUtil;
+import org.traccar.helper.model.PositionUtil;
 import org.traccar.model.Device;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
