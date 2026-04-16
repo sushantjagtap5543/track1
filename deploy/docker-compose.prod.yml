@@ -1,0 +1,20 @@
+# Production override — substitutes build: with pre-built GHCR images.
+# Used on Lightsail: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Images are built by GitHub Actions and pushed to GHCR.
+# Set GITHUB_REPOSITORY in your server .env (e.g. sushantjagtap5543/track1)
+
+version: '3.8'
+
+services:
+  traccar:
+    # Replace local build with the pre-built image from GHCR
+    build: !reset null
+    image: ghcr.io/${GITHUB_REPOSITORY:-sushantjagtap5543/track1}/traccar:${IMAGE_TAG:-latest}
+    pull_policy: always
+
+  saas-api:
+    # Replace local build with the pre-built image from GHCR
+    build: !reset null
+    image: ghcr.io/${GITHUB_REPOSITORY:-sushantjagtap5543/track1}/saas-api:${IMAGE_TAG:-latest}
+    pull_policy: always

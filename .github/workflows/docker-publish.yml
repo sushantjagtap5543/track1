@@ -1,11 +1,10 @@
-name: CI/CD Docker Pipeline
+# ⚠️  DISABLED — functionality merged into main.yml (3-job pipeline)
+# This file is kept for reference only.
+# The env:REGISTRY bug (should be env.REGISTRY) was also present here.
+name: CI/CD Docker Pipeline (DISABLED)
 
 on:
-  push:
-    branches: [ "main", "develop" ]
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:  # Manual trigger only — disabled from auto-run
 
 env:
   REGISTRY: ghcr.io
