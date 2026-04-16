@@ -86,6 +86,11 @@ public class WebServer implements LifecycleObject {
 
         ServletContextHandler servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         JettyWebSocketServletContainerInitializer.configure(servletHandler, null);
+
+        // IMPORTANT: Add SaaS proxy filter BEFORE GuiceFilter so /api/saas/* requests
+        // are forwarded to Node.js and never reach Jersey's JAX-RS dispatcher.
+        initSaaSProxy(servletHandler);
+
         servletHandler.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
 
         initApi(servletHandler);
@@ -198,6 +203,28 @@ public class WebServer implements LifecycleObject {
             LOGGER.warn("Failed to load API resources");
         }
         servletHandler.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/api/*");
+    }
+
+    private void initSaaSProxy(ServletContextHandler servletHandler) {
+        // Fix: Register the proxy servlet with name "saas-proxy" mappd at /api/saas/*.
+        // proxyTo is the root of the Node.js server. AsyncProxyServlet.Transparent
+        // forwards the full request URI as-is, so /api/saas/auth/register → http://localhost:3001/api/saas/auth/register.
+        ServletHolder saasProxy = new ServletHolder("saas-proxy", AsyncProxyServlet.Transparent.class);
+        saasProxy.setInitParameter("proxyTo", "http://localhost:3001");
+        servletHandler.addServlet(saasProxy, "/api/saas/*");
+        // Critical: Add this filter BEFORE GuiceFilter to intercept /api/saas/* requests.
+        // GuiceFilter (/*) would otherwise catch them first and route to Jersey (causing 404).
+        // We dispatch to the named servlet "saas-proxy" directly, bypassing GuiceFilter.
+        servletHandler.addFilter((request, response, chain) -> {
+            jakarta.servlet.http.HttpServletRequest r = (jakarta.servlet.http.HttpServletRequest) request;
+            String uri = r.getRequestURI();
+            if (uri != null && uri.startsWith("/api/saas")) {
+                // Dispatch to named servlet directly — skips GuiceFilter managed pipeline.
+                request.getServletContext().getNamedDispatcher("saas-proxy").forward(request, response);
+                return;
+            }
+            chain.doFilter(request, response);
+        }, "/api/saas/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
     private void initSessionConfig(ServletContextHandler servletHandler) {

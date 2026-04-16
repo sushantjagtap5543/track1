@@ -185,6 +185,22 @@ if (isRecoveryMode) {
   router.get('/api/users', (req, res) => res.json([{ id: 1, name: 'Admin', email: 'admin@geosurepath.com', administrator: true, attributes: {} }]));
   router.get('/api/users/:id', (req, res) => res.json({ id: parseInt(req.params.id), name: 'Admin', email: 'admin@geosurepath.com', administrator: true, attributes: {} }));
   router.put('/api/users/:id', (req, res) => res.json({ ...req.body, id: parseInt(req.params.id) }));
+  // Added: POST /api/users (needed for registration saga — creates Traccar user)
+  router.post('/api/users', (req, res) => {
+    const { name, email } = req.body || {};
+    res.status(201).json({ id: Math.floor(Math.random() * 9000) + 1000, name: name || 'New User', email: email || '', administrator: false, attributes: {} });
+  });
+  // Added: DELETE /api/users/:id (needed for registration rollback)
+  router.delete('/api/users/:id', (req, res) => res.status(204).send());
+  // Added: POST /api/devices (needed for device creation)
+  router.post('/api/devices', (req, res) => {
+    const { name, uniqueId } = req.body || {};
+    res.status(201).json({ id: Math.floor(Math.random() * 9000) + 1000, name: name || 'New Device', uniqueId: uniqueId || String(Date.now()), status: 'offline', attributes: {} });
+  });
+  // Added: DELETE /api/devices/:id (cleanup)
+  router.delete('/api/devices/:id', (req, res) => res.status(204).send());
+  // Added: POST /api/permissions (link user to device)
+  router.post('/api/permissions', (req, res) => res.status(204).send());
   router.post('/api/server/reboot', (req, res) => res.status(202).send());
   router.post('/api/session/token', (req, res) => res.send('mock_token_' + Math.random().toString(36).substring(7)));
   
