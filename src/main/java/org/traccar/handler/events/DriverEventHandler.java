@@ -33,7 +33,7 @@ public class DriverEventHandler extends BaseEventHandler {
 
     @Override
     public void onPosition(Position position, Callback callback) {
-        if (!org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
+        if (!PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
         String driverUniqueId = position.getString(Position.KEY_DRIVER_UNIQUE_ID);

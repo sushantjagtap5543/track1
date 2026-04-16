@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import traccarService from '../services/traccar.js';
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma.js';
+
 
 /**
  * Fetch AI Insights using OpenRouter

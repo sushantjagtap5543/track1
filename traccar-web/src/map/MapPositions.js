@@ -114,6 +114,27 @@ const MapPositions = ({
         features: [],
       },
     });
+
+    // Elite Selection Bloom (Glow) Layer
+    map.addLayer({
+      id: `${selected}-glow`,
+      type: 'circle',
+      source: selected,
+      paint: {
+        'circle-radius': 15 * iconScale,
+        'circle-color': '#3b82f6',
+        'circle-blur': 1,
+        'circle-opacity': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          0, 0,
+          10, 0.4,
+          22, 0.6
+        ]
+      }
+    });
+
     [id, selected].forEach((source) => {
       map.addLayer({
         id: source,
@@ -189,6 +210,9 @@ const MapPositions = ({
         map.off('mouseleave', source, onMouseLeave);
         map.off('click', source, onMarkerClickCallback);
 
+        if (map.getLayer(`${source}-glow`)) {
+          map.removeLayer(`${source}-glow`);
+        }
         if (map.getLayer(source)) {
           map.removeLayer(source);
         }
@@ -198,6 +222,7 @@ const MapPositions = ({
         if (map.getSource(source)) {
           map.removeSource(source);
         }
+
       });
     };
   }, [mapCluster, clusters, onMarkerClickCallback, onClusterClick]);

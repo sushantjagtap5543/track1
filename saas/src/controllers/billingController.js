@@ -1,11 +1,5 @@
-import Razorpay from 'razorpay';
-import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
-import logAudit from '../utils/auditLogger.js';
-import traccar from '../services/traccar.js';
-import googleSheetService from '../services/googleSheetService.js';
+import prisma from '../utils/prisma.js';
 
-const prisma = new PrismaClient();
 
 const razorpay = (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) 
   ? new Razorpay({

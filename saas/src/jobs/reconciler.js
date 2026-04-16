@@ -1,7 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const Redis = require('ioredis');
+import prisma from '../utils/prisma.js';
+import Redis from 'ioredis';
 const redis = new Redis({ host: process.env.REDIS_HOST || 'redis' });
+
 
 /**
  * Anti-Gravity State Reconciler
@@ -26,4 +26,5 @@ const reconcileState = async () => {
 // Run every 30 minutes
 setInterval(reconcileState, 30 * 60 * 1000);
 
-module.exports = reconcileState;
+export default reconcileState;
+

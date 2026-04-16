@@ -7,6 +7,11 @@ import java.util.TreeMap;
  * High-Precision Sensor Calibration & Telemetry Functions for GeoSurePath
  */
 public class Functions {
+    
+    private Functions() {
+        // Utility class
+    }
+
 
     /**
      * Extracts a specific bit from an integer. 
@@ -21,7 +26,9 @@ public class Functions {
      * Useful for simple sensor calibration (e.g., voltage to pressure).
      */
     public static double linear(double value, double x1, double y1, double x2, double y2) {
-        if (x2 == x1) return y1;
+        if (x2 == x1) {
+            return y1;
+        }
         return y1 + (value - x1) * (y2 - y1) / (x2 - x1);
     }
 
@@ -39,13 +46,19 @@ public class Functions {
             }
         }
 
-        if (points.isEmpty()) return value;
+        if (points.isEmpty()) {
+            return value;
+        }
         
         Map.Entry<Double, Double> low = points.floorEntry(value);
         Map.Entry<Double, Double> high = points.ceilingEntry(value);
 
-        if (low == null) return high.getValue();
-        if (high == null || low.getKey().equals(high.getKey())) return low.getValue();
+        if (low == null) {
+            return high.getValue();
+        }
+        if (high == null || low.getKey().equals(high.getKey())) {
+            return low.getValue();
+        }
 
         return low.getValue() + (value - low.getKey()) * (high.getValue() - low.getValue()) 
                / (high.getKey() - low.getKey());

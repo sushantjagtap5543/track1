@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
+import prisma from './prisma.js';
 import traccar from '../services/traccar.js';
 
-const prisma = new PrismaClient();
 
 // Redis setup for status check
 let redis;

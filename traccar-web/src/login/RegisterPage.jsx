@@ -20,8 +20,14 @@ import { useNavigate } from 'react-router-dom';
 import LoginLayout from './LoginLayout';
 import { useCatch } from '../reactHelper';
 import { sessionActions } from '../store';
-import { Visibility, VisibilityOff, EmailOutlined, LockOutlined, ArrowBack as BackIcon } from '@mui/icons-material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import EmailOutlined from '@mui/icons-material/EmailOutlined';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import BackIcon from '@mui/icons-material/ArrowBack';
+
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '../common/components/LocalizationProvider';
 
 const useStyles = makeStyles()((theme) => ({
   container: {
@@ -69,6 +75,11 @@ const useStyles = makeStyles()((theme) => ({
         background: 'rgba(255, 255, 255, 0.08)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
       },
+      height: '56px',
+      [theme.breakpoints.down('sm')]: {
+        height: '50px',
+      },
+
       '&.Mui-focused': {
         background: 'rgba(255, 255, 255, 0.1)',
         border: '1px solid rgba(59, 130, 246, 0.5)',
@@ -121,6 +132,7 @@ const Register = () => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const t = useTranslation();
 
   // Account fields
   const [name, setName] = useState('');
@@ -130,47 +142,42 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Vehicle/Device onboarding (Synchronized)
-  const [vehicleName, setVehicleName] = useState('');
-  const [deviceImei, setDeviceImei] = useState('');
-
   // UI state
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
   const [successText, setSuccessText] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
+  useState(() => {
+    document.title = `${t('loginRegister')} - GeoSurePath`;
+  }, [t]);
+
   const validate = () => {
+
     let newErrors = {};
-    if (!name.trim()) newErrors.name = 'Full name is required.';
+    if (!name.trim()) newErrors.name = t('registrationNameRequired');
     if (!email) {
-      newErrors.email = 'Email address is required.';
+      newErrors.email = t('registrationEmailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address.';
+      newErrors.email = t('registrationEmailInvalid');
     }
     if (phone && !/^\+?[0-9\s\-()]{7,15}$/.test(phone)) {
-      newErrors.phone = 'Please enter a valid phone number.';
+      newErrors.phone = t('registrationPhoneInvalid');
     }
     if (!password) {
-      newErrors.password = 'Password is required.';
+      newErrors.password = t('registrationPasswordRequired');
     } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long.';
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match.';
+      newErrors.password = t('registrationPasswordTooShort');
     }
     
-    // Optional but validated if provided
-    if (deviceImei && !/^\d{15}$/.test(deviceImei)) {
-      newErrors.deviceImei = 'IMEI must be exactly 15 digits.';
+    if (confirmPassword !== password) {
+      newErrors.confirmPassword = t('registrationPasswordMismatch') || 'Passwords do not match';
     }
-    if (deviceImei && !vehicleName.trim()) {
-      newErrors.vehicleName = 'Vehicle name is required if IMEI is provided.';
-    }
-
+    
     if (!acceptedTerms) {
-      newErrors.terms = 'You must accept the terms and conditions.';
+      newErrors.terms = t('registrationTermsRequired');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -183,7 +190,7 @@ const Register = () => {
     setErrors({});
 
     if (!validate()) {
-      setErrorText('Please fix the errors in the form before submitting.');
+      setErrorText(t('registrationFixErrors'));
       return;
     }
 
@@ -193,11 +200,9 @@ const Register = () => {
       const payload = {
         name: name.trim(),
         email,
-        phone: phone || undefined,
         password,
-        vehicleName,
-        deviceImei,
       };
+      if (phone.trim()) payload.phone = phone.trim();
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -206,13 +211,13 @@ const Register = () => {
       });
 
       if (response.ok) {
-        setSuccessText('Account successfully created! Redirecting to login...');
-        setLoading(false); // Stop loading to show success state clearly
+        setSuccessText(t('registerSuccess'));
         setTimeout(() => {
-          navigate('/login', { state: { registered: true, email } });
+          navigate('/login', { state: { registered: true, email }, replace: true });
+
         }, 1800);
       } else {
-        let errorMsg = 'Registration failed. Please try again.';
+        let errorMsg = t('registrationFailed');
         const textError = await response.text().catch(() => '');
         try {
           const data = JSON.parse(textError);
@@ -225,7 +230,7 @@ const Register = () => {
       }
     } catch (e) {
       console.error('[GeoSurePath] Registration Error:', e);
-      setErrorText('Connection error. Please check if the server is running.');
+      setErrorText(t('registrationConnectionError'));
     } finally {
       setLoading(false);
     }
@@ -243,11 +248,45 @@ const Register = () => {
 
   return (
     <LoginLayout>
-      <IconButton className={classes.backButton} onClick={() => navigate('/login')}>
+      <Link
+        href="#register-form"
+        sx={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 'auto',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+          '&:focus': {
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            width: 'auto',
+            height: 'auto',
+            padding: '10px 20px',
+            background: '#3b82f6',
+            color: '#fff',
+            borderRadius: '8px',
+            zIndex: 9999,
+          }
+        }}
+      >
+        Skip to Registration Form
+      </Link>
+
+      <IconButton 
+        className={classes.backButton} 
+        onClick={() => navigate('/login')} 
+        aria-label="Go back to login"
+        component={motion.button}
+        whileHover={{ x: -4 }}
+      >
         <BackIcon />
       </IconButton>
 
+
       <Box
+        id="register-form"
         component={motion.form}
         variants={containerVariants}
         initial="hidden"
@@ -256,28 +295,47 @@ const Register = () => {
         onSubmit={handleSubmit}
       >
         <motion.div className={classes.header} variants={itemVariants}>
-          <Typography className={classes.title}>Register</Typography>
-          <Typography className={classes.subText}>Create a new account</Typography>
+          <Typography component="h2" className={classes.title} sx={{ textWrap: 'balance' }}>{t('loginRegister')}</Typography>
+          <Typography className={classes.subText} sx={{ textWrap: 'balance' }}>{t('registerCreateAccount')}</Typography>
         </motion.div>
 
+
+
         <AnimatePresence mode="wait">
-          {(errorText || successText) && (
+          {errorText && (
+            <motion.div variants={itemVariants} aria-live="assertive" id="auth-error-region">
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  borderRadius: '16px', 
+                  mb: 1, 
+                  background: 'rgba(239, 68, 68, 0.1)', 
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.2)'
+                }}
+              >
+                {errorText}
+              </Alert>
+            </motion.div>
+          )}
+          {successText && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              aria-live="polite"
             >
               <Alert 
-                severity={errorText ? 'error' : 'success'} 
+                severity="success" 
                 sx={{ 
                   borderRadius: '16px', 
                   mb: 1,
-                  background: errorText ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                  color: errorText ? '#f87171' : '#34d399',
-                  border: `1px solid ${errorText ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16, 185, 129, 0.2)'
                 }}
               >
-                {errorText || successText}
+                {successText}
               </Alert>
             </motion.div>
           )}
@@ -286,8 +344,9 @@ const Register = () => {
         <motion.div variants={itemVariants}>
           <TextField
             required
+            autoFocus
             fullWidth
-            label="Full Name"
+            label={t('sharedName')}
             name="name"
             value={name}
             autoComplete="name"
@@ -295,6 +354,12 @@ const Register = () => {
             helperText={errors.name}
             onChange={(e) => { setName(e.target.value); if(errors.name) setErrors({...errors, name: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
+            slotProps={{
+              input: {
+                'aria-invalid': !!errors.name,
+                'aria-errormessage': errors.name ? 'name-error' : undefined,
+              },
+            }}
           />
         </motion.div>
         
@@ -303,21 +368,28 @@ const Register = () => {
             required
             fullWidth
             type="email"
-            label="Email Address"
+            label={t('userEmail')}
             name="email"
             value={email}
-            autoComplete="email"
+            autoComplete="username"
+
             error={!!errors.email}
             helperText={errors.email}
             onChange={(e) => { setEmail(e.target.value); if(errors.email) setErrors({...errors, email: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
+            slotProps={{
+              input: {
+                'aria-invalid': !!errors.email,
+                'aria-errormessage': errors.email ? 'email-error' : undefined,
+              },
+            }}
           />
         </motion.div>
 
         <motion.div variants={itemVariants}>
           <TextField
             fullWidth
-            label="Phone Number (Optional)"
+            label={t('sharedPhone')}
             name="phone"
             value={phone}
             autoComplete="tel"
@@ -328,52 +400,35 @@ const Register = () => {
           />
         </motion.div>
 
-        <Divider className={classes.divider} sx={{ my: 1 }}>VEHICLE ONBOARDING (OPTIONAL)</Divider>
-
-        <motion.div variants={itemVariants}>
-          <TextField
-            fullWidth
-            label="Vehicle Name (e.g. My Truck)"
-            name="vehicleName"
-            value={vehicleName}
-            error={!!errors.vehicleName}
-            helperText={errors.vehicleName}
-            onChange={(e) => { setVehicleName(e.target.value); if(errors.vehicleName) setErrors({...errors, vehicleName: ''}); if(errorText) setErrorText(''); }}
-            className={classes.input}
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <TextField
-            fullWidth
-            label="Device IMEI (15 Digits)"
-            name="deviceImei"
-            value={deviceImei}
-            error={!!errors.deviceImei}
-            helperText={errors.deviceImei}
-            onChange={(e) => { setDeviceImei(e.target.value); if(errors.deviceImei) setErrors({...errors, deviceImei: ''}); if(errorText) setErrorText(''); }}
-            className={classes.input}
-          />
-        </motion.div>
-
         <motion.div variants={itemVariants}>
           <TextField
             required
             fullWidth
-            label="Password"
+            label={t('userPassword')}
             name="password"
             value={password}
             type={showPassword ? 'text' : 'password'}
             autoComplete="new-password"
+
             error={!!errors.password}
-            helperText={errors.password || 'Must be at least 8 characters long'}
+            helperText={errors.password || t('sharedPasswordLength')}
             onChange={(e) => { setPassword(e.target.value); if(errors.password) setErrors({...errors, password: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
             slotProps={{
               input: {
+                'aria-label': t('userPassword'),
+                'aria-invalid': !!errors.password,
+                'aria-errormessage': errors.password ? 'password-error' : undefined,
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                      component={motion.button}
+                      whileTap={{ scale: 0.9, rotate: 15 }}
+                      aria-label={showPassword ? t('sharedHidePassword') || "Hide password" : t('sharedShowPassword') || "Show password"}
+                    >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -387,15 +442,37 @@ const Register = () => {
           <TextField
             required
             fullWidth
-            label="Confirm Password"
+            label={t('registrationConfirmPassword') || "Confirm Password"}
             name="confirmPassword"
             value={confirmPassword}
-            type={showPassword ? 'text' : 'password'}
+            type={showConfirmPassword ? 'text' : 'password'}
             autoComplete="new-password"
+
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); if(errors.confirmPassword) setErrors({...errors, confirmPassword: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
+            slotProps={{
+              input: {
+                'aria-label': "Confirm Password",
+                'aria-invalid': !!errors.confirmPassword,
+                'aria-errormessage': errors.confirmPassword ? 'confirm-password-error' : undefined,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                      sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                      component={motion.button}
+                      whileTap={{ scale: 0.9, rotate: 15 }}
+                      aria-label={showConfirmPassword ? t('sharedHidePassword') || "Hide password" : t('sharedShowPassword') || "Show password"}
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
         </motion.div>
 
@@ -410,7 +487,7 @@ const Register = () => {
             }
             label={
               <Typography variant="body2" sx={{ color: errors.terms ? '#f87171' : 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
-                I agree to the Terms and Conditions
+                {t('registerTermsAgree')}
               </Typography>
             }
           />
@@ -419,21 +496,36 @@ const Register = () => {
 
         <motion.div variants={itemVariants}>
           <Button
-            variant="contained"
+            component={motion.button}
             fullWidth
+            variant="contained"
+            color="primary"
             type="submit"
-            disabled={loading}
             className={classes.registerButton}
+            disabled={loading}
+            sx={{ 
+              borderRadius: '16px', 
+              fontWeight: 900, 
+              fontSize: '1.1rem',
+              letterSpacing: '1px',
+              textTransform: 'none',
+              boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)',
+              '&:hover': {
+                boxShadow: '0 12px 24px rgba(59, 130, 246, 0.4)',
+              }
+            }}
+            whileHover={{ scale: 1.02, translateY: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {loading ? <CircularProgress size={26} color="inherit" /> : 'Create Account'}
+            {loading ? <CircularProgress size={26} color="inherit" /> : t('loginRegister')}
           </Button>
         </motion.div>
 
         <motion.div className={classes.footer} variants={itemVariants}>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-            Already have an account?{' '}
+            {t('registerAlreadyHaveAccount')}{' '}
             <Link className={classes.loginLink} onClick={() => navigate('/login')} component="button" type="button">
-              Sign In Here
+              {t('loginLogin')}
             </Link>
           </Typography>
         </motion.div>

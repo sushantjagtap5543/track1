@@ -1,8 +1,7 @@
-import WebSocket from 'ws';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
+import { WebSocket } from 'ws';
 import { broadcastLocation, broadcastEvent } from './socketService.js';
 
-const prisma = new PrismaClient();
 const TRACCAR_WS_URL = process.env.TRACCAR_URL ? process.env.TRACCAR_URL.replace('http', 'ws') + '/api/socket' : null;
 
 /**

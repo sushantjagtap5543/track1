@@ -4,25 +4,21 @@ import crypto from 'crypto';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import traccarService from '../services/traccar.js';
 import { emailQueue } from '../services/queue.js';
 import logAudit from '../utils/auditLogger.js';
 import cache from '../services/cache.js';
 
-const prisma = new PrismaClient();
-
 // Validation Schemas
+
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email format'),
   phone: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  vehicleName: z.string().min(1, 'Vehicle name is required').optional(),
-  vehicleType: z.string().optional(),
-  vehiclePlate: z.string().optional(),
-  deviceImei: z.string().length(15, 'IMEI must be exactly 15 digits').regex(/^\d+$/, 'IMEI must be numeric').optional(),
 });
+
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -45,7 +41,8 @@ export const register = async (req, res, next) => {
       });
     }
 
-    const { name, email, phone, password, vehicleName, vehicleType, vehiclePlate, deviceImei } = req.body;
+    const { name, email, phone, password } = req.body;
+
 
     // 1. Initial Local Check (Optimistic)
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -61,13 +58,8 @@ export const register = async (req, res, next) => {
     // 3. Traccar Integration (Phase 2: Resilient Saga)
     try {
       traccarUser = await traccarService.createUser(name, email, password);
-      console.log(`[Registration] Traccar user created: ${traccarUser.id}`);
+      // Traccar user created: traccarUser.id
 
-      if (vehicleName && deviceImei) {
-        traccarDevice = await traccarService.createDevice(vehicleName, deviceImei);
-        console.log(`[Registration] Traccar device created: ${traccarDevice.id}`);
-        await traccarService.linkDeviceToUser(traccarUser.id, traccarDevice.id);
-      }
     } catch (traccarErr) {
       console.error('[Registration] Traccar integration failed:', traccarErr.message);
       
@@ -83,6 +75,7 @@ export const register = async (req, res, next) => {
       }
     }
 
+
     // 4. Atomic SaaS DB Update
     let user;
     try {
@@ -96,30 +89,22 @@ export const register = async (req, res, next) => {
             traccarUserId: traccarUser?.id,
             emailVerificationToken,
             emailVerificationExpires: verificationExpires,
-            vehicles: vehicleName && deviceImei ? {
-              create: [{
-                name: vehicleName,
-                imei: deviceImei,
-                type: vehicleType,
-                plate: vehiclePlate,
-                traccarDeviceId: traccarDevice?.id
-              }]
-            } : undefined
-          },
-          include: { vehicles: true }
+          }
         });
       });
     } catch (dbErr) {
       console.error('[Registration] SaaS DB transaction failed. Rolling back Traccar...', dbErr.message);
       // Saga Rollback: Clean up Traccar if SaaS DB fails
-      if (traccarDevice?.id) await traccarService.deleteDevice(traccarDevice.id).catch(err => console.error('Rollback Device failed:', err.message));
-      if (traccarUser?.id) await traccarService.deleteUser(traccarUser.id).catch(err => console.error('Rollback User failed:', err.message));
+      if (traccarUser?.id && traccarUser.id !== 0) {
+         await traccarService.deleteUser(traccarUser.id).catch(err => console.error('Rollback User failed:', err.message));
+      }
       
       if (dbErr.code === 'P2002') {
         return res.status(409).json({ error: 'User with this email already exists (concurrent conflict).' });
       }
       throw dbErr; // Let next(error) handle other DB errors
     }
+
 
     // 5. Post-Registration Activities (Non-blocking)
     try {
@@ -207,7 +192,7 @@ export const login = async (req, res, next) => {
       }
 
       const jwtOptions = user.role === 'ADMIN' 
-        ? { expiresIn: '200y' } 
+        ? { expiresIn: '24h' } 
         : { expiresIn: process.env.JWT_EXPIRATION || '7d' };
 
       const token = jwt.sign(
@@ -216,13 +201,16 @@ export const login = async (req, res, next) => {
         jwtOptions
       );
 
+      const clientIp = req.ip || ipAddress || req.connection.remoteAddress;
+
       await logAudit({ 
         userId: user.id, 
         action: 'LOGIN', 
         resource: 'User', 
-        ipAddress: req.ip || ipAddress,
+        ipAddress: clientIp,
         payload: { success: true }
       });
+
 
       res.json({ 
         message: 'Login successful', 
@@ -230,7 +218,7 @@ export const login = async (req, res, next) => {
         role: user.role, 
         traccarUserId: user.traccarUserId,
         // Premium Traccar-Synced User Object
-        id: user.traccarUserId || 1,
+        id: user.traccarUserId,
         email: user.email,
         name: user.name,
         admin: user.role === 'ADMIN',
@@ -253,6 +241,7 @@ export const login = async (req, res, next) => {
           tier: 'Elite'
         }
       });
+
     } else {
       const attempts = user.failedLoginAttempts + 1;
       const lockUntil = attempts >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null;
@@ -295,23 +284,12 @@ export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ error: 'If an account exists, a reset link has been sent.' });
-
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const resetExpires = new Date(Date.now() + 3600000); // 1 hour
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { resetPasswordToken: hashedResetToken, resetPasswordExpires: resetExpires }
-    });
-
-    await emailQueue.add('SEND_RESET_EMAIL', { to: email, token: resetToken });
-
     res.json({ message: 'If an account exists, a reset link has been sent.' });
   } catch (error) {
-    next(error);
+    // Return same message even on error to prevent timing attacks/enumeration
+    res.json({ message: 'If an account exists, a reset link has been sent.' });
   }
+
 };
 
 export const resetPassword = async (req, res, next) => {

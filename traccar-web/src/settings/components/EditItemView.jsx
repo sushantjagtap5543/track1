@@ -13,6 +13,8 @@ import { useTranslation } from '../../common/components/LocalizationProvider';
 import PageLayout from '../../common/components/PageLayout';
 import useSettingsStyles from '../common/useSettingsStyles';
 import fetchOrThrow from '../../common/util/fetchOrThrow';
+import { useDispatch } from 'react-redux';
+import { notificationsActions } from '../../store';
 
 const EditItemView = ({
   children,
@@ -25,6 +27,7 @@ const EditItemView = ({
   menu,
   breadcrumbs,
 }) => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { classes } = useSettingsStyles();
   const t = useTranslation();
@@ -57,6 +60,7 @@ const EditItemView = ({
     if (onItemSaved) {
       onItemSaved(await response.json());
     }
+    dispatch(notificationsActions.push(t('settingsSavedSuccessfully')));
     navigate(-1);
   });
 
@@ -64,7 +68,7 @@ const EditItemView = ({
     <PageLayout menu={menu} breadcrumbs={breadcrumbs}>
       <div className={classes.container}>
         <div className={classes.containerMain}>
-          <Box maxWidth="md" sx={{ width: '100%', mx: 'auto', p: { xs: 2, md: 4 } }}>
+          <Box maxWidth="md" sx={{ width: '100%', mx: 'auto', p: { xs: 2, md: 5 } }}>
             {item ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {children}
@@ -78,19 +82,22 @@ const EditItemView = ({
             )}
             
             <Box sx={{ 
-              display: 'flex', gap: 2, mt: 6, pt: 4, 
-              borderTop: '1px solid rgba(255,255,255,0.06)',
+              display: 'flex', gap: 2, mt: 8, pt: 4, 
+              borderTop: '1px solid rgba(255,255,255,0.08)',
               position: 'sticky', bottom: 0, 
-              background: 'rgba(15, 23, 42, 0.01)', 
-              backdropFilter: 'blur(5px)' 
+              background: 'rgba(15, 23, 42, 0.4)', 
+              backdropFilter: 'blur(30px)',
+              zIndex: 10,
+              pb: 2
             }}>
               <Button 
                 fullWidth
                 variant="outlined"
                 startIcon={<CloseIcon />}
                 disabled={!item}
-                sx={{ py: 1.8 }}
+                className={classes.buttonSecondary}
                 onClick={() => navigate(-1)}
+                aria-label={t('sharedCancel')}
               >
                 {t('sharedCancel')}
               </Button>
@@ -99,8 +106,9 @@ const EditItemView = ({
                 variant="contained"
                 startIcon={<SaveIcon />}
                 disabled={!item || (validate && !validate())}
-                sx={{ py: 1.8 }}
+                className={classes.buttonPrimary}
                 onClick={handleSave}
+                aria-label={t('sharedSave')}
               >
                 {t('sharedSave')}
               </Button>

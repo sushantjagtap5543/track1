@@ -12,6 +12,7 @@ import alarm from './resources/alarm.mp3';
 import { eventsActions } from './store/events';
 import useFeatures from './common/util/useFeatures';
 import { useAttributePreference } from './common/util/preferences';
+import { playSound } from './common/util/sound';
 import {
   handleNativeNotificationListeners,
   nativePostMessage,
@@ -44,6 +45,7 @@ const SocketController = () => {
 
   const soundEvents = useAttributePreference('soundEvents', '');
   const soundAlarms = useAttributePreference('soundAlarms', 'sos');
+  const soundType = useAttributePreference('soundType', 'default');
 
   const features = useFeatures();
 
@@ -65,7 +67,7 @@ const SocketController = () => {
       });
 
       if (shouldPlaySound) {
-        new Audio(alarm).play().catch(() => {});
+        playSound(soundType);
       }
 
       setNotifications((prev) => [
@@ -247,19 +249,22 @@ const SocketController = () => {
           onClick={() => setNotifications([])}
           sx={{
             position: 'fixed',
-            top: '8px',
+            top: '16px',
             right: '420px',
-            zIndex: 1500,
-            bgcolor: 'rgba(15, 23, 42, 0.9)',
+            zIndex: 2000,
+            background: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(20px)',
             color: '#38bdf8',
             fontWeight: 800,
-            borderRadius: '8px',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            backdropFilter: 'blur(10px)',
-            '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)' }
+            borderRadius: 'var(--border-radius-card)',
+            border: '1px solid var(--glass-border)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            textTransform: 'none',
+            '&:hover': { background: 'rgba(56, 189, 248, 0.1)', borderColor: '#38bdf8' }
           }}
+          aria-label={t('sharedClearAll')}
         >
-          DISMISS ALL ({notifications.length})
+          {t('sharedClearAll')} ({notifications.length})
         </Button>
       )}
       {notifications.map((notification, index) => (
@@ -274,22 +279,26 @@ const SocketController = () => {
           <Box
             className={cx('premium-snack', (notification.type === 'alarm' || notification.type === 'sos') && 'critical-alert')}
             sx={{
-              p: 2,
-              minWidth: '320px',
+              p: 2.5,
+              minWidth: '340px',
               display: 'flex',
               alignItems: 'center',
-              gap: 2,
-              background: (notification.type === 'alarm' || notification.type === 'sos') 
-                ? (notification.isAis140 ? 'rgba(220, 38, 38, 0.95)' : 'rgba(15, 23, 42, 0.9)')
-                : 'rgba(15, 23, 42, 0.9)',
+              gap: 2.5,
+              background: 'var(--glass-background)',
+              backdropFilter: 'var(--glass-blur)',
               color: '#fff',
-              border: notification.isAis140 ? '2px solid #fff' : 'none',
-              boxShadow: notification.isAis140 ? '0 0 20px rgba(220, 38, 38, 0.5)' : 'none',
-              animation: notification.isAis140 ? 'pulse 1s infinite' : 'none',
+              borderRadius: 'var(--border-radius-card)',
+              border: (notification.type === 'alarm' || notification.type === 'sos') ? '1px solid rgba(244, 63, 94, 0.5)' : '1px solid var(--glass-border)',
+              boxShadow: (notification.type === 'alarm' || notification.type === 'sos') ? '0 8px 32px rgba(244, 63, 94, 0.3)' : '0 8px 32px rgba(0,0,0,0.5)',
+              animation: (notification.type === 'alarm' || notification.type === 'sos') ? 'pulse 1.5s infinite' : 'slideIn 0.3s ease-out',
               '@keyframes pulse': {
-                '0%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.02)' },
-                '100%': { transform: 'scale(1)' },
+                '0%': { transform: 'scale(1)', boxShadow: '0 8px 32px rgba(244, 63, 94, 0.3)' },
+                '50%': { transform: 'scale(1.02)', boxShadow: '0 8px 48px rgba(244, 63, 94, 0.5)' },
+                '100%': { transform: 'scale(1)', boxShadow: '0 8px 32px rgba(244, 63, 94, 0.3)' },
+              },
+              '@keyframes slideIn': {
+                '0%': { transform: 'translateX(100%)', opacity: 0 },
+                '100%': { transform: 'translateX(0)', opacity: 1 },
               },
             }}
           >
@@ -353,8 +362,9 @@ const SocketController = () => {
                     setNotifications(notifications.filter((n) => n.id !== notification.id));
                     // Future: Send acknowledgment to API
                   }}
+                  aria-label={t('sharedAcknowledge')}
                 >
-                  ACKNOWLEDGE SOS (LOG EVENT)
+                  {t('sharedAcknowledge')}
                 </Button>
               )}
             </Box>

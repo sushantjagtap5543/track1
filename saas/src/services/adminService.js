@@ -1,9 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import traccar from './traccar.js';
-import cache from './cache.js';
-import logAudit from '../utils/auditLogger.js';
+import prisma from '../utils/prisma.js';
 
-const prisma = new PrismaClient();
 
 /**
  * Universal Service for Admin-Client Interactions.

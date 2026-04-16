@@ -137,4 +137,103 @@ export default makeStyles()((theme) => ({
     fontSize: '1.5rem',
     fontWeight: 800,
   },
+  accordion: {
+    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '20px !important',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    marginBottom: theme.spacing(2),
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:before': { display: 'none' },
+    '&:hover': {
+      backgroundColor: 'rgba(30, 41, 59, 0.5)',
+      borderColor: 'rgba(56, 189, 248, 0.2)',
+    },
+    '&.Mui-expanded': {
+      backgroundColor: 'rgba(15, 23, 42, 0.6)',
+      margin: theme.spacing(0, 0, 2, 0),
+    }
+  },
+  accordionSummary: {
+    padding: theme.spacing(1, 3),
+    '& .MuiAccordionSummary-expandIconWrapper': {
+      color: '#94a3b8',
+    },
+    '&.Mui-expanded': {
+      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+      minHeight: '48px',
+    }
+  },
+  textField: {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'rgba(15, 23, 42, 0.6)',
+      borderRadius: '12px',
+      color: '#f8fafc',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      transition: 'all 0.2s ease',
+      '& fieldset': { border: 'none' },
+      '&:hover': {
+        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+        borderColor: 'rgba(56, 189, 248, 0.3)',
+      },
+      '&.Mui-focused': {
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        boxShadow: '0 0 0 2px rgba(56, 189, 248, 0.2)',
+        '& fieldset': { border: 'none' },
+      }
+    },
+    '& .MuiInputLabel-root': {
+      color: '#94a3b8',
+      '&.Mui-focused': { color: '#38bdf8' }
+    },
+    '& .MuiInputBase-input': {
+      padding: theme.spacing(1.5, 2),
+    }
+  },
+  buttonPrimary: {
+    borderRadius: '14px',
+    padding: theme.spacing(1.5, 4),
+    textTransform: 'none',
+    fontWeight: 800,
+    fontSize: '0.95rem',
+    background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
+    boxShadow: '0 4px 15px rgba(56, 189, 248, 0.4)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(56, 189, 248, 0.5)',
+    },
+    '&:active': {
+      transform: 'translateY(0)',
+    }
+  },
+  buttonSecondary: {
+    borderRadius: '14px',
+    padding: theme.spacing(1.5, 4),
+    textTransform: 'none',
+    fontWeight: 700,
+    fontSize: '0.95rem',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#94a3b8',
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+      background: 'rgba(255, 255, 255, 0.05)',
+      color: '#f8fafc',
+    }
+  },
+  headerIconNew: {
+    width: 44,
+    height: 44,
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(129, 140, 248, 0.15) 100%)',
+    border: '1px solid rgba(56, 189, 248, 0.2)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    '& svg': { fontSize: 22, color: '#38bdf8' }
+  }
 }));

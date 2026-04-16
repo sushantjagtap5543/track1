@@ -10,7 +10,9 @@ import {
   Typography,
   Stack,
   Box,
+  CircularProgress,
 } from '@mui/material';
+
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import Battery60Icon from '@mui/icons-material/Battery60';
@@ -44,6 +46,10 @@ import GeofencesValue from '../common/components/GeofencesValue';
 import DriverValue from '../common/components/DriverValue';
 import MotionBar from './components/MotionBar';
 import fetchOrThrow from '../common/util/fetchOrThrow';
+import CommandConfirmDialog from '../common/components/CommandConfirmDialog';
+import { useSnackbar } from 'notistack';
+import { motion } from 'framer-motion';
+
 
 dayjs.extend(relativeTime);
 
@@ -139,8 +145,14 @@ const DeviceRow = ({ devices, index, style }) => {
   const { classes, cx } = useStyles();
   const dispatch = useDispatch();
   const t = useTranslation();
+  const { enqueueSnackbar } = useSnackbar();
+
+  const [engineLoading, setEngineLoading] = React.useState(false);
+  const [safeParkingLoading, setSafeParkingLoading] = React.useState(false);
+  const [confirmDialog, setConfirmDialog] = React.useState({ open: false, type: '', title: '', message: '', danger: false, safetyWarning: null });
 
   const admin = useAdministrator();
+
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
   const item = devices[index];
@@ -169,56 +181,88 @@ const DeviceRow = ({ devices, index, style }) => {
 
 
 
-  const handleIgnitionToggle = async (e) => {
+  const handleIgnitionToggle = (e) => {
     e.stopPropagation();
     const action = position?.attributes?.ignition ? 'engineStop' : 'engineResume';
-    if (window.confirm(`Are you sure you want to ${action === 'engineStop' ? 'BLOCK' : 'RESUME'} engine for ${item.name}?`)) {
+    const isMoving = position?.speed > 20;
+
+    setConfirmDialog({
+      open: true,
+      type: 'engine',
+      title: action === 'engineStop' ? 'Block Engine' : 'Resume Engine',
+      message: action === 'engineStop' 
+        ? `Are you sure you want to stop the engine for ${item.name}? This will immobilize the vehicle.` 
+        : `Resume engine power and allow vehicle movement for ${item.name}?`,
+      danger: action === 'engineStop',
+      safetyWarning: (action === 'engineStop' && isMoving) 
+        ? 'CRITICAL: Vehicle is currently MOVING. Stopping engine may cause an accident.' 
+        : null
+    });
+  };
+
+  const executeEngineCommand = async () => {
+    const action = position?.attributes?.ignition ? 'engineStop' : 'engineResume';
+    setConfirmDialog(p => ({ ...p, open: false }));
+    setEngineLoading(true);
+
+    try {
+      const response = await fetch('/api/saas/vehicles/engine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicleId: item.id, action }),
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Engine command failed');
+      
       if (position) {
         dispatch(sessionActions.updatePositions([{
           ...position,
           attributes: { ...position.attributes, ignition: action === 'engineResume' }
         }]));
       }
+      enqueueSnackbar(data.message, { variant: 'success' });
+    } catch (err) {
+      // Fallback: Use standard Traccar Command API
       try {
-        const response = await fetch('/api/saas/vehicles/engine', {
+        await fetchOrThrow('/api/commands/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ vehicleId: item.id, action }),
+          body: JSON.stringify({ 
+            deviceId: item.id, 
+            type: action === 'engineStop' ? 'engineStop' : 'engineResume',
+            attributes: {} 
+          }),
         });
-        
-        if (response.status === 404 || !response.ok) {
-           throw new Error('Fallback to standard command');
-        }
-        
-        alert('Engine command processed via Elite Engine.');
-      } catch (err) {
-        // Fallback: Use standard Traccar Command API
-        try {
-          await fetchOrThrow('/api/commands/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              deviceId: item.id, 
-              type: action === 'engineStop' ? 'engineStop' : 'engineResume',
-              attributes: {} 
-            }),
-          });
-          alert('Engine command sent via Standard Relay.');
-        } catch (relayErr) {
-          alert('ALL COMMAND RELAYS FAILED: ' + relayErr.message);
-        }
+        enqueueSnackbar('Command sent via Standard Relay.', { variant: 'info' });
+      } catch (relayErr) {
+        enqueueSnackbar(relayErr.message, { variant: 'error' });
       }
+    } finally {
+      setEngineLoading(false);
     }
   };
 
-  const handleSafeParkingToggle = async (e) => {
+  const handleSafeParkingToggle = (e) => {
     e.stopPropagation();
     const enable = !item.attributes?.safeParking;
     
-    dispatch(devicesActions.update([{
-      ...item,
-      attributes: { ...(item.attributes || {}), safeParking: enable }
-    }]));
+    setConfirmDialog({
+      open: true,
+      type: 'safeParking',
+      title: enable ? 'Enable Safe Parking' : 'Disable Safe Parking',
+      message: enable 
+        ? `Activate Safe Parking for ${item.name}? You will be notified instantly if the vehicle moves.` 
+        : `Deactivate Safe Parking and motion alerts for ${item.name}?`,
+      danger: false,
+      safetyWarning: null
+    });
+  };
+
+  const executeSafeParkingCommand = async () => {
+    const enable = !item.attributes?.safeParking;
+    setConfirmDialog(p => ({ ...p, open: false }));
+    setSafeParkingLoading(true);
 
     try {
       const response = await fetch('/api/saas/vehicles/safe-parking', {
@@ -233,9 +277,15 @@ const DeviceRow = ({ devices, index, style }) => {
         }),
       });
 
-      if (!response.ok) throw new Error('SaaS Safe Parking unavailable');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Safe Parking failed');
       
-      alert(`Safe Parking ${enable ? 'Enabled' : 'Disabled'}`);
+      dispatch(devicesActions.update([{
+        ...item,
+        attributes: { ...(item.attributes || {}), safeParking: enable }
+      }]));
+
+      enqueueSnackbar(data.message, { variant: 'success' });
     } catch (err) {
        // Fallback: Local Tagging in Traccar Attributes
        try {
@@ -245,12 +295,16 @@ const DeviceRow = ({ devices, index, style }) => {
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({ ...item, attributes }),
          });
-         alert(`Safe Parking tagged locally: ${enable ? 'ON' : 'OFF'}`);
+         dispatch(devicesActions.update([{ ...item, attributes }]));
+         enqueueSnackbar(`Safe Parking tagged locally: ${enable ? 'ON' : 'OFF'}`, { variant: 'info' });
        } catch (tagErr) {
-         alert('Safe Parking activation failed: ' + tagErr.message);
+         enqueueSnackbar(tagErr.message, { variant: 'error' });
        }
+    } finally {
+      setSafeParkingLoading(false);
     }
   };
+
 
   return (
     <div style={style}>
@@ -282,14 +336,25 @@ const DeviceRow = ({ devices, index, style }) => {
               {true && (
                 <>
                   <Stack direction="row" spacing={0.8} alignItems="center">
-                    <Tooltip title="Ignition">
-                      <Box className={classes.actionButton} onClick={handleIgnitionToggle}>
-                        <PowerSettingsNewIcon className={position?.attributes?.ignition ? classes.ignitionActive : classes.neutral} />
-                        <Typography variant="caption" sx={{ ml: 0.5, fontWeight: 800, fontSize: '0.55rem', color: position?.attributes?.ignition ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
-                          {position?.attributes?.ignition ? 'ON' : 'OFF'}
-                        </Typography>
+                    <Tooltip title={engineLoading ? 'Syncing...' : 'Ignition Control'}>
+                      <Box 
+                        className={classes.actionButton} 
+                        onClick={handleIgnitionToggle}
+                        component={motion.div}
+                        animate={engineLoading ? { opacity: [0.5, 1, 0.5] } : {}}
+                        transition={engineLoading ? { repeat: Infinity, duration: 1 } : {}}
+                      >
+                        {engineLoading ? <CircularProgress size={14} thickness={6} sx={{ color: '#3b82f6' }} /> : (
+                          <>
+                            <PowerSettingsNewIcon className={position?.attributes?.ignition ? classes.ignitionActive : classes.neutral} />
+                            <Typography variant="caption" sx={{ ml: 0.5, fontWeight: 800, fontSize: '0.55rem', color: position?.attributes?.ignition ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>
+                              {position?.attributes?.ignition ? 'ON' : 'OFF'}
+                            </Typography>
+                          </>
+                        )}
                       </Box>
                     </Tooltip>
+
 
                     <Tooltip title={!position?.attributes?.ignition ? 'Engine Stopped' : (position?.speed > 1 ? 'Moving' : 'Idling')}>
                       <Box className={classes.actionButton}>
@@ -301,11 +366,20 @@ const DeviceRow = ({ devices, index, style }) => {
                       </Box>
                     </Tooltip>
 
-                    <Tooltip title="Safe Parking">
-                      <Box className={classes.actionButton} onClick={handleSafeParkingToggle}>
-                        <SecurityIcon className={item.attributes?.safeParking ? classes.success : classes.neutral} />
+                    <Tooltip title={safeParkingLoading ? 'Syncing...' : 'Safe Parking'}>
+                      <Box 
+                        className={classes.actionButton} 
+                        onClick={handleSafeParkingToggle}
+                        component={motion.div}
+                        animate={safeParkingLoading ? { opacity: [0.5, 1, 0.5] } : {}}
+                        transition={safeParkingLoading ? { repeat: Infinity, duration: 1 } : {}}
+                      >
+                        {safeParkingLoading ? <CircularProgress size={14} thickness={6} sx={{ color: '#10b981' }} /> : (
+                          <SecurityIcon className={item.attributes?.safeParking ? classes.success : classes.neutral} />
+                        )}
                       </Box>
                     </Tooltip>
+
 
                     <Tooltip title={`Geofences${position?.geofenceIds?.length ? ` (${position.geofenceIds.length})` : ''}`}>
                       <Box className={classes.actionButton}>
@@ -340,8 +414,21 @@ const DeviceRow = ({ devices, index, style }) => {
           }
         />
 
+
+        <CommandConfirmDialog
+          open={confirmDialog.open}
+          onClose={() => setConfirmDialog(p => ({ ...p, open: false }))}
+          onConfirm={confirmDialog.type === 'engine' ? executeEngineCommand : executeSafeParkingCommand}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          loading={engineLoading || safeParkingLoading}
+          danger={confirmDialog.danger}
+          safetyWarning={confirmDialog.safetyWarning}
+          confirmText="Send Command"
+        />
       </ListItemButton>
     </div>
+
   );
 };
 

@@ -3,19 +3,25 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
-import { PrismaClient } from '@prisma/client';
+import prisma from './utils/prisma.js';
 
-import { metricsMiddleware } from './middleware/metricsMiddleware.js';
-import correlationIdMiddleware from './middleware/correlationIdMiddleware.js';
-import errorHandler from './middleware/errorMiddleware.js';
+// Internal Missing Imports
 import memoryGuard from './middleware/memoryGuard.js';
-import swaggerSpec from './config/swagger.js';
-import traccarMockRouter from './routes/traccarMock.js';
+import correlationIdMiddleware from './middleware/correlationIdMiddleware.js';
+import { metricsMiddleware } from './middleware/metricsMiddleware.js';
 import v1Router from './routes/index.js';
+import traccarMockRouter from './routes/traccarMock.js';
+import errorHandler from './middleware/errorMiddleware.js';
 import { getStatusHtml } from './utils/statusDashboard.js';
+import swaggerSpec from './config/swagger.js';
 
-const prisma = new PrismaClient();
 const app = express();
+
+// Item 43: Explicitly Disable X-Powered-By
+app.disable('x-powered-by');
+
+
+
 
 // Fail-Fast: Environment Validation
 const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL'];
@@ -24,6 +30,12 @@ if (missingEnv.length > 0) {
   console.error(`[CRITICAL] Missing required environment variables: ${missingEnv.join(', ')}`);
   if (process.env.NODE_ENV === 'production') process.exit(1);
 }
+
+// Item 19: Sanitize TRACCAR_URL
+if (process.env.TRACCAR_URL && process.env.TRACCAR_URL.endsWith('/')) {
+  process.env.TRACCAR_URL = process.env.TRACCAR_URL.slice(0, -1);
+}
+
 
 // Autonomic Guards
 app.use(memoryGuard);

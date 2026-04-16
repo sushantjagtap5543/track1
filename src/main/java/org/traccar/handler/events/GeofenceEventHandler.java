@@ -16,7 +16,7 @@
 package org.traccar.handler.events;
 
 import jakarta.inject.Inject;
-import org.traccar.helper.model.PositionUtil;
+import PositionUtil;
 import org.traccar.model.Calendar;
 import org.traccar.model.Event;
 import org.traccar.model.Geofence;
@@ -37,7 +37,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
 
     @Override
     public void onPosition(Position position, Callback callback) {
-        if (!org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
+        if (!PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

@@ -1,7 +1,5 @@
-import { google } from 'googleapis';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 
-const prisma = new PrismaClient();
 
 /**
  * PRODUCTION-GRADE Google Sheets Sync Service

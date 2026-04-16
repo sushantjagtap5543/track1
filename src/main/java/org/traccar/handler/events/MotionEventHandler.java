@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
-import org.traccar.helper.model.PositionUtil;
+import PositionUtil;
 import org.traccar.model.Device;
 import org.traccar.model.Position;
 import org.traccar.reports.common.TripsConfig;
@@ -58,7 +58,7 @@ public class MotionEventHandler extends BaseEventHandler {
 
         long deviceId = position.getDeviceId();
         Device device = cacheManager.getObject(Device.class, deviceId);
-        if (device == null || !org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
+        if (device == null || !PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

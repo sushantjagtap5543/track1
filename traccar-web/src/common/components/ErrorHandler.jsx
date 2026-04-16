@@ -14,6 +14,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { usePrevious } from '../../reactHelper';
 import { errorsActions } from '../../store';
 import { useTranslation } from './LocalizationProvider';
+import { playSound } from '../util/sound';
+import { useEffect } from 'react';
 
 const ErrorHandler = () => {
   const dispatch = useDispatch();
@@ -30,6 +32,12 @@ const ErrorHandler = () => {
 
   const [expanded, setExpanded] = useState(false);
 
+  useEffect(() => {
+    if (error) {
+      playSound('rapidBeeps');
+    }
+  }, [error]);
+
   return (
     <>
       <Snackbar open={Boolean(error) && !expanded}>
@@ -38,6 +46,16 @@ const ErrorHandler = () => {
           onClose={() => dispatch(errorsActions.pop())}
           severity="error"
           variant="filled"
+          sx={{ 
+            borderRadius: 'var(--border-radius-card)', 
+            background: 'rgba(239, 68, 68, 0.9)',
+            backdropFilter: 'var(--glass-blur)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2)',
+            fontWeight: 700,
+            color: '#fff',
+            '& .MuiAlert-icon': { color: '#fff' }
+          }}
         >
           {displayMessage}
           {multiline && (

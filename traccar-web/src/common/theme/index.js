@@ -60,17 +60,28 @@ export default (server, darkMode, direction) =>
                 opacity: 1;
               }
 
+              /* Item 114: Mobile Resilient Viewport */
+              html, body, #root {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+              }
+              body {
+                height: 100dvh;
+                overflow-x: hidden;
+              }
+
               /* Custom Premium Scrollbar */
               * {
                 scrollbar-width: thin;
-                scrollbar-color: rgba(56, 189, 248, 0.2) transparent;
+                scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
               }
               *::-webkit-scrollbar {
                 width: 6px;
                 height: 6px;
               }
               *::-webkit-scrollbar-track {
-                background: transparent;
+                background: rgba(0, 0, 0, 0.1);
               }
               *::-webkit-scrollbar-thumb {
                 background: rgba(56, 189, 248, 0.2);
@@ -78,10 +89,22 @@ export default (server, darkMode, direction) =>
                 border: 2px solid transparent;
                 background-clip: content-box;
                 transition: all 0.3s ease;
+                box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.2);
               }
               *::-webkit-scrollbar-thumb:hover {
                 background: rgba(56, 189, 248, 0.4);
                 background-clip: content-box;
+                box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.5);
+              }
+
+
+              :root {
+                --glass-bg: rgba(15, 23, 42, 0.6);
+                --glass-border: rgba(255, 255, 255, 0.08);
+                --glass-blur: blur(30px) saturate(180%);
+                --premium-radius: 16px;
+                --panel-radius: 24px;
+                --primary-glow: 0 0 20px rgba(59, 130, 246, 0.4);
               }
             `,
           },

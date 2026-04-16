@@ -6,24 +6,34 @@
 const errorHandler = (err, req, res, next) => {
   const correlationId = req.headers['x-correlation-id'] || 'no-id';
   
-  // Standardized Error Object
+  let status = err.status || 500;
+  let message = err.message || 'Internal Server Error';
+
+  // Specific Error Handling
+  if (err.name === 'ZodError') {
+    status = 400;
+    message = err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+  } else if (err.code?.startsWith('P')) {
+    // Prisma errors
+    status = 400;
+    message = `Database Error: ${err.code}`;
+  }
+
   const errorResponse = {
-    error: err.message || 'Internal Server Error',
-    status: err.status || 500,
+    error: message,
     timestamp: new Date().toISOString(),
     path: req.path,
     correlationId: correlationId
   };
 
-  // Structured Logging
-  console.error(JSON.stringify({
-    level: 'error',
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    ...errorResponse
-  }));
+  if (process.env.NODE_ENV !== 'production' && err.stack) {
+    errorResponse.stack = err.stack;
+  }
 
-  res.status(errorResponse.status).json(errorResponse);
+  console.error(`[GeoSure Error] [${correlationId}] ${status} - ${message}`);
+
+  res.status(status).json(errorResponse);
 };
+
 
 export default errorHandler;

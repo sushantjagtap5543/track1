@@ -20,7 +20,12 @@ maplibregl.addProtocol('google', googleProtocol);
 export const map = new maplibregl.Map({
   container: element,
   attributionControl: false,
+  dragRotate: true,
+  touchZoomRotate: true,
+  bearingSnap: 0,
+  crossSourceCollisions: false,
 });
+
 
 let ready = false;
 const readyListeners = new Set();

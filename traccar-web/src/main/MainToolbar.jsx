@@ -19,6 +19,8 @@ import {
   ListItemText,
   Tooltip,
 } from '@mui/material';
+import { motion } from 'framer-motion';
+
 import { makeStyles } from 'tss-react/mui';
 import { useTheme } from '@mui/material/styles';
 import MapIcon from '@mui/icons-material/Map';
@@ -78,10 +80,19 @@ const MainToolbar = ({
     Object.values(devices).filter((d) => d.status === status).length;
 
   return (
-    <Toolbar ref={toolbarRef} className={classes.toolbar} sx={{ px: 1, backgroundColor: 'transparent', minHeight: '48px !important' }}>
+    <Toolbar ref={toolbarRef} className={classes.toolbar} sx={{ 
+      px: 1, 
+      backgroundColor: 'rgba(15, 23, 42, 0.4)', 
+      backdropFilter: 'blur(20px)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+      minHeight: '48px !important' 
+    }}>
       <IconButton 
         edge="start" 
         onClick={() => setDevicesOpen(!devicesOpen)}
+        component={motion.button}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         sx={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.05)', 
           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -89,12 +100,13 @@ const MainToolbar = ({
           borderRadius: '8px',
           width: '36px',
           height: '36px',
-          transition: 'all 0.2s ease',
-          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', transform: 'scale(1.05)' }
+          transition: 'background-color 0.2s ease',
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
         }}
       >
         {devicesOpen ? <MapIcon sx={{ fontSize: '18px' }} /> : <DnsIcon sx={{ fontSize: '18px' }} />}
       </IconButton>
+
       <OutlinedInput
         ref={inputRef}
         placeholder={t('sharedSearchDevices')}
@@ -254,6 +266,9 @@ const MainToolbar = ({
       <IconButton 
         edge="end" 
         onClick={() => navigate('/ai-insights')}
+        component={motion.button}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         sx={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.05)', 
           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -261,19 +276,23 @@ const MainToolbar = ({
           borderRadius: '8px',
           width: '36px',
           height: '36px',
-          transition: 'all 0.2s ease',
-          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', transform: 'scale(1.05)' }
+          transition: 'background-color 0.2s ease',
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
         }}
       >
         <Tooltip title="AI Insights" arrow>
           <AutoAwesomeIcon sx={{ fontSize: '18px' }} />
         </Tooltip>
       </IconButton>
+
       <IconButton 
         edge="end" 
         onClick={() => {
            window.location.reload(); 
         }}
+        component={motion.button}
+        whileHover={{ scale: 1.1, rotate: 180 }}
+        whileTap={{ scale: 0.9 }}
         sx={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.05)', 
           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -281,15 +300,16 @@ const MainToolbar = ({
           borderRadius: '8px',
           width: '36px',
           height: '36px',
-          transition: 'all 0.2s ease',
+          transition: 'background-color 0.2s ease',
           ml: 1,
-          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', transform: 'rotate(180deg)' }
+          '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
         }}
       >
         <Tooltip title={t('sharedRefresh')} arrow>
           <RefreshIcon sx={{ fontSize: '18px' }} />
         </Tooltip>
       </IconButton>
+
       <IconButton 
         edge="end" 
         onClick={() => navigate('/demo/vehicles')}

@@ -21,7 +21,9 @@ import {
   DialogContent,
   DialogActions,
   Box,
+  Collapse,
 } from '@mui/material';
+import QRCode from 'react-qr-code';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CachedIcon from '@mui/icons-material/Cached';
@@ -31,6 +33,8 @@ import TuneIcon from '@mui/icons-material/Tune';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import SecurityIcon from '@mui/icons-material/Security';
 import KeyIcon from '@mui/icons-material/Key';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useDispatch, useSelector } from 'react-redux';
 import EditItemView from './components/EditItemView';
 import EditAttributesAccordion from './components/EditAttributesAccordion';
@@ -74,6 +78,7 @@ const UserPage = () => {
   const [deleteFailed, setDeleteFailed] = useState(false);
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const [revokeToken, setRevokeToken] = useState('');
+  const [showTotp, setShowTotp] = useState(false);
 
   const handleDelete = useCatch(async () => {
     if (deleteEmail === currentUser.email) {
@@ -129,7 +134,7 @@ const UserPage = () => {
   const validate = () =>
     item &&
     item.name &&
-    item.email &&
+    item.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email) &&
     (item.id || item.password) &&
     (admin || !totpForce || item.totpKey);
 
@@ -146,27 +151,22 @@ const UserPage = () => {
     >
       {item && (
         <>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, ml: 1 }}>
-            <Box sx={{
-              width: 48, height: 48, borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(129, 140, 248, 0.2) 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2,
-              border: '1px solid rgba(56, 189, 248, 0.2)',
-            }}>
-              <PersonIcon sx={{ color: '#38bdf8', fontSize: 28 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 5, ml: 1 }}>
+            <Box className={settingsClasses.headerIconNew} sx={{ mr: 2 }}>
+              <PersonIcon />
             </Box>
             <Box>
-              <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
+              <Typography className={settingsClasses.headerTitle}>
                 {item.id ? item.name : t('settingsUser')}
               </Typography>
-              <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                Manage profile details, system preferences, and security settings.
+              <Typography className={settingsClasses.headerSubtitle}>
+                {t('settingsUserManageSubtitle')}
               </Typography>
             </Box>
           </Box>
 
-          <Accordion defaultExpanded={!attribute} sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+          <Accordion className={settingsClasses.accordion} defaultExpanded={!attribute}>
+            <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <KeyIcon sx={{ color: '#38bdf8', fontSize: '1.2rem' }} />
                 <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedRequired')}</Typography>
@@ -176,12 +176,14 @@ const UserPage = () => {
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                 <TextField
                   fullWidth
+                  className={settingsClasses.textField}
                   value={item.name || ''}
                   onChange={(e) => setItem({ ...item, name: e.target.value })}
                   label={t('sharedName')}
                 />
                 <TextField
                   fullWidth
+                  className={settingsClasses.textField}
                   value={item.email || ''}
                   onChange={(e) => setItem({ ...item, email: e.target.value })}
                   label={t('userEmail')}
@@ -191,36 +193,56 @@ const UserPage = () => {
               {!openIdForced && (
                 <TextField
                   fullWidth
+                  className={settingsClasses.textField}
                   type="password"
                   onChange={(e) => setItem({ ...item, password: e.target.value })}
                   label={t('userPassword')}
                 />
               )}
               {totpEnable && (
-                <FormControl fullWidth>
-                  <InputLabel>{t('loginTotpKey')}</InputLabel>
-                  <OutlinedInput
-                    readOnly
-                    label={t('loginTotpKey')}
-                    value={item.totpKey || ''}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <IconButton size="small" edge="end" onClick={handleGenerateTotp} sx={{ color: '#38bdf8' }}>
-                          <CachedIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" edge="end" onClick={() => setItem({ ...item, totpKey: null })} sx={{ color: '#fb7185' }}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                  />
-                </FormControl>
+                <Box sx={{ mt: 2 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>{t('loginTotpKey')}</InputLabel>
+                    <OutlinedInput
+                      readOnly
+                      label={t('loginTotpKey')}
+                      type={showTotp ? 'text' : 'password'}
+                      value={item.totpKey || ''}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={() => setShowTotp(!showTotp)} sx={{ color: '#94a3b8', mr: 1 }} aria-label={showTotp ? t('sharedHide') : t('sharedShow')}>
+                            {showTotp ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                          </IconButton>
+                          <IconButton size="small" edge="end" onClick={handleGenerateTotp} sx={{ color: '#38bdf8' }} aria-label={t('settingsGenerateTotp')}>
+                            <CachedIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" edge="end" onClick={() => setItem({ ...item, totpKey: null })} sx={{ color: '#fb7185' }} aria-label={t('sharedClear')}>
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                    />
+                  </FormControl>
+                  <Collapse in={!!item.totpKey}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, p: 3, background: 'rgba(255,255,255,0.05)', borderRadius: '16px' }}>
+                      <Typography variant="caption" sx={{ color: '#94a3b8', mb: 2, textAlign: 'center' }}>
+                        Scan this code with your authenticator app (e.g., Google Authenticator, Authy)
+                      </Typography>
+                      <Box sx={{ p: 2, background: 'white', borderRadius: '12px' }}>
+                        <QRCode
+                          value={`otpauth://totp/GeoSurePath:${item.email}?secret=${item.totpKey}&issuer=GeoSurePath`}
+                          size={180}
+                        />
+                      </Box>
+                    </Box>
+                  </Collapse>
+                </Box>
               )}
             </AccordionDetails>
           </Accordion>
 
-          <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+          <Accordion className={settingsClasses.accordion}>
+            <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <TuneIcon sx={{ color: '#818cf8', fontSize: '1.2rem' }} />
                 <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedPreferences')}</Typography>
@@ -230,11 +252,12 @@ const UserPage = () => {
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                 <TextField
                   fullWidth
+                  className={settingsClasses.textField}
                   value={item.phone || ''}
                   onChange={(e) => setItem({ ...item, phone: e.target.value })}
                   label={t('sharedPhone')}
                 />
-                <FormControl fullWidth>
+                <FormControl fullWidth className={settingsClasses.textField}>
                   <InputLabel>{t('mapDefault')}</InputLabel>
                   <Select
                     label={t('mapDefault')}
@@ -249,7 +272,7 @@ const UserPage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth>
+                <FormControl fullWidth className={settingsClasses.textField}>
                   <InputLabel>{t('settingsCoordinateFormat')}</InputLabel>
                   <Select
                     label={t('settingsCoordinateFormat')}
@@ -262,7 +285,7 @@ const UserPage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth>
+                <FormControl fullWidth className={settingsClasses.textField}>
                   <InputLabel>{t('settingsSpeedUnit')}</InputLabel>
                   <Select
                     label={t('settingsSpeedUnit')}
@@ -275,7 +298,7 @@ const UserPage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth>
+                <FormControl fullWidth className={settingsClasses.textField}>
                   <InputLabel>{t('settingsDistanceUnit')}</InputLabel>
                   <Select
                     label={t('settingsDistanceUnit')}
@@ -288,7 +311,7 @@ const UserPage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth>
+                <FormControl fullWidth className={settingsClasses.textField}>
                   <InputLabel>{t('settingsAltitudeUnit')}</InputLabel>
                   <Select
                     label={t('settingsAltitudeUnit')}
@@ -300,7 +323,7 @@ const UserPage = () => {
                   </Select>
                 </FormControl>
                 
-                <FormControl fullWidth>
+                <FormControl fullWidth className={settingsClasses.textField}>
                   <InputLabel>{t('settingsVolumeUnit')}</InputLabel>
                   <Select
                     label={t('settingsVolumeUnit')}
@@ -314,6 +337,7 @@ const UserPage = () => {
                 </FormControl>
                 <SelectField
                   fullWidth
+                  className={settingsClasses.textField}
                   value={item.attributes && item.attributes.timezone}
                   onChange={(e) => setItem({ ...item, attributes: { ...item.attributes, timezone: e.target.value } })}
                   endpoint="/api/server/timezones"
@@ -325,8 +349,8 @@ const UserPage = () => {
             </AccordionDetails>
           </Accordion>
 
-          <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+          <Accordion className={settingsClasses.accordion}>
+            <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <LocationOnIcon sx={{ color: '#34d399', fontSize: '1.2rem' }} />
                 <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedLocation')}</Typography>
@@ -334,9 +358,9 @@ const UserPage = () => {
             </AccordionSummary>
             <AccordionDetails className={settingsClasses.details}>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 3, mb: 2 }}>
-                <TextField fullWidth type="number" label={t('positionLatitude')} value={item.latitude || 0} onChange={(e) => setItem({ ...item, latitude: Number(e.target.value) })} />
-                <TextField fullWidth type="number" label={t('positionLongitude')} value={item.longitude || 0} onChange={(e) => setItem({ ...item, longitude: Number(e.target.value) })} />
-                <TextField fullWidth type="number" label={t('serverZoom')} value={item.zoom || 0} onChange={(e) => setItem({ ...item, zoom: Number(e.target.value) })} />
+                <TextField fullWidth className={settingsClasses.textField} type="number" label={t('positionLatitude')} value={item.latitude || 0} onChange={(e) => setItem({ ...item, latitude: Number(e.target.value) })} />
+                <TextField fullWidth className={settingsClasses.textField} type="number" label={t('positionLongitude')} value={item.longitude || 0} onChange={(e) => setItem({ ...item, longitude: Number(e.target.value) })} />
+                <TextField fullWidth className={settingsClasses.textField} type="number" label={t('serverZoom')} value={item.zoom || 0} onChange={(e) => setItem({ ...item, zoom: Number(e.target.value) })} />
               </Box>
               <Button
                 variant="contained"
@@ -356,8 +380,8 @@ const UserPage = () => {
             </AccordionDetails>
           </Accordion>
 
-          <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+          <Accordion className={settingsClasses.accordion}>
+            <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <SecurityIcon sx={{ color: '#f59e0b', fontSize: '1.2rem' }} />
                 <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedPermissions')}</Typography>
@@ -365,9 +389,9 @@ const UserPage = () => {
             </AccordionSummary>
             <AccordionDetails className={settingsClasses.details}>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 3, mb: 3 }}>
-                <TextField fullWidth label={t('userExpirationTime')} type="date" value={item.expirationTime ? item.expirationTime.split('T')[0] : '2099-01-01'} onChange={(e) => e.target.value && setItem({ ...item, expirationTime: new Date(e.target.value).toISOString() })} disabled={!manager} InputLabelProps={{ shrink: true }} />
-                <TextField fullWidth type="number" value={item.deviceLimit || 0} onChange={(e) => setItem({ ...item, deviceLimit: Number(e.target.value) })} label={t('userDeviceLimit')} disabled={!admin} />
-                <TextField fullWidth type="number" value={item.userLimit || 0} onChange={(e) => setItem({ ...item, userLimit: Number(e.target.value) })} label={t('userUserLimit')} disabled={!admin} />
+                <TextField fullWidth className={settingsClasses.textField} label={t('userExpirationTime')} type="date" value={item.expirationTime ? item.expirationTime.split('T')[0] : '2099-01-01'} onChange={(e) => e.target.value && setItem({ ...item, expirationTime: new Date(e.target.value).toISOString() })} disabled={!manager} slotProps={{ inputLabel: { shrink: true } }} />
+                <TextField fullWidth className={settingsClasses.textField} type="number" value={item.deviceLimit || 0} onChange={(e) => setItem({ ...item, deviceLimit: Number(e.target.value) })} label={t('userDeviceLimit')} disabled={!admin} />
+                <TextField fullWidth className={settingsClasses.textField} type="number" value={item.userLimit || 0} onChange={(e) => setItem({ ...item, userLimit: Number(e.target.value) })} label={t('userUserLimit')} disabled={!admin} />
               </Box>
               
               <Button 
@@ -413,12 +437,12 @@ const UserPage = () => {
           />
 
           {registrationEnabled && item.id === currentUser.id && !manager && (
-            <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fb7185' }} />} sx={{ px: 1 }}>
+            <Accordion className={settingsClasses.accordion}>
+              <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
                 <Typography sx={{ color: '#fb7185', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('userDeleteAccount')}</Typography>
               </AccordionSummary>
               <AccordionDetails className={settingsClasses.details}>
-                <TextField fullWidth value={deleteEmail} onChange={(e) => setDeleteEmail(e.target.value)} label={t('userEmail')} error={deleteFailed} helperText={deleteFailed && 'Email mismatch'} sx={{ mb: 2 }} />
+                <TextField fullWidth className={settingsClasses.textField} value={deleteEmail} onChange={(e) => setDeleteEmail(e.target.value)} label={t('userEmail')} error={deleteFailed} helperText={deleteFailed && t('settingsEmailMismatch')} sx={{ mb: 2 }} />
                 <Button variant="contained" color="error" onClick={handleDelete} startIcon={<DeleteForeverIcon />} sx={{ borderRadius: '12px', py: 1.5, fontWeight: 700 }}>
                   {t('userDeleteAccount')}
                 </Button>
@@ -428,13 +452,18 @@ const UserPage = () => {
         </>
       )}
 
+      <Box sx={{ display: 'flex', gap: 2, mt: 4, pt: 4, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <Button fullWidth variant="outlined" startIcon={<CloseIcon />} className={settingsClasses.buttonSecondary} onClick={() => navigate(-1)}>{t('sharedCancel')}</Button>
+        <Button fullWidth variant="contained" startIcon={<SaveIcon />} className={settingsClasses.buttonPrimary} onClick={handleSave}>{t('sharedSave')}</Button>
+      </Box>
+
       <Dialog open={revokeDialogOpen} onClose={closeRevokeDialog} fullWidth maxWidth="xs" PaperProps={{ sx: { background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', backdropFilter: 'blur(30px)' } }}>
         <DialogContent sx={{ p: 4 }}>
-          <TextField fullWidth value={revokeToken} onChange={(e) => setRevokeToken(e.target.value)} label={t('userToken')} autoFocus />
+          <TextField fullWidth className={settingsClasses.textField} value={revokeToken} onChange={(e) => setRevokeToken(e.target.value)} label={t('userToken')} autoFocus />
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button onClick={closeRevokeDialog} sx={{ color: '#94a3b8' }}>{t('sharedCancel')}</Button>
-          <Button onClick={handleRevokeToken} disabled={!revokeToken} variant="contained" sx={{ borderRadius: '12px', background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', px: 3 }}>{t('userRevokeToken')}</Button>
+          <Button onClick={handleRevokeToken} disabled={!revokeToken} variant="contained" className={settingsClasses.buttonPrimary} sx={{ px: 3 }}>{t('userRevokeToken')}</Button>
         </DialogActions>
       </Dialog>
     </EditItemView>

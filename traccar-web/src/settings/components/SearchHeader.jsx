@@ -16,9 +16,9 @@ const useStyles = makeStyles()((theme) => ({
   textField: {
     '& .MuiOutlinedInput-root': {
       backgroundColor: 'rgba(30, 41, 59, 0.4)',
-      backdropFilter: 'blur(10px)',
-      borderRadius: '12px',
-      border: '1px solid rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'var(--glass-blur)',
+      borderRadius: 'var(--premium-radius)',
+      border: '1px solid var(--glass-border)',
       transition: 'all 0.2s ease',
       '&:hover': {
         backgroundColor: 'rgba(30, 41, 59, 0.6)',
@@ -27,7 +27,7 @@ const useStyles = makeStyles()((theme) => ({
       '&.Mui-focused': {
         backgroundColor: 'rgba(30, 41, 59, 0.8)',
         borderColor: '#38bdf8',
-        boxShadow: '0 0 0 4px rgba(56, 189, 248, 0.1)',
+        boxShadow: 'var(--primary-glow)',
       },
     },
     '& .MuiOutlinedInput-input': {

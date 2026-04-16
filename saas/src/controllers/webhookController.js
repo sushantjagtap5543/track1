@@ -1,14 +1,6 @@
 // src/controllers/webhookController.js
-import { PrismaClient } from '@prisma/client';
-import { Worker } from 'worker_threads';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import edgeIntelligence from '../services/edgeIntelligence.js';
+import prisma from '../utils/prisma.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const prisma = new PrismaClient();
 
 /**
  * Traccar Webhook Controller
@@ -67,7 +59,8 @@ export const handleTraccarWebhook = async (req, res) => {
           }
         });
 
-        console.log(`[Blockchain] Position signed and stored for device ${deviceId}`);
+        // [Blockchain] Position signed and stored for deviceId
+
         res.status(201).json({ status: 'success', id: signedPosition.id });
       }
     });

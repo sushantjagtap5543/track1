@@ -76,27 +76,22 @@ const ServerPage = () => {
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'settingsServer']}>
       <Box sx={{ p: 3, maxWidth: '1000px', margin: '0 auto' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, ml: 1 }}>
-            <Box sx={{
-            width: 48, height: 48, borderRadius: '14px',
-            background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.2) 0%, rgba(71, 85, 105, 0.2) 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2,
-            border: '1px solid rgba(148, 163, 184, 0.2)',
-            }}>
-            <SettingsIcon sx={{ color: '#94a3b8', fontSize: 28 }} />
-            </Box>
-            <Box>
-            <Typography sx={{ color: '#f8fafc', fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t('settingsServer')}</Typography>
-            <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                Manage global platform configurations, default units, and system-wide permissions.
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 5, ml: 1 }}>
+          <Box className={settingsClasses.headerIconNew} sx={{ mr: 2 }}>
+            <SettingsIcon />
+          </Box>
+          <Box>
+            <Typography className={settingsClasses.headerTitle}>{t('settingsServer')}</Typography>
+            <Typography className={settingsClasses.headerSubtitle}>
+              {t('settingsServerManageSubtitle')}
             </Typography>
-            </Box>
+          </Box>
         </Box>
 
         {item && (
           <>
-            <Accordion defaultExpanded sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+            <Accordion className={settingsClasses.accordion} defaultExpanded>
+              <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <MapIcon sx={{ color: '#38bdf8', fontSize: '1.2rem' }} />
                     <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedPreferences')}</Typography>
@@ -106,17 +101,19 @@ const ServerPage = () => {
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                     <TextField
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.mapUrl || ''}
                     onChange={(event) => setItem({ ...item, mapUrl: event.target.value })}
                     label={t('mapCustomLabel')}
                     />
                     <TextField
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.overlayUrl || ''}
                     onChange={(event) => setItem({ ...item, overlayUrl: event.target.value })}
                     label={t('mapOverlayCustom')}
                     />
-                    <FormControl fullWidth>
+                    <FormControl fullWidth className={settingsClasses.textField}>
                     <InputLabel>{t('mapDefault')}</InputLabel>
                     <Select
                         label={t('mapDefault')}
@@ -132,7 +129,7 @@ const ServerPage = () => {
                         ))}
                     </Select>
                     </FormControl>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth className={settingsClasses.textField}>
                     <InputLabel>{t('settingsCoordinateFormat')}</InputLabel>
                     <Select
                         label={t('settingsCoordinateFormat')}
@@ -144,7 +141,7 @@ const ServerPage = () => {
                         <MenuItem value="dms">{t('sharedDegreesMinutesSeconds')}</MenuItem>
                     </Select>
                     </FormControl>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth className={settingsClasses.textField}>
                     <InputLabel>{t('settingsSpeedUnit')}</InputLabel>
                     <Select
                         label={t('settingsSpeedUnit')}
@@ -161,7 +158,7 @@ const ServerPage = () => {
                         <MenuItem value="mph">{t('sharedMph')}</MenuItem>
                     </Select>
                     </FormControl>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth className={settingsClasses.textField}>
                     <InputLabel>{t('settingsDistanceUnit')}</InputLabel>
                     <Select
                         label={t('settingsDistanceUnit')}
@@ -178,7 +175,7 @@ const ServerPage = () => {
                         <MenuItem value="nmi">{t('sharedNmi')}</MenuItem>
                     </Select>
                     </FormControl>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth className={settingsClasses.textField}>
                     <InputLabel>{t('settingsAltitudeUnit')}</InputLabel>
                     <Select
                         label={t('settingsAltitudeUnit')}
@@ -194,7 +191,7 @@ const ServerPage = () => {
                         <MenuItem value="ft">{t('sharedFeet')}</MenuItem>
                     </Select>
                     </FormControl>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth className={settingsClasses.textField}>
                     <InputLabel>{t('settingsVolumeUnit')}</InputLabel>
                     <Select
                         label={t('settingsVolumeUnit')}
@@ -213,6 +210,7 @@ const ServerPage = () => {
                     </FormControl>
                     <SelectField
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.attributes.timezone}
                     onChange={(e) =>
                         setItem({
@@ -227,6 +225,7 @@ const ServerPage = () => {
                     />
                     <TextField
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.poiLayer || ''}
                     onChange={(event) => setItem({ ...item, poiLayer: event.target.value })}
                     label={t('mapPoiLayer')}
@@ -234,6 +233,7 @@ const ServerPage = () => {
                 </Box>
                 <TextField
                   fullWidth
+                  className={settingsClasses.textField}
                   sx={{ mt: 3 }}
                   value={item.announcement || ''}
                   onChange={(event) => setItem({ ...item, announcement: event.target.value })}
@@ -255,8 +255,8 @@ const ServerPage = () => {
               </AccordionDetails>
             </Accordion>
 
-            <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+            <Accordion className={settingsClasses.accordion}>
+              <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <MapIcon sx={{ color: '#fb923c', fontSize: '1.2rem' }} />
                     <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedLocation')}</Typography>
@@ -267,6 +267,7 @@ const ServerPage = () => {
                     <TextField
                     type="number"
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.latitude || 0}
                     onChange={(event) => setItem({ ...item, latitude: Number(event.target.value) })}
                     label={t('positionLatitude')}
@@ -274,6 +275,7 @@ const ServerPage = () => {
                     <TextField
                     type="number"
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.longitude || 0}
                     onChange={(event) => setItem({ ...item, longitude: Number(event.target.value) })}
                     label={t('positionLongitude')}
@@ -281,6 +283,7 @@ const ServerPage = () => {
                     <TextField
                     type="number"
                     fullWidth
+                    className={settingsClasses.textField}
                     value={item.zoom || 0}
                     onChange={(event) => setItem({ ...item, zoom: Number(event.target.value) })}
                     label={t('serverZoom')}
@@ -290,6 +293,7 @@ const ServerPage = () => {
                   variant="contained"
                   fullWidth
                   startIcon={<MapIcon />}
+                  aria-label={t('mapCurrentLocation')}
                   onClick={() => {
                     const { lng, lat } = map.getCenter();
                     setItem({
@@ -311,8 +315,8 @@ const ServerPage = () => {
               </AccordionDetails>
             </Accordion>
 
-            <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+            <Accordion className={settingsClasses.accordion}>
+              <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <SecurityIcon sx={{ color: '#a855f7', fontSize: '1.2rem' }} />
                     <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedPermissions')}</Typography>
@@ -386,8 +390,8 @@ const ServerPage = () => {
               </AccordionDetails>
             </Accordion>
 
-            <Accordion sx={{ background: 'transparent', boxShadow: 'none', '&:before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#94a3b8' }} />} sx={{ px: 1 }}>
+            <Accordion className={settingsClasses.accordion}>
+              <AccordionSummary className={settingsClasses.accordionSummary} expandIcon={<ExpandMoreIcon />}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <FolderIcon sx={{ color: '#facc15', fontSize: '1.2rem' }} />
                     <Typography sx={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sharedFile')}</Typography>
@@ -396,6 +400,7 @@ const ServerPage = () => {
               <AccordionDetails className={settingsClasses.details}>
                 <MuiFileInput
                   fullWidth
+                  className={settingsClasses.textField}
                   placeholder={t('sharedSelectFile')}
                   value={null}
                   onChange={handleFileChange}
@@ -418,27 +423,17 @@ const ServerPage = () => {
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }}>
           <Button 
             variant="outlined" 
+            className={settingsClasses.buttonSecondary}
             onClick={() => navigate(-1)}
-            sx={{ 
-                borderRadius: '12px', px: 4, py: 1.2, fontWeight: 700,
-                borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8',
-                '&:hover': { borderColor: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.02)' }
-            }}
+            sx={{ px: 4 }}
           >
             {t('sharedCancel')}
           </Button>
           <Button 
             variant="contained" 
+            className={settingsClasses.buttonPrimary}
             onClick={handleSave}
-            sx={{ 
-                borderRadius: '12px', px: 6, py: 1.2, fontWeight: 900,
-                background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
-                boxShadow: '0 8px 16px rgba(56, 189, 248, 0.25)',
-                textTransform: 'none',
-                '&:hover': {
-                    background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
-                }
-            }}
+            sx={{ px: 6 }}
           >
             {t('sharedSave')}
           </Button>

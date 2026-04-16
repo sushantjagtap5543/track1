@@ -18,7 +18,7 @@ package org.traccar.handler.events;
 import jakarta.inject.Inject;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
-import org.traccar.helper.model.PositionUtil;
+import PositionUtil;
 import org.traccar.model.Device;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
@@ -40,7 +40,7 @@ public class FuelEventHandler extends BaseEventHandler {
         if (device == null) {
             return;
         }
-        if (!org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
+        if (!PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

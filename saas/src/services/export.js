@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma.js';
+
 
 /**
  * Data Sovereignty Service
@@ -24,4 +24,5 @@ const exportUserData = async (userId) => {
   return user;
 };
 
-module.exports = { exportUserData };
+export { exportUserData };
+

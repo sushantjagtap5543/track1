@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import traccar from './traccar.js';
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma.js';
+
 
 /**
  * Automated Health & Security Service

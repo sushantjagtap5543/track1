@@ -15,8 +15,13 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import { Visibility, VisibilityOff, EmailOutlined, LockOutlined } from '@mui/icons-material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import EmailOutlined from '@mui/icons-material/EmailOutlined';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+
 import { motion } from 'framer-motion';
+import { useTranslation } from '../common/components/LocalizationProvider';
 import LoginLayout from './LoginLayout';
 import { sessionActions } from '../store';
 import { useCatch } from '../reactHelper';
@@ -49,13 +54,17 @@ const useStyles = makeStyles()((theme) => ({
   },
   input: {
     '& .MuiOutlinedInput-root': {
-      borderRadius: '16px',
+      borderRadius: 'var(--premium-radius)',
       background: 'rgba(255, 255, 255, 0.04)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'var(--glass-blur)',
+      border: '1px solid var(--glass-border)',
       color: '#fff',
       transition: 'all 0.3s ease',
-      height: '60px',
+      height: '56px',
+      [theme.breakpoints.down('sm')]: {
+        height: '50px',
+      },
+
       '&:hover': {
         background: 'rgba(255, 255, 255, 0.08)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -63,7 +72,7 @@ const useStyles = makeStyles()((theme) => ({
       '&.Mui-focused': {
         background: 'rgba(255, 255, 255, 0.1)',
         border: '1px solid rgba(59, 130, 246, 0.5)',
-        boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.15)',
+        boxShadow: 'var(--primary-glow)',
       },
     },
     '& .MuiInputLabel-root': {
@@ -81,6 +90,7 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(2, 0),
     marginTop: theme.spacing(2),
     height: '60px',
+    borderRadius: 'var(--premium-radius)',
   },
   footer: {
     display: 'flex',
@@ -96,6 +106,16 @@ const useStyles = makeStyles()((theme) => ({
     transition: 'color 0.2s ease',
     '&:hover': {
       color: '#fff',
+    },
+  },
+  forgotPassword: {
+    color: '#3b82f6',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    textDecoration: 'none',
+    cursor: 'pointer',
+    '&:hover': {
+      textDecoration: 'underline',
     },
   },
   signupText: {
@@ -121,34 +141,39 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useTranslation();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(localStorage.getItem('rememberedEmail') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
+  const [successText, setSuccessText] = useState('');
   const [errors, setErrors] = useState({});
+
   const [rememberMe, setRememberMe] = useState(false);
 
   React.useEffect(() => {
-    const savedEmail = localStorage.getItem('rememberedEmail');
+    document.title = `${t('loginLogin')} - GeoSurePath`;
     if (location.state?.email) {
       setEmail(location.state.email);
-    } else if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
     }
-  }, [location.state?.email]);
+    if (location.state?.registered) {
+      setSuccessText(t('loginRegistrationSuccessful'));
+    }
+  }, [location.state?.email, location.state?.registered, t]);
+
+
 
   const validate = () => {
     const newErrors = {};
     if (!email) {
-      newErrors.email = 'Email address is required.';
+      newErrors.email = t('loginEmailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address.';
+      newErrors.email = t('loginEmailInvalid');
     }
     if (!password) {
-      newErrors.password = 'Password is required.';
+      newErrors.password = t('loginPasswordRequired');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -164,7 +189,6 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // Step 1: Authenticate with Traccar (Primary Session)
       const traccarResponse = await fetch('/api/session', {
         method: 'POST',
         headers: {
@@ -182,7 +206,6 @@ const Login = () => {
 
         const user = await traccarResponse.json();
         
-        // Step 2: Authenticate with SaaS API (JWT Session)
         try {
           const saasResponse = await fetch('/api/auth/login', {
             method: 'POST',
@@ -192,17 +215,16 @@ const Login = () => {
           if (saasResponse.ok) {
             const saasData = await saasResponse.json();
             if (saasData.token) localStorage.setItem('saasToken', saasData.token);
-          } else {
-            console.warn('[GeoSurePath] SaaS auth sync returned non-ok response.');
           }
         } catch (saasErr) {
           console.warn('[GeoSurePath] SaaS auth sync failed (non-fatal):', saasErr);
         }
 
         dispatch(sessionActions.updateUser(user));
-        navigate('/');
+        const from = location.state?.from?.pathname || '/';
+        navigate(from, { replace: true });
       } else {
-        let errorMsg = 'Invalid email or password. Please try again.';
+        let errorMsg = t('loginError');
         const textError = await traccarResponse.text().catch(() => '');
         try {
           const errorData = JSON.parse(textError);
@@ -213,7 +235,7 @@ const Login = () => {
         setErrorText(errorMsg);
       }
     } catch (e) {
-      setErrorText('Connection error. Please check if the server is running.');
+      setErrorText(t('loginConnectionError'));
     } finally {
       setLoading(false);
     }
@@ -237,8 +259,36 @@ const Login = () => {
 
   return (
     <LoginLayout>
+      <Link
+        href="#login-form"
+        sx={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 'auto',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+          '&:focus': {
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            width: 'auto',
+            height: 'auto',
+            padding: '10px 20px',
+            background: '#3b82f6',
+            color: '#fff',
+            borderRadius: '8px',
+            zIndex: 9999,
+          }
+        }}
+      >
+        Skip to Login Form
+      </Link>
+
       <Box
+        id="login-form"
         component={motion.form}
+
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -246,12 +296,32 @@ const Login = () => {
         onSubmit={handleSubmit}
       >
         <motion.div className={classes.header} variants={itemVariants}>
-          <Typography className={classes.title}>Sign In</Typography>
-          <Typography className={classes.subText}>Access your account</Typography>
+          <Typography component="h2" className={classes.title} sx={{ textWrap: 'balance' }}>{t('loginTitle')}</Typography>
+          <Typography className={classes.subText} sx={{ textWrap: 'balance' }}>{t('loginSubtitle')}</Typography>
+
         </motion.div>
 
+
+        {successText && (
+          <motion.div variants={itemVariants} aria-live="polite">
+            <Alert 
+              severity="success" 
+              sx={{ 
+                borderRadius: '16px', 
+                mb: 1, 
+                background: 'rgba(16, 185, 129, 0.1)', 
+                color: '#34d399',
+                border: '1px solid rgba(16, 185, 129, 0.2)'
+              }}
+            >
+              {successText}
+            </Alert>
+          </motion.div>
+        )}
+
         {errorText && (
-          <motion.div variants={itemVariants}>
+
+          <motion.div variants={itemVariants} aria-live="assertive" id="auth-error-region">
             <Alert 
               severity="error" 
               sx={{ 
@@ -265,24 +335,36 @@ const Login = () => {
               {errorText}
             </Alert>
           </motion.div>
+
         )}
 
         <motion.div variants={itemVariants}>
+
           <TextField
             required
+            autoFocus
             fullWidth
-            label="Email Address"
+            label={t('userEmail')}
             name="email"
             type="email"
             value={email}
-            autoComplete="email"
+            autoComplete="username"
             error={!!errors.email}
             helperText={errors.email}
-            onChange={(event) => { setEmail(event.target.value); if(errors.email) setErrors({...errors, email: ''}); }}
+            onChange={(event) => { 
+                const value = event.target.value;
+                setEmail(value); 
+                if(errors.email) setErrors(prev => ({ ...prev, email: '' })); 
+                if(errorText) setErrorText('');
+            }}
             className={classes.input}
             slotProps={{
               input: {
+                'aria-label': t('userEmail'),
+                'aria-invalid': !!errors.email,
+                'aria-errormessage': errors.email ? 'email-error' : undefined,
                 startAdornment: (
+
                   <InputAdornment position="start">
                     <EmailOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
                   </InputAdornment>
@@ -296,26 +378,38 @@ const Login = () => {
           <TextField
             required
             fullWidth
-            label="Password"
+            label={t('userPassword')}
             name="password"
             value={password}
             type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
+
             error={!!errors.password}
             helperText={errors.password}
-            onChange={(event) => { setPassword(event.target.value); if(errors.password) setErrors({...errors, password: ''}); if(errorText) setErrorText(''); }}
+            onChange={(e) => { setPassword(e.target.value); if(errors.password) setErrors({...errors, password: ''}); if(errorText) setErrorText(''); }}
             className={classes.input}
             slotProps={{
               input: {
+                'aria-label': t('userPassword'),
+                'aria-invalid': !!errors.password,
+                'aria-errormessage': errors.password ? 'password-error' : undefined,
                 startAdornment: (
+
                   <InputAdornment position="start">
                     <LockOutlined sx={{ color: 'rgba(255,255,255,0.4)', mr: 1 }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                    component={motion.button}
+                    whileTap={{ scale: 0.9, rotate: 15 }}
+                    aria-label={showPassword ? t('sharedHidePassword') || "Hide password" : t('sharedShowPassword') || "Show password"}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -326,6 +420,7 @@ const Login = () => {
 
         <motion.div className={classes.footer} variants={itemVariants}>
           <FormControlLabel
+            sx={{ px: 1 }}
             control={
               <Checkbox 
                 checked={rememberMe}
@@ -333,22 +428,39 @@ const Login = () => {
                 sx={{ color: 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#3b82f6' } }} 
               />
             }
-            label={<Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 500 }}>Remember Me</Typography>}
+            label={<Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 500 }}>{t('userRemember')}</Typography>}
           />
+          <Link className={classes.forgotPassword} onClick={() => navigate('/reset-password')}>
+            {t('loginForgotPassword') || "Forgot password?"}
+          </Link>
         </motion.div>
 
         <motion.div variants={itemVariants}>
           <Button
-            variant="contained"
+            component={motion.button}
             fullWidth
+            variant="contained"
+            color="primary"
             type="submit"
-            disabled={loading}
             className={classes.loginButton}
+            disabled={loading}
+            sx={{ 
+              borderRadius: '16px', 
+              fontWeight: 900, 
+              fontSize: '1.1rem',
+              letterSpacing: '1px',
+              textTransform: 'none',
+              boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)',
+              '&:hover': {
+                boxShadow: '0 12px 24px rgba(59, 130, 246, 0.4)',
+              }
+            }}
+            whileHover={{ scale: 1.02, translateY: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {loading ? <CircularProgress size={26} color="inherit" /> : 'Sign In'}
+            {loading ? <CircularProgress size={26} color="inherit" /> : t('loginLogin')}
           </Button>
         </motion.div>
-
 
         <motion.div variants={itemVariants} style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
           <Box
@@ -380,9 +492,21 @@ const Login = () => {
               }}
             />
             <Typography sx={{ color: '#2ecc71', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px' }}>
-              AIS140 COMPLIANT (RTO CERTIFIED)
+              {t('loginAis140')}
             </Typography>
           </Box>
+        </motion.div>
+
+        <motion.div variants={itemVariants} style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+            {t('registerAlreadyHaveAccount') === "Already have an account?" ? "Don't have an account?" : t('registerAlreadyHaveAccount')}{' '}
+            <Link 
+              onClick={() => navigate('/register')} 
+              sx={{ color: '#3b82f6', fontWeight: 700, cursor: 'pointer', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+            >
+              {t('loginRegister')}
+            </Link>
+          </Typography>
         </motion.div>
       </Box>
     </LoginLayout>

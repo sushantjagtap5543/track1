@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
-import org.traccar.helper.model.PositionUtil;
+import PositionUtil;
 import org.traccar.model.Device;
 import org.traccar.model.Geofence;
 import org.traccar.model.Position;
@@ -63,7 +63,7 @@ public class OverspeedEventHandler extends BaseEventHandler {
         if (device == null) {
             return;
         }
-        if (!org.traccar.helper.model.PositionUtil.isLatest(cacheManager, position)) {
+        if (!PositionUtil.isLatest(cacheManager, position)) {
             return;
         }
 

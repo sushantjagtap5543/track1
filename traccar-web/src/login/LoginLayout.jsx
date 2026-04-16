@@ -2,13 +2,16 @@ import { Box, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { makeStyles } from 'tss-react/mui';
 import { motion } from 'framer-motion';
+import { useTranslation } from '../common/components/LocalizationProvider';
 import LogoImage from './LogoImage';
+
 
 const useStyles = makeStyles()((theme) => ({
   root: {
     display: 'flex',
-    height: '100vh',
+    height: '100dvh',
     width: '100vw',
+
     backgroundColor: '#020617',
     backgroundImage: 'linear-gradient(to right, rgba(2, 6, 23, 0.9), rgba(2, 6, 23, 0.5)), url(/geosurepath_login_bg.png)',
     backgroundSize: 'cover',
@@ -128,6 +131,8 @@ const useStyles = makeStyles()((theme) => ({
 const LoginLayout = ({ children }) => {
   const { classes } = useStyles();
   const theme = useTheme();
+  const t = useTranslation();
+
 
   return (
     <Box component="main" className={classes.root}>
@@ -145,23 +150,27 @@ const LoginLayout = ({ children }) => {
           >
             <LogoImage color="#fff" width={250} />
             <Typography
+              component="h1"
               className={classes.tagline}
               sx={{ fontSize: '3.5rem', letterSpacing: '-2px', mb: 1 }}
             >
+
               GeoSurePath
             </Typography>
             <Typography
               variant="h5"
               sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 300, mb: 6, letterSpacing: '1px' }}
             >
-              Real-time GPS Tracking
+              {t('loginTagline')}
             </Typography>
+
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.8 }}>
               {[
-                'Live Tracking',
-                'Secure Access',
-                'Advanced Analytics',
+                t('loginLiveTracking'),
+                t('loginSecureAccess'),
+                t('loginAdvancedAnalytics'),
               ].map((text, index) => (
+
                 <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Box
                     sx={{

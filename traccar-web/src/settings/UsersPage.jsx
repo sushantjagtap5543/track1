@@ -123,17 +123,17 @@ const UsersPage = () => {
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 3, mb: 4 }}>
               <div className={settingsClasses.statCard}>
                 <PersonIcon sx={{ color: '#38bdf8', mb: 1 }} />
-                <Typography className={settingsClasses.statLabel}>Total Users</Typography>
+                <Typography className={settingsClasses.statLabel}>{t('sharedTotal')}</Typography>
                 <Typography className={settingsClasses.statValue}>{stats.total}</Typography>
               </div>
               <div className={settingsClasses.statCard}>
                 <AdminPanelSettingsIcon sx={{ color: '#818cf8', mb: 1 }} />
-                <Typography className={settingsClasses.statLabel}>Administrators</Typography>
+                <Typography className={settingsClasses.statLabel}>{t('userAdmin')}</Typography>
                 <Typography className={settingsClasses.statValue}>{stats.admins}</Typography>
               </div>
               <div className={settingsClasses.statCard}>
                 <EventBusyIcon sx={{ color: '#fb7185', mb: 1 }} />
-                <Typography className={settingsClasses.statLabel}>Disabled Accounts</Typography>
+                <Typography className={settingsClasses.statLabel}>{t('sharedDisabled')}</Typography>
                 <Typography className={settingsClasses.statValue}>{stats.disabled}</Typography>
               </div>
             </Box>

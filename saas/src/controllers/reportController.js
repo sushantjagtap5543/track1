@@ -1,9 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import traccarService from '../services/traccar.js';
-import archiveService from '../services/archiveService.js';
-import { paginate, optimizePositions } from '../utils/responseOptimizer.js';
+import prisma from '../utils/prisma.js';
 
-const prisma = new PrismaClient();
 
 /**
  * Security helper to verify if a user has access to specific devices.

@@ -1,17 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import traccarService from '../services/traccar.js';
 import aiService from '../services/aiService.js';
 import { optimizePositions } from '../utils/responseOptimizer.js';
 import mapper from '../utils/commandMapper.js';
 import logAudit from '../utils/auditLogger.js';
-
-const prisma = new PrismaClient({ 
-  datasources: { 
-    db: { 
-      url: process.env.DATABASE_URL || "file:./prisma/dev.db" 
-    } 
-  } 
-});
 
 // Get user's vehicles (Basic Metadata)
 export const getVehicles = async (req, res) => {
