@@ -96,6 +96,9 @@ public class WebServer implements LifecycleObject {
         initApi(servletHandler);
         initSessionConfig(servletHandler);
 
+        // Manually register AsyncSocketServlet to ensure Jetty 12 handles WebSocket upgrade correctly
+        servletHandler.addServlet(new ServletHolder(injector.getInstance(AsyncSocketServlet.class)), "/api/socket");
+
         if (config.getBoolean(Keys.WEB_CONSOLE)) {
             servletHandler.addServlet(new ServletHolder(new ConsoleServlet(config)), "/console/*");
         }

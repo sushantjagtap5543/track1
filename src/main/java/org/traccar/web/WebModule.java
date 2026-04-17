@@ -26,6 +26,6 @@ public class WebModule extends ServletModule {
         filter("/*").through(OverrideTextFilter.class);
         filter("/api/media/*").through(MediaFilter.class);
         serve("/.well-known/*").with(WellKnownServlet.class);
-        serve("/api/socket").with(AsyncSocketServlet.class);
+        // serve("/api/socket").with(AsyncSocketServlet.class); // Manually registered in WebServer.java
     }
 }
