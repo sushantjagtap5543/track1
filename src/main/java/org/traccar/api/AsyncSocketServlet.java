@@ -68,8 +68,20 @@ public class AsyncSocketServlet extends JettyWebSocketServlet {
                 } catch (StorageException | GeneralSecurityException | IOException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (SessionHelper.isSessionOriginValid(req.getHttpServletRequest())) {
-                userId = (Long) ((HttpSession) req.getSession()).getAttribute(SessionHelper.USER_ID_KEY);
+            } else {
+                String authHeader = req.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Basic ")) {
+                    try {
+                        String[] parts = authHeader.split(" ");
+                        if (parts.length == 2) {
+                            userId = loginService.login("Basic", parts[1]).getUser().getId();
+                        }
+                    } catch (StorageException | GeneralSecurityException | IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if (SessionHelper.isSessionOriginValid(req.getHttpServletRequest())) {
+                    userId = (Long) ((HttpSession) req.getSession()).getAttribute(SessionHelper.USER_ID_KEY);
+                }
             }
             if (userId != null) {
                 return new AsyncSocket(objectMapper, connectionManager, storage, userId);
