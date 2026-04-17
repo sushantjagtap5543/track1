@@ -225,12 +225,16 @@ const Login = () => {
         navigate(from, { replace: true });
       } else {
         let errorMsg = t('loginFailed');
-        const textError = await traccarResponse.text().catch(() => '');
-        try {
-          const errorData = JSON.parse(textError);
-          errorMsg = errorData.error || errorData.message || errorMsg;
-        } catch (parseErr) {
-          if (textError) errorMsg = textError;
+        if (traccarResponse.status !== 401) {
+          const textError = await traccarResponse.text().catch(() => '');
+          try {
+            const errorData = JSON.parse(textError);
+            errorMsg = errorData.error || errorData.message || errorMsg;
+          } catch (parseErr) {
+            if (textError && textError.length < 100) {
+              errorMsg = textError;
+            }
+          }
         }
         setErrorText(errorMsg);
       }
