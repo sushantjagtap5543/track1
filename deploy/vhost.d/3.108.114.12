@@ -1,5 +1,7 @@
+set $saas_upstream http://saas-api:3001;
+
 location ~ ^/api/(status|health|auth|vehicles|billing|admin|reports|webhooks|ai|v1|saas) {
-    proxy_pass http://172.19.0.5:3001;
+    proxy_pass $saas_upstream;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -8,7 +10,7 @@ location ~ ^/api/(status|health|auth|vehicles|billing|admin|reports|webhooks|ai|
 }
 
 location /api-docs {
-    proxy_pass http://172.19.0.5:3001;
+    proxy_pass $saas_upstream;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

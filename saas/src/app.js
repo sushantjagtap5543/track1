@@ -19,6 +19,7 @@ const app = express();
 
 // Item 43: Explicitly Disable X-Powered-By
 app.disable('x-powered-by');
+app.set('trust proxy', true);
 
 
 
@@ -47,7 +48,19 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org", "https://*.mapbox.com"],
-      connectSrc: ["'self'", "ws:", "wss:", "http://3.108.114.12", "https://3.108.114.12", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:8082", "http://127.0.0.1:8082"]
+      connectSrc: [
+        "'self'", 
+        "ws:", 
+        "wss:", 
+        process.env.SERVER_IP ? `http://${process.env.SERVER_IP}` : "",
+        process.env.SERVER_IP ? `https://${process.env.SERVER_IP}` : "",
+        process.env.DOMAIN ? `http://${process.env.DOMAIN}` : "",
+        process.env.DOMAIN ? `https://${process.env.DOMAIN}` : "",
+        "http://localhost:3001", 
+        "http://127.0.0.1:3001", 
+        "http://localhost:8082", 
+        "http://127.0.0.1:8082"
+      ].filter(Boolean)
     }
   },
   crossOriginEmbedderPolicy: false,
