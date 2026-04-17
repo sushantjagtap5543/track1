@@ -168,12 +168,12 @@ const Login = () => {
   const validate = () => {
     const newErrors = {};
     if (!email) {
-      newErrors.email = t('loginEmailRequired');
+      newErrors.email = t('registrationEmailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = t('loginEmailInvalid');
+      newErrors.email = t('registrationEmailInvalid');
     }
     if (!password) {
-      newErrors.password = t('loginPasswordRequired');
+      newErrors.password = t('registrationPasswordRequired');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -224,7 +224,7 @@ const Login = () => {
         const from = location.state?.from?.pathname || '/';
         navigate(from, { replace: true });
       } else {
-        let errorMsg = t('loginError');
+        let errorMsg = t('loginFailed');
         const textError = await traccarResponse.text().catch(() => '');
         try {
           const errorData = JSON.parse(textError);
@@ -235,7 +235,7 @@ const Login = () => {
         setErrorText(errorMsg);
       }
     } catch (e) {
-      setErrorText(t('loginConnectionError'));
+      setErrorText(t('errorConnection'));
     } finally {
       setLoading(false);
     }
