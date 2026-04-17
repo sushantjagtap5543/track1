@@ -36,7 +36,8 @@
     "stylis-plugin-rtl": "^2.1.1",
     "tss-react": "^4.9.20",
     "wellknown": "^0.5.0",
-    "framer-motion": "^12.38.0"
+    "framer-motion": "^12.38.0",
+    "notistack": "^3.5.1"
   },
   "scripts": {
     "start": "vite --host",
