@@ -132,7 +132,7 @@ export const createUser = async (name, email, password, req = null) => {
   const response = await fetchWithTimeout(`${TRACCAR_URL}/api/users`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ name, email, password, attributes: {} })
+    body: JSON.stringify({ name, email, password, deviceLimit: -1, attributes: {} })
   });
   if (response.ok) await updateSessionCache(response);
   if (!response.ok) await handleTraccarError(response, 'createUser');

@@ -234,7 +234,7 @@ export const login = async (req, res, next) => {
         readonly: false,
         deviceReadonly: false,
         userLimit: 0,
-        deviceLimit: 0,
+        deviceLimit: -1,
         expirationTime: null,
         attributes: {
           branding: 'GeoSurePath',
