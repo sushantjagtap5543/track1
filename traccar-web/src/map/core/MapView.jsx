@@ -17,13 +17,45 @@ element.style.boxSizing = 'initial';
 
 maplibregl.addProtocol('google', googleProtocol);
 
-export const map = new maplibregl.Map({
-  container: element,
-  attributionControl: false,
-  dragRotate: true,
-  touchZoomRotate: true,
-  bearingSnap: 0,
-  crossSourceCollisions: false,
+let internalMap = null;
+let mapSupported = true;
+
+try {
+  if (maplibregl.supported()) {
+    internalMap = new maplibregl.Map({
+      container: element,
+      attributionControl: false,
+      dragRotate: true,
+      touchZoomRotate: true,
+      bearingSnap: 0,
+      crossSourceCollisions: false,
+    });
+  } else {
+    mapSupported = false;
+  }
+} catch (e) {
+  console.error('WebGL initialization failed', e);
+  mapSupported = false;
+}
+
+export const map = new Proxy({}, {
+  get(target, prop) {
+    if (internalMap) {
+      const value = internalMap[prop];
+      return typeof value === 'function' ? value.bind(internalMap) : value;
+    }
+    return (...args) => {
+      console.warn(`Map method ${prop} called but map is not available`);
+      if (prop === 'getCenter') return { lng: 0, lat: 0, toArray: () => [0, 0] };
+      if (prop === 'getZoom') return 0;
+      if (prop === 'getCanvas') return { style: {}, width: 0, height: 0, addEventListener: () => {}, removeEventListener: () => {} };
+      if (prop === 'getSource' || prop === 'getLayer') return null;
+      if (prop === 'getBounds') return { getSouthWest: () => ({ lng: 0, lat: 0 }), getNorthEast: () => ({ lng: 0, lat: 0 }) };
+      if (prop === 'queryRenderedFeatures' || prop === 'querySourceFeatures') return [];
+      if (prop === 'getStyle') return { layers: [] };
+      return null;
+    };
+  }
 });
 
 
@@ -147,6 +179,46 @@ const MapView = ({ children }) => {
       currentEl.removeChild(element);
     };
   }, [containerRef]);
+
+  if (!mapSupported) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0f172a',
+        color: '#f8fafc',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        padding: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{ 
+          fontSize: '3rem', 
+          background: 'rgba(239, 68, 68, 0.1)', 
+          color: '#ef4444', 
+          width: '80px', 
+          height: '80px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          borderRadius: '50%',
+          marginBottom: '1rem'
+        }}>
+          !
+        </div>
+        <h2 style={{ margin: 0, color: '#ef4444' }}>Map Support Unavailable</h2>
+        <p style={{ maxWidth: '400px', margin: 0, opacity: 0.8, lineHeight: 1.6 }}>
+          WebGL is required to display the map but is currently disabled or not supported in your browser.
+        </p>
+        <p style={{ fontSize: '0.875rem', color: '#38bdf8', cursor: 'help' }}>
+          Try enabling hardware acceleration in your browser settings.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: '100%', height: '100%' }} ref={containerRef}>
