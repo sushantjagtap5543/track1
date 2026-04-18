@@ -111,8 +111,6 @@ services:
           memory: 4G
     environment:
       - JAVA_OPTS=-Xms1g -Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dtraccar.xml=/opt/traccar/conf/traccar.xml
-      - VIRTUAL_HOST=3.108.114.12
-      - VIRTUAL_PORT=8082
       - LETSENCRYPT_HOST=3.108.114.12
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
     ports:
