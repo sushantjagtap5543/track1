@@ -1,3 +1,4 @@
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import {
@@ -206,9 +207,13 @@ const DeviceRow = ({ devices, index, style }) => {
     setEngineLoading(true);
 
     try {
+      const saasToken = localStorage.getItem('saasToken');
+      const headers = { 'Content-Type': 'application/json' };
+      if (saasToken) headers['Authorization'] = `Bearer ${saasToken}`;
+
       const response = await fetch('/api/saas/vehicles/engine', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ vehicleId: item.id, action }),
       });
       
@@ -265,9 +270,13 @@ const DeviceRow = ({ devices, index, style }) => {
     setSafeParkingLoading(true);
 
     try {
+      const saasToken = localStorage.getItem('saasToken');
+      const headers = { 'Content-Type': 'application/json' };
+      if (saasToken) headers['Authorization'] = `Bearer ${saasToken}`;
+
       const response = await fetch('/api/saas/vehicles/safe-parking', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           vehicleId: item.id, 
           enable,

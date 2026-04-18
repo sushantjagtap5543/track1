@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import {
   Button,
@@ -150,7 +150,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
-  useState(() => {
+  useEffect(() => {
     document.title = `${t('loginRegister')} - GeoSurePath`;
   }, [t]);
 

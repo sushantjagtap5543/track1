@@ -2,7 +2,11 @@ import traccarBreaker from '../middleware/circuitBreaker.js';
 import IORedis from 'ioredis';
 
 const { TRACCAR_URL, TRACCAR_ADMIN_EMAIL, TRACCAR_ADMIN_PASSWORD, MOCK_TRACCAR } = process.env;
-const redis = new IORedis({ host: process.env.REDIS_HOST || '127.0.0.1' });
+const redis = new IORedis({ 
+  host: process.env.REDIS_HOST || '127.0.0.1',
+  retryStrategy: (times) => times > 3 ? null : Math.min(times * 100, 2000)
+});
+redis.on('error', () => {}); // Silence connection errors
 const SESSION_CACHE_KEY = 'traccar:admin_session';
 
 /**
@@ -125,6 +129,22 @@ export const getDevice = async (deviceId) => {
   if (!response.ok) await handleTraccarError(response, 'getDevice');
   const devices = await response.json();
   return devices.length > 0 ? devices[0] : null;
+};
+
+export const getUsers = async (params = {}) => {
+  if (MOCK_TRACCAR === 'true') {
+     return params.keyword 
+       ? MOCK_DATA.users.filter(u => u.email.toLowerCase().includes(params.keyword.toLowerCase()))
+       : MOCK_DATA.users;
+  }
+  const headers = await getAuthHeaders();
+  const url = new URL(`${TRACCAR_URL}/api/users`);
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+  
+  const response = await fetchWithTimeout(url.toString(), { headers });
+  if (response.ok) await updateSessionCache(response);
+  if (!response.ok) await handleTraccarError(response, 'getUsers');
+  return response.json();
 };
 
 export const createUser = async (name, email, password, req = null) => {
@@ -345,6 +365,7 @@ export default {
   getDevices,
   getDevice,
   createUser,
+  getUsers,
   updateUser,
   disableUser,
   createDevice,

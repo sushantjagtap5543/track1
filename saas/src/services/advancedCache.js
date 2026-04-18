@@ -1,4 +1,4 @@
-const Redis = require('ioredis');
+import Redis from 'ioredis';
 const redis = new Redis({ 
   host: process.env.REDIS_HOST || 'redis',
   retryStrategy: (times) => (times > 3) ? null : Math.min(times * 50, 2000)
@@ -32,4 +32,4 @@ const advancedCache = {
   }
 };
 
-module.exports = advancedCache;
+export default advancedCache;

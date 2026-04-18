@@ -38,9 +38,12 @@
     "axios": "^1.7.9"
   },
   "devDependencies": {
+    "chai": "^5.1.2",
     "eslint": "9.15.0",
     "mocha": "10.8.2",
     "nodemon": "3.1.7",
-    "prisma": "^5.22.0"
+    "prisma": "^5.22.0",
+    "sinon": "^19.0.2",
+    "supertest": "^7.0.0"
   }
 }

@@ -37,6 +37,12 @@ log "♻️  Restarting all services (zero-downtime replacement)..."
 docker compose $COMPOSE_FILES up -d --remove-orphans --no-build
 ok "Services restarted."
 
+# ── 4.5 SaaS Database Sync ──────────────────────────────────────────────────
+log "💾 Syncing SaaS database schema..."
+docker compose $COMPOSE_FILES exec -T saas-api npx prisma generate
+docker compose $COMPOSE_FILES exec -T saas-api npx prisma db push --accept-data-loss
+ok "SaaS database synced."
+
 # ── 5. Traccar health check ─────────────────────────────────────────────────
 log "⏳ Waiting for Traccar (max ${HEALTH_RETRIES}×5s)..."
 for i in $(seq 1 $HEALTH_RETRIES); do

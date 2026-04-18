@@ -1,5 +1,18 @@
 set $saas_upstream http://saas-api:3001;
 
+# Gzip Compression
+gzip on;
+gzip_proxied any;
+gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+gzip_vary on;
+
+# Static Asset Caching
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|otf|mp3)$ {
+    expires 30d;
+    add_header Cache-Control "public, no-transform";
+    access_log off;
+}
+
 location ~ ^/api/(status|health|auth|vehicles|billing|admin|reports|webhooks|ai|v1|saas) {
     proxy_pass $saas_upstream;
     proxy_set_header Host $host;

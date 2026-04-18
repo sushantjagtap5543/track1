@@ -35,6 +35,20 @@ export default defineConfig(({ mode }) => {
     },
   build: {
     outDir: 'build',
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@mui')) return 'vendor_mui';
+            if (id.includes('mapbox-gl') || id.includes('maplibre-gl')) return 'vendor_maps';
+            if (id.includes('recharts')) return 'vendor_charts';
+            return 'vendor';
+          }
+        },
+      },
+    },
+    reportCompressedSize: false,
   },
     plugins: [
       svgr(),

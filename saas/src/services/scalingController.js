@@ -1,11 +1,11 @@
-const { getHealthTrend } = require('./predictiveHealth');
+import { getHealthTrend } from './predictiveHealth.js';
 
 /**
  * Anti-Gravity Scaling Controller
  * Autonomously evaluates resource needs and outputs scaling recommendations.
  */
 
-const evaluateScaling = () => {
+export const evaluateScaling = () => {
     const trend = getHealthTrend();
     const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024; // MB
     
@@ -29,5 +29,3 @@ const evaluateScaling = () => {
     
     return { decision: 'STABLE', recommendation: 'System within optimal operation bounds.', priority: 'NONE' };
 };
-
-module.exports = { evaluateScaling };

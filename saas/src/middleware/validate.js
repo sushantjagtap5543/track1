@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 /**
  * Anti-Gravity Validation Middleware
@@ -24,4 +24,4 @@ const validate = (schema) => (req, res, next) => {
   }
 };
 
-module.exports = validate;
+export default validate;

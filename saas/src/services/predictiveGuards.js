@@ -1,4 +1,4 @@
-const { getHealthTrend } = require('./predictiveHealth');
+import { getHealthTrend } from './predictiveHealth.js';
 
 /**
  * Anti-Gravity Predictive Guards
@@ -23,6 +23,8 @@ const evaluateGuards = () => {
 };
 
 // Run every 5 minutes
-setInterval(evaluateGuards, 5 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(evaluateGuards, 5 * 60 * 1000);
+}
 
-module.exports = evaluateGuards;
+export default evaluateGuards;

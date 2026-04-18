@@ -1,4 +1,4 @@
-const EventEmitter = require('events');
+import EventEmitter from 'events';
 
 /**
  * Anti-Gravity Centralized Event Bus
@@ -23,4 +23,4 @@ bus.subscribe('admin:plan_update', (data) => {
     console.log(`[Sync] Notifying Client ${data.userId} of plan change to ${data.planId}`);
 });
 
-module.exports = bus;
+export default bus;

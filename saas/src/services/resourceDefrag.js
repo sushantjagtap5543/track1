@@ -24,6 +24,8 @@ const defrag = () => {
 };
 
 // Run every 10 minutes
-setInterval(defrag, 10 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(defrag, 10 * 60 * 1000);
+}
 
-module.exports = defrag;
+export default defrag;

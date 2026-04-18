@@ -1,4 +1,4 @@
-const { getHealthTrend } = require('./predictiveHealth');
+import { getHealthTrend } from './predictiveHealth.js';
 
 /**
  * Anti-Gravity Smart Retry Service
@@ -28,4 +28,4 @@ const smartRetry = async (fn, options = {}) => {
   }
 };
 
-module.exports = smartRetry;
+export default smartRetry;

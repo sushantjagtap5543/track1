@@ -1,11 +1,11 @@
-const { getHealthTrend } = require('./predictiveHealth');
+import { getHealthTrend } from './predictiveHealth.js';
 
 /**
  * Anti-Gravity Refactor Suggestion Engine
  * Analyzes performance bottlenecks and suggests architectural evolutions.
  */
 
-const analyzeForRefactor = () => {
+export const analyzeForRefactor = () => {
     const trend = getHealthTrend();
     
     console.log('[RefactorEngine] Analyzing architectural patterns...');
@@ -21,5 +21,3 @@ const analyzeForRefactor = () => {
     
     return { category: 'STABLE', suggestion: 'Architecture performing within optimal parameters.', impact: 'NONE' };
 };
-
-module.exports = { analyzeForRefactor };

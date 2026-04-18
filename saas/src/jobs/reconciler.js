@@ -1,6 +1,10 @@
 import prisma from '../utils/prisma.js';
 import Redis from 'ioredis';
-const redis = new Redis({ host: process.env.REDIS_HOST || 'redis' });
+const redis = new Redis({ 
+  host: process.env.REDIS_HOST || 'redis',
+  retryStrategy: (times) => times > 3 ? null : Math.min(times * 50, 2000)
+});
+redis.on('error', () => {});
 
 
 /**
@@ -24,7 +28,9 @@ const reconcileState = async () => {
 };
 
 // Run every 30 minutes
-setInterval(reconcileState, 30 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(reconcileState, 30 * 60 * 1000);
+}
 
 export default reconcileState;
 

@@ -1,5 +1,5 @@
-const rateLimit = require('express-rate-limit');
-const { getHealthTrend } = require('../services/predictiveHealth');
+import rateLimit from 'express-rate-limit';
+import { getHealthTrend } from '../services/predictiveHealth.js';
 
 /**
  * Anti-Gravity Dynamic Throttle
@@ -21,4 +21,4 @@ const dynamicThrottle = rateLimit({
   }
 });
 
-module.exports = dynamicThrottle;
+export default dynamicThrottle;

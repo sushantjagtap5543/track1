@@ -1,4 +1,4 @@
-const { getHealthTrend } = require('./predictiveHealth');
+import { getHealthTrend } from './predictiveHealth.js';
 
 /**
  * Anti-Gravity Failover Validation Engine
@@ -21,6 +21,8 @@ const validateFailover = async () => {
 };
 
 // Run every 15 minutes
-setInterval(validateFailover, 15 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(validateFailover, 15 * 60 * 1000);
+}
 
-module.exports = validateFailover;
+export default validateFailover;

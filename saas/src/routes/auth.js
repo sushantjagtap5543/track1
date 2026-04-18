@@ -1,5 +1,6 @@
 import express from 'express';
 import { register, login, forgotPassword, resetPassword, verifyEmail, setupMFA, verifyMFA, logout } from '../controllers/authController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -18,13 +19,13 @@ router.post('/reset-password', resetPassword);
 // Verify Email
 router.get('/verify-email/:token', verifyEmail);
 
-// MFA Setup
-router.post('/mfa/setup', setupMFA);
+// MFA Setup (Protected)
+router.post('/mfa/setup', authenticateToken, setupMFA);
 
-// MFA Verify
-router.post('/mfa/verify', verifyMFA);
+// MFA Verify (Protected)
+router.post('/mfa/verify', authenticateToken, verifyMFA);
 
-// Logout
-router.post('/logout', logout);
+// Logout (Protected)
+router.post('/logout', authenticateToken, logout);
 
 export default router;

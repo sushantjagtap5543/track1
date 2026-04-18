@@ -58,20 +58,34 @@ export const register = async (req, res, next) => {
     // 3. Traccar Integration (Phase 2: Resilient Saga)
     try {
       traccarUser = await traccarService.createUser(name, email, password);
-      // Traccar user created: traccarUser.id
-
     } catch (traccarErr) {
-      console.error('[Registration] Traccar integration failed:', traccarErr.message);
+      console.error('[Registration] Traccar integration error:', traccarErr.message);
       
-      // Dynamic Fallback: Allow SaaS-only registration in dev/recovery mode
-      if (process.env.NODE_ENV !== 'production' || process.env.MOCK_TRACCAR === 'true') {
-        console.warn('[Registration] Entering Sync-Pending mode due to Traccar unavailability.');
-        traccarUser = { id: 0, name, email }; // Virtual mock user
-      } else {
-        return res.status(503).json({
-          error: 'Registration temporarily unavailable',
-          detail: 'The tracking backend is not responding. Please try again in a few minutes.'
-        });
+      // If user already exists in Traccar, try to recover the ID
+      if (traccarErr.status === 400) {
+        console.log('[Registration] User already exists in Traccar. Attempting to sync...');
+        try {
+          const users = await traccarService.getUsers({ keyword: email });
+          traccarUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+          if (traccarUser) {
+            console.log('[Registration] Successfully recovered Traccar User ID:', traccarUser.id);
+          }
+        } catch (fetchErr) {
+          console.error('[Registration] Failed to recover existing Traccar user:', fetchErr.message);
+        }
+      }
+
+      if (!traccarUser) {
+        // Dynamic Fallback: Allow SaaS-only registration in dev/recovery mode
+        if (process.env.NODE_ENV !== 'production' || process.env.MOCK_TRACCAR === 'true') {
+          console.warn('[Registration] Entering Sync-Pending mode due to Traccar unavailability.');
+          traccarUser = { id: 0, name, email }; // Virtual mock user
+        } else {
+          return res.status(503).json({
+            error: 'Registration temporarily unavailable',
+            detail: 'The tracking backend reported an error or is not responding. Please try again later.'
+          });
+        }
       }
     }
 

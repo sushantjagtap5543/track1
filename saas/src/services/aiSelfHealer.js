@@ -1,4 +1,4 @@
-const { getHealthTrend } = require('./predictiveHealth');
+import { getHealthTrend } from './predictiveHealth.js';
 
 /**
  * Anti-Gravity AI Self-Healer
@@ -19,6 +19,8 @@ const heal = () => {
 };
 
 // Run every 2 minutes
-setInterval(heal, 2 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(heal, 2 * 60 * 1000);
+}
 
-module.exports = heal;
+export default heal;

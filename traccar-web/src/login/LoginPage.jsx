@@ -215,9 +215,11 @@ const Login = () => {
           if (saasResponse.ok) {
             const saasData = await saasResponse.json();
             if (saasData.token) localStorage.setItem('saasToken', saasData.token);
+          } else {
+             console.error('[GeoSurePath] SaaS auth sync failed with status:', saasResponse.status);
           }
         } catch (saasErr) {
-          console.warn('[GeoSurePath] SaaS auth sync failed (non-fatal):', saasErr);
+          console.error('[GeoSurePath] SaaS auth sync connection error:', saasErr.message);
         }
 
         dispatch(sessionActions.updateUser(user));

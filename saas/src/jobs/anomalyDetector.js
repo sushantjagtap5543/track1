@@ -1,4 +1,4 @@
-const { getHealthTrend, recordError } = require('../services/predictiveHealth');
+import { getHealthTrend, recordError } from '../services/predictiveHealth.js';
 
 /**
  * Anti-Gravity Autonomous Anomaly Detector
@@ -20,6 +20,8 @@ const detectAnomalies = () => {
 };
 
 // Run every 10 minutes
-setInterval(detectAnomalies, 10 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(detectAnomalies, 10 * 60 * 1000);
+}
 
-module.exports = detectAnomalies;
+export default detectAnomalies;
