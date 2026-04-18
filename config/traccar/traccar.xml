@@ -23,7 +23,7 @@
     <entry key='server.statistics'>false</entry>
     
     <!-- Logging and Performance -->
-    <entry key='logger.level'>warning</entry>
+    <entry key='logger.level'>info</entry>
     <entry key='logger.enable'>true</entry>
     <entry key='distance.enable'>true</entry>
     <entry key='processing.computedAttributes.enable'>true</entry>
