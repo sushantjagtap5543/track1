@@ -3,7 +3,7 @@
 <properties>
 
     <entry key='database.driver'>org.postgresql.Driver</entry>
-    <entry key='database.url'>jdbc:postgresql://127.0.0.1:5432/geosurepath?currentSchema=public</entry>
+    <entry key='database.url'>jdbc:postgresql://db:5432/geosurepath?currentSchema=public</entry>
     <entry key='database.user'>geosurepath</entry>
     <entry key='database.password'>SecurePass123!</entry>
 
